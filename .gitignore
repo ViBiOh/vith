@@ -1,0 +1,8 @@
+# scripts
+scripts/
+
+# Golang
+bin/
+release/
+coverage.*
+profile.out
