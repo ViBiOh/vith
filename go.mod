@@ -1,4 +1,4 @@
-module github.com/ViBiOh/goweb
+module github.com/ViBiOh/vith
 
 go 1.13
 
