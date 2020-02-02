@@ -18,7 +18,6 @@ Following variables are required for CI:
 ## Usage
 
 ```bash
-
 Usage of vith:
   -address string
         [http] Listen address {VITH_ADDRESS}
