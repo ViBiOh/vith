@@ -1,6 +1,6 @@
 # vith
 
-[![Build Status](https://travis-ci.org/ViBiOh/vith.svg?branch=master)](https://travis-ci.org/ViBiOh/vith)
+[![Build Status](https://travis-ci.com/ViBiOh/vith.svg?branch=master)](https://travis-ci.com/ViBiOh/vith)
 [![codecov](https://codecov.io/gh/ViBiOh/vith/branch/master/graph/badge.svg)](https://codecov.io/gh/ViBiOh/vith)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ViBiOh/vith)](https://goreportcard.com/report/github.com/ViBiOh/vith)
 [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=ViBiOh/vith)](https://dependabot.com)
