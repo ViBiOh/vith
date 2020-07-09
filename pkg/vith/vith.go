@@ -24,7 +24,7 @@ type App interface {
 func Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		name := sha(time.Now())
-		inputName := fmt.Sprintf("/tmp/input_%s.jpeg", name)
+		inputName := fmt.Sprintf("/tmp/input_%s", name)
 		outputName := fmt.Sprintf("/tmp/output_%s.jpeg", name)
 		copyBuffer := make([]byte, 32*1024)
 
