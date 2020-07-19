@@ -11,3 +11,11 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: sunday
+    commit-message:
+      prefix: chore
+      include: scope
