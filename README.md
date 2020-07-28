@@ -9,8 +9,8 @@
 
 Following variables are required for CI:
 
-| Name | Purpose |
-|:--:|:--:|
+|      Name       |           Purpose           |
+| :-------------: | :-------------------------: |
 | **DOCKER_USER** | for publishing Docker image |
 | **DOCKER_PASS** | for publishing Docker image |
 
