@@ -15,10 +15,10 @@ jobs:
 
       language: minimal
       script:
-        - curl -q -sSL --max-time 10 "https://raw.githubusercontent.com/ViBiOh/scripts/master/bootstrap" | bash -s "docker_promote"
+        - curl -q -sSL --max-time 30 "https://raw.githubusercontent.com/ViBiOh/scripts/master/bootstrap" | bash -s "docker_promote"
         - scripts/docker_promote "${DOCKER_USER}/$(make name)" "$(make version)"
       after_success:
-        - curl -q -sSL --max-time 10 -X POST https://goreportcard.com/checks?repo=github.com/${TRAVIS_REPO_SLUG}
+        - curl -q -sSL --max-time 30 -X POST https://goreportcard.com/checks?repo=github.com/${TRAVIS_REPO_SLUG}
 
 stages:
   - Build
