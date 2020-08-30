@@ -22,8 +22,20 @@ Usage of vith:
         [http] Listen address {VITH_ADDRESS}
   -cert string
         [http] Certificate file {VITH_CERT}
+  -graceDuration string
+        [http] Grace duration when SIGTERM received {VITH_GRACE_DURATION} (default "15s")
   -key string
         [http] Key file {VITH_KEY}
+  -loggerJson
+        [logger] Log format as JSON {VITH_LOGGER_JSON}
+  -loggerLevel string
+        [logger] Logger level {VITH_LOGGER_LEVEL} (default "INFO")
+  -loggerLevelKey string
+        [logger] Key for level in JSON {VITH_LOGGER_LEVEL_KEY} (default "level")
+  -loggerMessageKey string
+        [logger] Key for message in JSON {VITH_LOGGER_MESSAGE_KEY} (default "message")
+  -loggerTimeKey string
+        [logger] Key for timestam in JSON {VITH_LOGGER_TIME_KEY} (default "time")
   -okStatus int
         [http] Healthy HTTP Status code {VITH_OK_STATUS} (default 204)
   -port uint

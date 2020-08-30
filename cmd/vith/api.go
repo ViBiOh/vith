@@ -15,10 +15,12 @@ func main() {
 
 	serverConfig := httputils.Flags(fs, "")
 	alcotestConfig := alcotest.Flags(fs, "")
+	loggerConfig := logger.Flags(fs, "logger")
 
 	logger.Fatal(fs.Parse(os.Args[1:]))
 
 	alcotest.DoAndExit(alcotestConfig)
+	logger.Global(logger.New(loggerConfig))
 
 	server := httputils.New(serverConfig)
 	server.ListenServeWait(vith.Handler())
