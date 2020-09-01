@@ -35,7 +35,7 @@ Usage of vith:
   -loggerMessageKey string
         [logger] Key for message in JSON {VITH_LOGGER_MESSAGE_KEY} (default "message")
   -loggerTimeKey string
-        [logger] Key for timestam in JSON {VITH_LOGGER_TIME_KEY} (default "time")
+        [logger] Key for timestamp in JSON {VITH_LOGGER_TIME_KEY} (default "time")
   -okStatus int
         [http] Healthy HTTP Status code {VITH_OK_STATUS} (default 204)
   -port uint
