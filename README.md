@@ -23,7 +23,7 @@ Usage of vith:
   -cert string
         [http] Certificate file {VITH_CERT}
   -graceDuration string
-        [http] Grace duration when SIGTERM received {VITH_GRACE_DURATION} (default "15s")
+        [http] Grace duration when SIGTERM received {VITH_GRACE_DURATION} (default "30s")
   -key string
         [http] Key file {VITH_KEY}
   -loggerJson
