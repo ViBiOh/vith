@@ -23,6 +23,5 @@ func main() {
 	logger.Global(logger.New(loggerConfig))
 	defer logger.Close()
 
-	server := httputils.New(serverConfig)
-	server.ListenServeWait(vith.Handler())
+	httputils.New(serverConfig).ListenAndServe(vith.Handler(), nil)
 }
