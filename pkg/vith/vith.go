@@ -23,12 +23,18 @@ type App interface {
 // Handler for request. Should be use with net/http
 func Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
 		name := sha(time.Now())
 		inputName := fmt.Sprintf("/tmp/input_%s", name)
 		outputName := fmt.Sprintf("/tmp/output_%s.jpeg", name)
 		copyBuffer := make([]byte, 32*1024)
 
 		inputFile, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+		defer cleanFile(inputName, inputFile)
 		if err != nil {
 			httperror.InternalServerError(w, err)
 			return
@@ -45,7 +51,10 @@ func Handler() http.Handler {
 		cmd.Stdout = &out
 		cmd.Stderr = &out
 
-		if err := cmd.Run(); err != nil {
+		err = cmd.Run()
+		defer cleanFile(outputName, nil)
+
+		if err != nil {
 			httperror.InternalServerError(w, err)
 			logger.Error("%s", out.String())
 			return
@@ -61,11 +70,19 @@ func Handler() http.Handler {
 		if _, err := io.CopyBuffer(w, thumbnail, copyBuffer); err != nil {
 			logger.Error("%s", err)
 		}
-
-		if err := os.Remove(outputName); err != nil {
-			logger.Error("%s", err)
-		}
 	})
+}
+
+func cleanFile(name string, file *os.File) {
+	if file != nil {
+		if err := file.Close(); err != nil {
+			logger.Warn("unable to close file %s: %s", name, err)
+		}
+	}
+
+	if err := os.Remove(name); err != nil {
+		logger.Warn("unable to remove file %s: %s", name, err)
+	}
 }
 
 func sha(o interface{}) string {
