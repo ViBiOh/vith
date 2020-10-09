@@ -1,0 +1,16 @@
+---
+nameOverride: vith
+
+image:
+  repository: vibioh/vith
+
+config:
+  VITH_LOGGER_JSON: "true"
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 1G
+  requests:
+    cpu: 100m
+    memory: 1G
