@@ -16,3 +16,6 @@ resources:
   requests:
     cpu: 100m
     memory: 1G
+
+autoscaling:
+  enabled: false
