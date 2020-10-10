@@ -1,8 +1,5 @@
 FROM linuxserver/ffmpeg
 
-ENV VITH_READ_TIMEOUT 1m
-ENV VITH_WRITE_TIMEOUT 1m
-
 EXPOSE 1080
 
 HEALTHCHECK --retries=10 CMD [ "/vith", "-url", "http://localhost:1080/health" ]

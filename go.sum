@@ -1,6 +1,6 @@
 github.com/DATA-DOG/go-sqlmock v1.5.0/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
-github.com/ViBiOh/httputils/v3 v3.31.2 h1:FrgiviSJ/+k35rsBRlK4ku+w3vZyaOgzsFvUQr+HCb4=
-github.com/ViBiOh/httputils/v3 v3.31.2/go.mod h1:IbxKsKy648CmB0UfYloWRDh4pdENvT/s8JiWgYiuLqs=
+github.com/ViBiOh/httputils/v3 v3.32.0 h1:S1NwU8cmsV3F9/naHf2v6TPfbL5PvkMfjXh0eNW9BOc=
+github.com/ViBiOh/httputils/v3 v3.32.0/go.mod h1:IbxKsKy648CmB0UfYloWRDh4pdENvT/s8JiWgYiuLqs=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
