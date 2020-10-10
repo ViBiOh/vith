@@ -6,8 +6,6 @@ image:
 
 config:
   VITH_LOGGER_JSON: "true"
-  VITH_READ_TIMEOUT: "1m"
-  VITH_WRITE_TIMEOUT: "1m"
 
 resources:
   limits:
