@@ -45,7 +45,7 @@ Usage of vith:
   -prometheusPath string
         [prometheus] Path for exposing metrics {VITH_PROMETHEUS_PATH} (default "/metrics")
   -readTimeout string
-        [http] Read Timeout {VITH_READ_TIMEOUT} (default "5s")
+        [http] Read Timeout {VITH_READ_TIMEOUT} (default "1m")
   -shutdownTimeout string
         [http] Shutdown Timeout {VITH_SHUTDOWN_TIMEOUT} (default "10s")
   -url string
@@ -53,5 +53,5 @@ Usage of vith:
   -userAgent string
         [alcotest] User-Agent for check {VITH_USER_AGENT} (default "Alcotest")
   -writeTimeout string
-        [http] Write Timeout {VITH_WRITE_TIMEOUT} (default "10s")
+        [http] Write Timeout {VITH_WRITE_TIMEOUT} (default "1m")
 ```
