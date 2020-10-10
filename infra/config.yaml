@@ -15,5 +15,8 @@ resources:
     cpu: 100m
     memory: 1G
 
+strategy:
+  type: Recreate
+
 autoscaling:
   enabled: false
