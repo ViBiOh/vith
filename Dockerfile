@@ -13,5 +13,5 @@ VOLUME /tmp
 ARG TARGETOS
 ARG TARGETARCH
 
-COPY cacert.pem /etc/ssl/certs/ca-certificates.crt
+COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY release/vith_${TARGETOS}_${TARGETARCH} /vith
