@@ -5,14 +5,16 @@ updates:
   - package-ecosystem: gomod
     directory: /
     schedule:
-      interval: daily
+      interval: weekly
+      day: sunday
     commit-message:
       prefix: chore
       include: scope
   - package-ecosystem: docker
     directory: /
     schedule:
-      interval: daily
+      interval: weekly
+      day: sunday
     commit-message:
       prefix: chore
       include: scope
