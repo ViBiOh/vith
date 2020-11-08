@@ -42,6 +42,8 @@ Usage of vith:
         [http] Healthy HTTP Status code {VITH_OK_STATUS} (default 204)
   -port uint
         [http] Listen port {VITH_PORT} (default 1080)
+  -prometheusIgnore string
+        [prometheus] Ignored path prefixes for metrics, comma separated {VITH_PROMETHEUS_IGNORE}
   -prometheusPath string
         [prometheus] Path for exposing metrics {VITH_PROMETHEUS_PATH} (default "/metrics")
   -readTimeout string
