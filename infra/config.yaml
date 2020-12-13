@@ -1,4 +1,3 @@
----
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
@@ -15,16 +14,12 @@ spec:
         name: vibioh
         namespace: flux-system
       interval: 120m
-
   values:
     nameOverride: vith
-
     image:
-      repository: vibioh/vith # {"$imagepolicy": "default:vith"}
-
+      repository: vibioh/vith:latest # {"$imagepolicy": "default:vith"}
     config:
       VITH_LOGGER_JSON: "true"
-
     resources:
       limits:
         cpu: 100m
@@ -32,6 +27,5 @@ spec:
       requests:
         cpu: 100m
         memory: 100Mi
-
     autoscaling:
       enabled: false
