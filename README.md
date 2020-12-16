@@ -5,6 +5,25 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ViBiOh/vith)](https://goreportcard.com/report/github.com/ViBiOh/vith)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ViBiOh_vith&metric=alert_status)](https://sonarcloud.io/dashboard?id=ViBiOh_vith)
 
+## API
+
+The HTTP API is pretty simple :
+
+- GET `/health` returns a status code (by default 204), if everything fine or HTTP/503 if not ready
+- GET `/version` returns the value of the `VERSION` environment variable (by default the sha1 of the git commit), in plain text
+- GET `/metrics` return the Prometheus metrics values
+- POST `/` with the video in payload returns the thumbnail of the video, in binary
+
+### Installation
+
+Golang binary is built with static link. You can download it directly from the [Github Release page](https://github.com/ViBiOh/vith/releases) or build it by yourself by cloning this repo and running `make`.
+
+A Docker image is available for `amd64`, `arm` and `arm64` platforms on Docker Hub: [vibioh/vith](https://hub.docker.com/r/vibioh/vith/tags).
+
+You can configure app by passing CLI args or environment variables (cf. [Usage](#usage) section). CLI override environment variables.
+
+You'll find a Kubernetes exemple in the [`infra/`](infra/) folder, using my [`app chart`](https://github.com/ViBiOh/charts/tree/master/app)
+
 ## CI
 
 Following variables are required for CI:
