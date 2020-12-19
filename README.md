@@ -9,10 +9,10 @@
 
 The HTTP API is pretty simple :
 
-- GET `/health` returns a status code (by default 204), if everything fine or HTTP/503 if not ready
-- GET `/version` returns the value of the `VERSION` environment variable (by default the sha1 of the git commit), in plain text
-- GET `/metrics` return the Prometheus metrics values
-- POST `/` with the video in payload returns the thumbnail of the video, in binary
+- `GET /health`: healthcheck of server, respond [`okStatus (default 204)`](#usage) or `503` during [`graceDuration`](#usage) when SIGTERM is received
+- `GET /version`: value of `VERSION` environment variable
+- `GET /metrics`: Prometheus metrics values
+- `POST /`: generate thumbnail of the video passed in payload in binary
 
 ### Installation
 
