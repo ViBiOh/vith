@@ -11,8 +11,8 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/ViBiOh/httputils/v3/pkg/httperror"
-	"github.com/ViBiOh/httputils/v3/pkg/logger"
+	"github.com/ViBiOh/httputils/v4/pkg/httperror"
+	"github.com/ViBiOh/httputils/v4/pkg/logger"
 )
 
 // App of package
