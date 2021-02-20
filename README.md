@@ -11,7 +11,7 @@ The HTTP API is pretty simple :
 
 - `GET /health`: healthcheck of server, respond [`okStatus (default 204)`](#usage) or `503` during [`graceDuration`](#usage) when SIGTERM is received
 - `GET /version`: value of `VERSION` environment variable
-- `GET /metrics`: Prometheus metrics values
+- `GET /metrics`: Prometheus metrics values on a dedicated port
 - `POST /`: generate thumbnail of the video passed in payload in binary
 
 ### Installation
@@ -38,15 +38,15 @@ Following variables are required for CI:
 ```bash
 Usage of vith:
   -address string
-        [http] Listen address {VITH_ADDRESS}
+        [server] Listen address {VITH_ADDRESS}
   -cert string
-        [http] Certificate file {VITH_CERT}
+        [server] Certificate file {VITH_CERT}
   -graceDuration string
         [http] Grace duration when SIGTERM received {VITH_GRACE_DURATION} (default "30s")
   -idleTimeout string
-        [http] Idle Timeout {VITH_IDLE_TIMEOUT} (default "2m")
+        [server] Idle Timeout {VITH_IDLE_TIMEOUT} (default "2m")
   -key string
-        [http] Key file {VITH_KEY}
+        [server] Key file {VITH_KEY}
   -loggerJson
         [logger] Log format as JSON {VITH_LOGGER_JSON}
   -loggerLevel string
@@ -60,19 +60,33 @@ Usage of vith:
   -okStatus int
         [http] Healthy HTTP Status code {VITH_OK_STATUS} (default 204)
   -port uint
-        [http] Listen port {VITH_PORT} (default 1080)
+        [server] Listen port {VITH_PORT} (default 1080)
+  -prometheusAddress string
+        [prometheus] Listen address {VITH_PROMETHEUS_ADDRESS}
+  -prometheusCert string
+        [prometheus] Certificate file {VITH_PROMETHEUS_CERT}
+  -prometheusIdleTimeout string
+        [prometheus] Idle Timeout {VITH_PROMETHEUS_IDLE_TIMEOUT} (default "10s")
   -prometheusIgnore string
         [prometheus] Ignored path prefixes for metrics, comma separated {VITH_PROMETHEUS_IGNORE}
-  -prometheusPath string
-        [prometheus] Path for exposing metrics {VITH_PROMETHEUS_PATH} (default "/metrics")
+  -prometheusKey string
+        [prometheus] Key file {VITH_PROMETHEUS_KEY}
+  -prometheusPort uint
+        [prometheus] Listen port {VITH_PROMETHEUS_PORT} (default 9090)
+  -prometheusReadTimeout string
+        [prometheus] Read Timeout {VITH_PROMETHEUS_READ_TIMEOUT} (default "5s")
+  -prometheusShutdownTimeout string
+        [prometheus] Shutdown Timeout {VITH_PROMETHEUS_SHUTDOWN_TIMEOUT} (default "5s")
+  -prometheusWriteTimeout string
+        [prometheus] Write Timeout {VITH_PROMETHEUS_WRITE_TIMEOUT} (default "10s")
   -readTimeout string
-        [http] Read Timeout {VITH_READ_TIMEOUT} (default "2m")
+        [server] Read Timeout {VITH_READ_TIMEOUT} (default "2m")
   -shutdownTimeout string
-        [http] Shutdown Timeout {VITH_SHUTDOWN_TIMEOUT} (default "10s")
+        [server] Shutdown Timeout {VITH_SHUTDOWN_TIMEOUT} (default "10s")
   -url string
         [alcotest] URL to check {VITH_URL}
   -userAgent string
         [alcotest] User-Agent for check {VITH_USER_AGENT} (default "Alcotest")
   -writeTimeout string
-        [http] Write Timeout {VITH_WRITE_TIMEOUT} (default "2m")
+        [server] Write Timeout {VITH_WRITE_TIMEOUT} (default "2m")
 ```
