@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
@@ -21,7 +22,7 @@ type App interface {
 }
 
 // Handler for request. Should be use with net/http
-func Handler() http.Handler {
+func Handler(tmpFolder string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -29,8 +30,8 @@ func Handler() http.Handler {
 		}
 
 		name := sha(time.Now())
-		inputName := fmt.Sprintf("/tmp/input_%s", name)
-		outputName := fmt.Sprintf("/tmp/output_%s.jpeg", name)
+		inputName := path.Join(tmpFolder, fmt.Sprintf("input_%s", name))
+		outputName := path.Join(tmpFolder, fmt.Sprintf("output_%s.jpeg", name))
 		copyBuffer := make([]byte, 32*1024)
 
 		inputFile, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
