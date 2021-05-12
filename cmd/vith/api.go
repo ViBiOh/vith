@@ -20,6 +20,7 @@ func main() {
 	appServerConfig := server.Flags(fs, "", flags.NewOverride("ReadTimeout", "2m"), flags.NewOverride("WriteTimeout", "2m"))
 	promServerConfig := server.Flags(fs, "prometheus", flags.NewOverride("Port", 9090), flags.NewOverride("IdleTimeout", "10s"), flags.NewOverride("ShutdownTimeout", "5s"))
 	healthConfig := health.Flags(fs, "")
+	tmpFolder := flags.New("", "vith").Name("TmpFolder").Default("/tmp").Label("Folder used for temporary files storage").ToString(fs)
 
 	alcotestConfig := alcotest.Flags(fs, "")
 	loggerConfig := logger.Flags(fs, "logger")
@@ -37,7 +38,7 @@ func main() {
 	healthApp := health.New(healthConfig)
 
 	go promServer.Start("prometheus", healthApp.End(), prometheusApp.Handler())
-	go appServer.Start("http", healthApp.End(), httputils.Handler(vith.Handler(), healthApp, prometheusApp.Middleware))
+	go appServer.Start("http", healthApp.End(), httputils.Handler(vith.Handler(*tmpFolder), healthApp, prometheusApp.Middleware))
 
 	healthApp.WaitForTermination(appServer.Done())
 	server.GracefulWait(appServer.Done(), promServer.Done())

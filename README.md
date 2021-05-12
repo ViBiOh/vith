@@ -84,6 +84,8 @@ Usage of vith:
         [server] Read Timeout {VITH_READ_TIMEOUT} (default "2m")
   -shutdownTimeout string
         [server] Shutdown Timeout {VITH_SHUTDOWN_TIMEOUT} (default "10s")
+  -tmpFolder string
+        [vith] Folder used for temporary files storage {VITH_TMP_FOLDER} (default "/tmp")
   -url string
         [alcotest] URL to check {VITH_URL}
   -userAgent string
