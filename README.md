@@ -2,7 +2,6 @@
 
 [![Build](https://github.com/ViBiOh/vith/workflows/Build/badge.svg)](https://github.com/ViBiOh/vith/actions)
 [![codecov](https://codecov.io/gh/ViBiOh/vith/branch/main/graph/badge.svg)](https://codecov.io/gh/ViBiOh/vith)
-[![Go Report Card](https://goreportcard.com/badge/github.com/ViBiOh/vith)](https://goreportcard.com/report/github.com/ViBiOh/vith)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ViBiOh_vith&metric=alert_status)](https://sonarcloud.io/dashboard?id=ViBiOh_vith)
 
 ## API
