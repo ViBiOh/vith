@@ -10,6 +10,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/httputils"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/prometheus"
+	"github.com/ViBiOh/httputils/v4/pkg/recoverer"
 	"github.com/ViBiOh/httputils/v4/pkg/server"
 	"github.com/ViBiOh/vith/pkg/vith"
 )
@@ -38,7 +39,7 @@ func main() {
 	healthApp := health.New(healthConfig)
 
 	go promServer.Start("prometheus", healthApp.End(), prometheusApp.Handler())
-	go appServer.Start("http", healthApp.End(), httputils.Handler(vith.Handler(*tmpFolder), healthApp, prometheusApp.Middleware))
+	go appServer.Start("http", healthApp.End(), httputils.Handler(vith.Handler(*tmpFolder), healthApp, recoverer.Middleware, prometheusApp.Middleware))
 
 	healthApp.WaitForTermination(appServer.Done())
 	server.GracefulWait(appServer.Done(), promServer.Done())
