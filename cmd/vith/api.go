@@ -2,8 +2,6 @@ package main
 
 import (
 	"flag"
-	"net/http"
-	_ "net/http/pprof"
 	"os"
 
 	"github.com/ViBiOh/httputils/v4/pkg/alcotest"
@@ -22,7 +20,6 @@ func main() {
 
 	appServerConfig := server.Flags(fs, "", flags.NewOverride("ReadTimeout", "2m"), flags.NewOverride("WriteTimeout", "2m"))
 	promServerConfig := server.Flags(fs, "prometheus", flags.NewOverride("Port", 9090), flags.NewOverride("IdleTimeout", "10s"), flags.NewOverride("ShutdownTimeout", "5s"))
-	pprofServerConfig := server.Flags(fs, "pprof", flags.NewOverride("Port", 9999))
 	healthConfig := health.Flags(fs, "")
 
 	tmpFolder := flags.New("", "vith").Name("TmpFolder").Default("/tmp").Label("Folder used for temporary files storage").ToString(fs)
@@ -39,11 +36,9 @@ func main() {
 
 	appServer := server.New(appServerConfig)
 	promServer := server.New(promServerConfig)
-	pprofServer := server.New(pprofServerConfig)
 	prometheusApp := prometheus.New(prometheusConfig)
 	healthApp := health.New(healthConfig)
 
-	go pprofServer.Start("pprof", healthApp.End(), http.DefaultServeMux)
 	go promServer.Start("prometheus", healthApp.End(), prometheusApp.Handler())
 	go appServer.Start("http", healthApp.End(), httputils.Handler(vith.Handler(*tmpFolder), healthApp, recoverer.Middleware, prometheusApp.Middleware))
 
