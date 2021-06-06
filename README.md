@@ -60,11 +60,13 @@ Usage of vith:
   -okStatus int
         [http] Healthy HTTP Status code {VITH_OK_STATUS} (default 204)
   -port uint
-        [server] Listen port {VITH_PORT} (default 1080)
+        [server] Listen port (0 to disable) {VITH_PORT} (default 1080)
   -prometheusAddress string
         [prometheus] Listen address {VITH_PROMETHEUS_ADDRESS}
   -prometheusCert string
         [prometheus] Certificate file {VITH_PROMETHEUS_CERT}
+  -prometheusGzip
+        [prometheus] Enable gzip compression of metrics output {VITH_PROMETHEUS_GZIP}
   -prometheusIdleTimeout string
         [prometheus] Idle Timeout {VITH_PROMETHEUS_IDLE_TIMEOUT} (default "10s")
   -prometheusIgnore string
@@ -72,7 +74,7 @@ Usage of vith:
   -prometheusKey string
         [prometheus] Key file {VITH_PROMETHEUS_KEY}
   -prometheusPort uint
-        [prometheus] Listen port {VITH_PROMETHEUS_PORT} (default 9090)
+        [prometheus] Listen port (0 to disable) {VITH_PROMETHEUS_PORT} (default 9090)
   -prometheusReadTimeout string
         [prometheus] Read Timeout {VITH_PROMETHEUS_READ_TIMEOUT} (default "5s")
   -prometheusShutdownTimeout string
