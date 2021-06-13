@@ -10,10 +10,19 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"sync"
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
+)
+
+var (
+	bufferPool = sync.Pool{
+		New: func() interface{} {
+			return bytes.NewBuffer(make([]byte, 32*1024))
+		},
+	}
 )
 
 // App of package
@@ -32,7 +41,6 @@ func Handler(tmpFolder string) http.Handler {
 		name := sha(time.Now())
 		inputName := path.Join(tmpFolder, fmt.Sprintf("input_%s", name))
 		outputName := path.Join(tmpFolder, fmt.Sprintf("output_%s.jpeg", name))
-		copyBuffer := make([]byte, 32*1024)
 
 		inputFile, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 		defer cleanFile(inputName, inputFile)
@@ -41,7 +49,10 @@ func Handler(tmpFolder string) http.Handler {
 			return
 		}
 
-		if _, err := io.CopyBuffer(inputFile, r.Body, copyBuffer); err != nil {
+		buffer := bufferPool.Get().(*bytes.Buffer)
+		defer bufferPool.Put(buffer)
+
+		if _, err := io.CopyBuffer(inputFile, r.Body, buffer.Bytes()); err != nil {
 			httperror.InternalServerError(w, err)
 			return
 		}
@@ -68,7 +79,7 @@ func Handler(tmpFolder string) http.Handler {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		if _, err := io.CopyBuffer(w, thumbnail, copyBuffer); err != nil {
+		if _, err := io.CopyBuffer(w, thumbnail, buffer.Bytes()); err != nil {
 			logger.Error("%s", err)
 		}
 	})
