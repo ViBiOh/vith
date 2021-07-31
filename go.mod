@@ -2,4 +2,4 @@ module github.com/ViBiOh/vith
 
 go 1.16
 
-require github.com/ViBiOh/httputils/v4 v4.17.1
+require github.com/ViBiOh/httputils/v4 v4.18.0
