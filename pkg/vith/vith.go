@@ -25,11 +25,6 @@ var (
 	}
 )
 
-// App of package
-type App interface {
-	Handler() http.Handler
-}
-
 // Handler for request. Should be use with net/http
 func Handler(tmpFolder string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
