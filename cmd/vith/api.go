@@ -22,7 +22,7 @@ func main() {
 	promServerConfig := server.Flags(fs, "prometheus", flags.NewOverride("Port", 9090), flags.NewOverride("IdleTimeout", "10s"), flags.NewOverride("ShutdownTimeout", "5s"))
 	healthConfig := health.Flags(fs, "")
 
-	tmpFolder := flags.New("", "vith").Name("TmpFolder").Default("/tmp").Label("Folder used for temporary files storage").ToString(fs)
+	tmpFolder := flags.New("", "vith", "TmpFolder").Default("/tmp", nil).Label("Folder used for temporary files storage").ToString(fs)
 
 	alcotestConfig := alcotest.Flags(fs, "")
 	loggerConfig := logger.Flags(fs, "logger")
