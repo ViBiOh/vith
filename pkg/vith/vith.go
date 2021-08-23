@@ -38,21 +38,22 @@ func Handler(tmpFolder string) http.Handler {
 		outputName := path.Join(tmpFolder, fmt.Sprintf("output_%s.jpeg", name))
 
 		inputFile, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-		defer cleanFile(inputName, inputFile)
 		if err != nil {
 			httperror.InternalServerError(w, err)
 			return
 		}
 
-		buffer := bufferPool.Get().(*bytes.Buffer)
-		defer bufferPool.Put(buffer)
+		defer cleanFile(inputName, nil)
 
-		if _, err := io.CopyBuffer(inputFile, r.Body, buffer.Bytes()); err != nil {
+		if err := loadFile(inputFile, r); err != nil {
 			httperror.InternalServerError(w, err)
 			return
 		}
 
 		cmd := exec.Command("ffmpeg", "-i", inputName, "-vf", "thumbnail", "-frames:v", "1", outputName)
+
+		buffer := bufferPool.Get().(*bytes.Buffer)
+		defer bufferPool.Put(buffer)
 
 		buffer.Reset()
 		cmd.Stdout = buffer
@@ -80,6 +81,32 @@ func Handler(tmpFolder string) http.Handler {
 			logger.Error("unable to copy file: %s", err)
 		}
 	})
+}
+
+func loadFile(writer io.WriteCloser, r *http.Request) (err error) {
+	defer func() {
+		if closeErr := r.Body.Close(); closeErr != nil {
+			if err == nil {
+				err = closeErr
+			} else {
+				err = fmt.Errorf("%s: %w", err, closeErr)
+			}
+		}
+
+		if closeErr := writer.Close(); closeErr != nil {
+			if err == nil {
+				err = closeErr
+			} else {
+				err = fmt.Errorf("%s: %w", err, closeErr)
+			}
+		}
+	}()
+
+	buffer := bufferPool.Get().(*bytes.Buffer)
+	defer bufferPool.Put(buffer)
+
+	_, err = io.CopyBuffer(writer, r.Body, buffer.Bytes())
+	return
 }
 
 func cleanFile(name string, file *os.File) {
