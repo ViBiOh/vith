@@ -54,20 +54,22 @@ func Handler(tmpFolder string) http.Handler {
 
 		cmd := exec.Command("ffmpeg", "-i", inputName, "-vf", "thumbnail", "-frames:v", "1", outputName)
 
-		var out bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &out
+		buffer.Reset()
+		cmd.Stdout = buffer
+		cmd.Stderr = buffer
 
 		err = cmd.Run()
-		defer cleanFile(outputName, nil)
+
+		var thumbnail *os.File
+		defer cleanFile(outputName, thumbnail)
 
 		if err != nil {
 			httperror.InternalServerError(w, err)
-			logger.Error("%s", out.String())
+			logger.Error("%s", buffer.String())
 			return
 		}
 
-		thumbnail, err := os.OpenFile(outputName, os.O_RDONLY, 0600)
+		thumbnail, err = os.OpenFile(outputName, os.O_RDONLY, 0600)
 		if err != nil {
 			httperror.InternalServerError(w, err)
 			return
@@ -75,7 +77,7 @@ func Handler(tmpFolder string) http.Handler {
 
 		w.WriteHeader(http.StatusOK)
 		if _, err := io.CopyBuffer(w, thumbnail, buffer.Bytes()); err != nil {
-			logger.Error("%s", err)
+			logger.Error("unable to copy file: %s", err)
 		}
 	})
 }
