@@ -4,15 +4,14 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
-	"path"
 	"sync"
-	"time"
 
+	"github.com/ViBiOh/httputils/v4/pkg/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 )
@@ -25,75 +24,57 @@ var (
 	}
 )
 
+// App of package
+type App struct {
+	tmpFolder  string
+	workingDir string
+}
+
+// Config of package
+type Config struct {
+	tmpFolder  *string
+	workingDir *string
+}
+
+// Flags adds flags for configuring package
+func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
+	return Config{
+		tmpFolder:  flags.New(prefix, "vith", "TmpFolder").Default("/tmp", overrides).Label("Folder used for temporary files storage").ToString(fs),
+		workingDir: flags.New(prefix, "vith", "WorkDir").Default("", overrides).Label("Working directory for GET requests").ToString(fs),
+	}
+}
+
+// New creates new App from Config
+func New(config Config) App {
+	return App{
+		tmpFolder:  *config.tmpFolder,
+		workingDir: *config.workingDir,
+	}
+}
+
 // Handler for request. Should be use with net/http
-func Handler(tmpFolder string) http.Handler {
+func (a App) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
+		switch r.Method {
+		case http.MethodPost:
+			a.handlePost(w, r)
+		case http.MethodGet:
+			a.handleGet(w, r)
+		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-
-		name := sha(time.Now())
-		inputName := path.Join(tmpFolder, fmt.Sprintf("input_%s", name))
-		outputName := path.Join(tmpFolder, fmt.Sprintf("output_%s.jpeg", name))
-
-		inputFile, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-		if err != nil {
-			httperror.InternalServerError(w, err)
-			return
-		}
-
-		defer cleanFile(inputName, nil)
-
-		if err := loadFile(inputFile, r); err != nil {
-			httperror.InternalServerError(w, err)
-			return
-		}
-
-		cmd := exec.Command("ffmpeg", "-i", inputName, "-vf", "thumbnail", "-frames:v", "1", outputName)
-
-		buffer := bufferPool.Get().(*bytes.Buffer)
-		defer bufferPool.Put(buffer)
-
-		buffer.Reset()
-		cmd.Stdout = buffer
-		cmd.Stderr = buffer
-
-		err = cmd.Run()
-
-		var thumbnail *os.File
-		defer cleanFile(outputName, thumbnail)
-
-		if err != nil {
-			httperror.InternalServerError(w, err)
-			logger.Error("%s", buffer.String())
-			return
-		}
-
-		thumbnail, err = os.OpenFile(outputName, os.O_RDONLY, 0600)
-		if err != nil {
-			httperror.InternalServerError(w, err)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		if _, err := io.CopyBuffer(w, thumbnail, buffer.Bytes()); err != nil {
-			logger.Error("unable to copy file: %s", err)
 		}
 	})
 }
 
-func loadFile(writer io.WriteCloser, r *http.Request) (err error) {
-	defer func() {
-		if closeErr := r.Body.Close(); closeErr != nil {
-			if err == nil {
-				err = closeErr
-			} else {
-				err = fmt.Errorf("%s: %w", err, closeErr)
-			}
-		}
+func answerFile(w http.ResponseWriter, filename string) {
+	thumbnail, err := os.OpenFile(filename, os.O_RDONLY, 0600)
+	if err != nil {
+		httperror.InternalServerError(w, err)
+		return
+	}
 
-		if closeErr := writer.Close(); closeErr != nil {
+	defer func() {
+		if closeErr := thumbnail.Close(); closeErr != nil {
 			if err == nil {
 				err = closeErr
 			} else {
@@ -105,17 +86,13 @@ func loadFile(writer io.WriteCloser, r *http.Request) (err error) {
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
 
-	_, err = io.CopyBuffer(writer, r.Body, buffer.Bytes())
-	return
+	w.WriteHeader(http.StatusOK)
+	if _, err := io.CopyBuffer(w, thumbnail, buffer.Bytes()); err != nil {
+		logger.Error("unable to copy file: %s", err)
+	}
 }
 
-func cleanFile(name string, file *os.File) {
-	if file != nil {
-		if err := file.Close(); err != nil {
-			logger.Warn("unable to close file %s: %s", name, err)
-		}
-	}
-
+func cleanFile(name string) {
 	if err := os.Remove(name); err != nil {
 		logger.Warn("unable to remove file %s: %s", name, err)
 	}
