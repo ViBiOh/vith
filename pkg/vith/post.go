@@ -33,7 +33,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cmd := exec.Command("ffmpeg", "-i", inputName, "-vf", "thumbnail", "-frames:v", "1", outputName)
+	cmd := exec.Command("ffmpeg", "-i", inputName, "-ss", "00:00:01", "-frames:v", "1", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)

@@ -23,9 +23,10 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	inputName := filepath.Join(a.workingDir, r.URL.Path)
 	outputName := path.Join(a.tmpFolder, fmt.Sprintf("output_%s.jpeg", name))
 
-	cmd := exec.Command("ffmpeg", "-i", filepath.Join(a.workingDir, r.URL.Path), "-vf", "thumbnail", "-frames:v", "1", outputName)
+	cmd := exec.Command("ffmpeg", "-i", inputName, "-ss", "00:00:01", "-frames:v", "1", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
