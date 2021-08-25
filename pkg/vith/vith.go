@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"sync"
 
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
@@ -66,8 +67,27 @@ func (a App) Handler() http.Handler {
 	})
 }
 
-func answerFile(w http.ResponseWriter, filename string) {
-	thumbnail, err := os.OpenFile(filename, os.O_RDONLY, 0600)
+func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
+	cmd := exec.Command("ffmpeg", "-i", inputName, "-ss", "00:00:01", "-frames:v", "1", outputName)
+
+	buffer := bufferPool.Get().(*bytes.Buffer)
+	defer bufferPool.Put(buffer)
+
+	buffer.Reset()
+	cmd.Stdout = buffer
+	cmd.Stderr = buffer
+
+	err := cmd.Run()
+
+	defer cleanFile(outputName)
+
+	if err != nil {
+		httperror.InternalServerError(w, err)
+		logger.Error("%s", buffer.String())
+		return
+	}
+
+	thumbnail, err := os.OpenFile(outputName, os.O_RDONLY, 0600)
 	if err != nil {
 		httperror.InternalServerError(w, err)
 		return
@@ -82,9 +102,6 @@ func answerFile(w http.ResponseWriter, filename string) {
 			}
 		}
 	}()
-
-	buffer := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buffer)
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := io.CopyBuffer(w, thumbnail, buffer.Bytes()); err != nil {
@@ -102,10 +119,7 @@ func sha(o interface{}) string {
 	hasher := sha1.New()
 
 	// no err check https://golang.org/pkg/hash/#Hash
-	if _, err := hasher.Write([]byte(fmt.Sprintf("%#v", o))); err != nil {
-		logger.Error("%s", err)
-		return ""
-	}
+	_, _ = hasher.Write([]byte(fmt.Sprintf("%#v", o)))
 
 	return hex.EncodeToString(hasher.Sum(nil))
 }
