@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
@@ -130,7 +131,7 @@ func getContainerDuration(name string) (float64, error) {
 		return 0.0, fmt.Errorf("ffmpeg error `%s`: %s", err, buffer.String())
 	}
 
-	output := buffer.String()
+	output := strings.Trim(buffer.String(), "\n")
 
 	duration, err := strconv.ParseFloat(output, 64)
 	if err != nil {
