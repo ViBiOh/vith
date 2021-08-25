@@ -69,7 +69,13 @@ func (a App) Handler() http.Handler {
 }
 
 func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
-	cmd := exec.Command("ffmpeg", "-ss", "00:00:01.000", "-i", inputName, "-frames:v", "1", outputName)
+	duration, err := getContainerDuration(inputName)
+	if err != nil {
+		logger.Error("unable to get container duration: %s", err)
+		duration = 02 // so we take the first second
+	}
+
+	cmd := exec.Command("ffmpeg", "-ss", fmt.Sprintf("%.3f", duration/2), "-i", inputName, "-frames:v", "1", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
@@ -78,7 +84,7 @@ func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
 	cmd.Stdout = buffer
 	cmd.Stderr = buffer
 
-	err := cmd.Run()
+	err = cmd.Run()
 
 	defer cleanFile(outputName)
 
