@@ -68,7 +68,7 @@ func (a App) Handler() http.Handler {
 }
 
 func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
-	cmd := exec.Command("ffmpeg", "-i", inputName, "-ss", "00:00:01", "-frames:v", "1", outputName)
+	cmd := exec.Command("ffmpeg", "-ss", "00:00:01.000", "-i", inputName, "-frames:v", "1", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
