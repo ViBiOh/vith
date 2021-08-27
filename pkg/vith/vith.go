@@ -59,10 +59,12 @@ func New(config Config) App {
 func (a App) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case http.MethodPost:
-			a.handlePost(w, r)
 		case http.MethodGet:
 			a.handleGet(w, r)
+		case http.MethodPost:
+			a.handlePost(w, r)
+		case http.MethodPut:
+			a.handlePut(w, r)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
