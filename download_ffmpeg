@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+set -o nounset -o pipefail -o errexit
+
+script_dir() {
+  local FILE_SOURCE="${BASH_SOURCE[0]}"
+
+  if [[ -L ${FILE_SOURCE} ]]; then
+    dirname "$(readlink "${FILE_SOURCE}")"
+  else
+    (
+      cd "$(dirname "${FILE_SOURCE}")" && pwd
+    )
+  fi
+}
+
+main() {
+  source "$(script_dir)/scripts/meta" && meta_init "var"
+  var_color
+
+  local DESTINATION_FOLDER="ffmpeg"
+
+  rm -rf "${DESTINATION_FOLDER:?}/"
+
+  for arch in amd64 arm64 armhf; do
+    local ARCHIVE_NAME="ffmpeg-git-${arch}-static.tar.xz"
+
+    local DESTINATION_ARCH="${arch}"
+    if [[ ${DESTINATION_ARCH} == "armhf" ]]; then
+      DESTINATION_ARCH="arm"
+    fi
+
+    local TARGET_NAME="${DESTINATION_FOLDER}/linux/${DESTINATION_ARCH}"
+
+    var_info "Downloading static ffmpeg for linux/${arch}"
+
+    curl --disable --silent --show-error --location --max-time 300 --remote-name "https://johnvansickle.com/ffmpeg/builds/${ARCHIVE_NAME}"
+    mkdir -p "${TARGET_NAME}"
+    tar -xf "${ARCHIVE_NAME}" -C "${TARGET_NAME}" --strip 1
+    rm -rf "${ARCHIVE_NAME}"
+  done
+}
+
+main "${@}"
