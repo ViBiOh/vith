@@ -3,5 +3,6 @@ scripts/
 
 # Golang
 bin/
+ffmpeg/
 coverage.*
 profile.out
