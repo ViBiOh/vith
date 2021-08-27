@@ -1,4 +1,4 @@
-FROM linuxserver/ffmpeg
+FROM alpine
 
 EXPOSE 1080
 
@@ -12,6 +12,9 @@ VOLUME /tmp
 
 ARG TARGETOS
 ARG TARGETARCH
+
+COPY ffmpeg/${TARGETOS}/${TARGETARCH}/ffmpeg /usr/bin/ffmpeg
+COPY ffmpeg/${TARGETOS}/${TARGETARCH}/ffprobe /usr/bin/ffprobe
 
 COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY release/vith_${TARGETOS}_${TARGETARCH} /vith
