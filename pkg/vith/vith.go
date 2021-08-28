@@ -25,8 +25,9 @@ var (
 
 // App of package
 type App struct {
-	tmpFolder  string
-	workingDir string
+	tmpFolder          string
+	workingDir         string
+	streamRequestQueue chan streamRequest
 }
 
 // Config of package
@@ -46,8 +47,9 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 // New creates new App from Config
 func New(config Config) App {
 	return App{
-		tmpFolder:  *config.tmpFolder,
-		workingDir: *config.workingDir,
+		tmpFolder:          *config.tmpFolder,
+		workingDir:         *config.workingDir,
+		streamRequestQueue: make(chan streamRequest, 4),
 	}
 }
 
