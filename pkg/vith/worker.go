@@ -24,7 +24,7 @@ type streamRequest struct {
 func (a App) Start() {
 	defer close(a.streamRequestQueue)
 
-	if len(a.workingDir) == 0 {
+	if !a.hasDirectAccess() {
 		return
 	}
 

@@ -14,6 +14,11 @@ import (
 )
 
 func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
+	if !a.hasDirectAccess() {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 	if strings.Contains(r.URL.Path, "..") {
 		httperror.BadRequest(w, errors.New("path with dots are not allowed"))
 		return
