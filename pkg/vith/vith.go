@@ -65,10 +65,16 @@ func (a App) Handler() http.Handler {
 			a.handlePost(w, r)
 		case http.MethodPut:
 			a.handlePut(w, r)
+		case http.MethodDelete:
+			a.handleDelete(w, r)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
+}
+
+func (a App) hasDirectAccess() bool {
+	return len(a.workingDir) != 0
 }
 
 func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {

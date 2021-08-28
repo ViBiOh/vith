@@ -2,18 +2,14 @@ package vith
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
-	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
-	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
-func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
+func (a App) handleDelete(w http.ResponseWriter, r *http.Request) {
 	if !a.hasDirectAccess() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -24,8 +20,9 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inputName := filepath.Join(a.workingDir, r.URL.Path)
-	outputName := path.Join(a.tmpFolder, fmt.Sprintf("output_%s.jpeg", sha.New(time.Now())))
+	if err := a.cleanStream(filepath.Join(a.workingDir, r.URL.Path)); err != nil {
+		httperror.InternalServerError(w, err)
+	}
 
-	answerThumbnail(w, inputName, outputName)
+	w.WriteHeader(http.StatusNoContent)
 }
