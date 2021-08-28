@@ -55,7 +55,7 @@ func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
 func (a App) generateHLS(inputName, outputFolder string) {
 	outputName := filepath.Join(outputFolder, fmt.Sprintf("%s%s", filepath.Base(inputName), hlsExtension))
 
-	cmd := exec.Command("ffmpeg", "-i", inputName, "-c:v", "libx264", "-c:a", "aac", "-b:a", "128k", "-ac", "2", "-f", "hls", "-hls_time", "4", "-hls_playlist_type", "event", "-hls_flags", "independent_segments", outputName)
+	cmd := exec.Command("ffmpeg", "-i", inputName, "-c:v", "libx264", "-preset", "superfast", "-c:a", "aac", "-b:a", "128k", "-ac", "2", "-f", "hls", "-hls_time", "4", "-hls_playlist_type", "event", "-hls_flags", "independent_segments", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
