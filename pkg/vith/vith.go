@@ -10,8 +10,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
@@ -59,6 +57,8 @@ func New(config Config) App {
 func (a App) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
+		case http.MethodHead:
+			a.handleHead(w, r)
 		case http.MethodGet:
 			a.handleGet(w, r)
 		case http.MethodPost:
@@ -117,30 +117,6 @@ func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
 	if _, err := io.CopyBuffer(w, thumbnail, buffer.Bytes()); err != nil {
 		logger.Error("unable to copy file: %s", err)
 	}
-}
-
-func getContainerDuration(name string) (float64, error) {
-	cmd := exec.Command("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", name)
-
-	buffer := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buffer)
-
-	buffer.Reset()
-	cmd.Stdout = buffer
-	cmd.Stderr = buffer
-
-	if err := cmd.Run(); err != nil {
-		return 0.0, fmt.Errorf("ffmpeg error `%s`: %s", err, buffer.String())
-	}
-
-	output := strings.Trim(buffer.String(), "\n")
-
-	duration, err := strconv.ParseFloat(output, 64)
-	if err != nil {
-		return 0.0, fmt.Errorf("unable to parse duration `%s`: %s", output, err)
-	}
-
-	return duration, nil
 }
 
 func cleanFile(name string) {
