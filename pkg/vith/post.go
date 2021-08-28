@@ -9,10 +9,11 @@ import (
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
+	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
 func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
-	name := sha(time.Now())
+	name := sha.New(time.Now())
 
 	inputName := path.Join(a.tmpFolder, fmt.Sprintf("input_%s", name))
 	outputName := path.Join(a.tmpFolder, fmt.Sprintf("output_%s.jpeg", name))

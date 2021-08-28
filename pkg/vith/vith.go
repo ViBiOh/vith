@@ -2,8 +2,6 @@ package vith
 
 import (
 	"bytes"
-	"crypto/sha1"
-	"encoding/hex"
 	"flag"
 	"fmt"
 	"io"
@@ -123,13 +121,4 @@ func cleanFile(name string) {
 	if err := os.Remove(name); err != nil {
 		logger.Warn("unable to remove file %s: %s", name, err)
 	}
-}
-
-func sha(o interface{}) string {
-	hasher := sha1.New()
-
-	// no err check https://golang.org/pkg/hash/#Hash
-	_, _ = hasher.Write([]byte(fmt.Sprintf("%#v", o)))
-
-	return hex.EncodeToString(hasher.Sum(nil))
 }
