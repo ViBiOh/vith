@@ -38,7 +38,7 @@ spec:
       VITH_WORK_DIR: "/data"
     resources:
       limits:
-        memory: ""
+        memory: "1Gi"
     securityContext:
       runAsGroup: 995
       runAsUser: 999
