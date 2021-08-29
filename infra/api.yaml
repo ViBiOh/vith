@@ -1,0 +1,32 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: vith
+  namespace: default
+spec:
+  interval: 120m
+  chart:
+    spec:
+      chart: app
+      version: "0.0.75"
+      sourceRef:
+        kind: HelmRepository
+        name: vibioh
+      interval: 120m
+  install:
+    crds: Skip
+  maxHistory: 3
+  upgrade:
+    remediation:
+      retries: 3
+  rollback:
+    cleanupOnFail: true
+  values:
+    nameOverride: vith
+    image:
+      name: vibioh/vith
+      tag: "latest" # {"$imagepolicy": "default:flux-vith-api:tag"}
+    config:
+      VITH_LOGGER_JSON: "true"
+    autoscaling:
+      enabled: false
