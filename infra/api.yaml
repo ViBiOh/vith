@@ -26,7 +26,15 @@ spec:
     image:
       name: vibioh/vith
       tag: "202108291108" # {"$imagepolicy": "default:flux-vith-api:tag"}
+    volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: vith
+    volumeMounts:
+      - name: data
+        mountPath: /data
     config:
       VITH_LOGGER_JSON: "true"
+      VITH_WORK_DIR: "/data"
     autoscaling:
       enabled: false
