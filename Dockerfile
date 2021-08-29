@@ -1,6 +1,7 @@
 FROM alpine
 
 EXPOSE 1080
+USER 405
 
 HEALTHCHECK --retries=10 CMD [ "/vith", "-url", "http://localhost:1080/health" ]
 ENTRYPOINT [ "/vith" ]
