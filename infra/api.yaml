@@ -37,8 +37,7 @@ spec:
       VITH_LOGGER_JSON: "true"
       VITH_WORK_DIR: "/data"
     resources:
-      limits:
-        memory: null
+      limits: null
     securityContext:
       runAsGroup: 995
       runAsUser: 999
