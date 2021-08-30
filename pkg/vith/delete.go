@@ -20,7 +20,14 @@ func (a App) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.cleanStream(filepath.Join(a.workingDir, r.URL.Path)); err != nil {
+	inputName := filepath.Join(a.workingDir, r.URL.Path)
+
+	if err := isValidStreamName(inputName); err != nil {
+		httperror.BadRequest(w, err)
+		return
+	}
+
+	if err := a.cleanStream(inputName); err != nil {
 		httperror.InternalServerError(w, err)
 	}
 

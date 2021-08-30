@@ -2,12 +2,15 @@ package vith
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
@@ -25,9 +28,11 @@ var (
 
 // App of package
 type App struct {
+	done               chan struct{}
+	stop               chan struct{}
+	streamRequestQueue chan streamRequest
 	tmpFolder          string
 	workingDir         string
-	streamRequestQueue chan streamRequest
 }
 
 // Config of package
@@ -50,6 +55,8 @@ func New(config Config) App {
 		tmpFolder:          *config.tmpFolder,
 		workingDir:         *config.workingDir,
 		streamRequestQueue: make(chan streamRequest, 4),
+		stop:               make(chan struct{}),
+		done:               make(chan struct{}),
 	}
 }
 
@@ -65,6 +72,8 @@ func (a App) Handler() http.Handler {
 			a.handlePost(w, r)
 		case http.MethodPut:
 			a.handlePut(w, r)
+		case http.MethodPatch:
+			a.handlePatch(w, r)
 		case http.MethodDelete:
 			a.handleDelete(w, r)
 		default:
@@ -75,6 +84,26 @@ func (a App) Handler() http.Handler {
 
 func (a App) hasDirectAccess() bool {
 	return len(a.workingDir) != 0
+}
+
+func isValidStreamName(streamName string) error {
+	if len(streamName) == 0 {
+		return errors.New("name is required")
+	}
+
+	if strings.Contains(streamName, "..") {
+		return errors.New("path with dots are not allowed")
+	}
+
+	if filepath.Ext(streamName) != hlsExtension {
+		return fmt.Errorf("only `%s` files are allowed", hlsExtension)
+	}
+
+	if info, err := os.Stat(streamName); err != nil || info.IsDir() {
+		return fmt.Errorf("input `%s` doesn't exist or is a directory", streamName)
+	}
+
+	return nil
 }
 
 func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {

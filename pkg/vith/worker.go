@@ -20,16 +20,40 @@ type streamRequest struct {
 	output string
 }
 
+// Done close when work is over
+func (a App) Done() <-chan struct{} {
+	return a.done
+}
+
 // Start worker
-func (a App) Start() {
+func (a App) Start(done <-chan struct{}) {
+	defer close(a.done)
 	defer close(a.streamRequestQueue)
+	defer a.stopOnce()
 
 	if !a.hasDirectAccess() {
 		return
 	}
 
+	go func() {
+		defer a.stopOnce()
+
+		select {
+		case <-done:
+		case <-a.done:
+		}
+	}()
+
 	for req := range a.streamRequestQueue {
 		a.generateStream(req)
+	}
+}
+
+func (a App) stopOnce() {
+	select {
+	case <-a.stop:
+	default:
+		close(a.stop)
 	}
 }
 

@@ -49,10 +49,13 @@ func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
 
 	logger.WithField("input", inputName).Info("Adding stream generation in the work queue")
 
-	a.streamRequestQueue <- streamRequest{
+	select {
+	case a.streamRequestQueue <- streamRequest{
 		input:  inputName,
 		output: outputName,
+	}:
+		w.WriteHeader(http.StatusAccepted)
+	case <-a.stop:
+		w.WriteHeader(http.StatusServiceUnavailable)
 	}
-
-	w.WriteHeader(http.StatusAccepted)
 }
