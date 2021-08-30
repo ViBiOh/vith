@@ -37,7 +37,10 @@ func (a App) generateStream(req streamRequest) {
 	log := logger.WithField("input", req.input).WithField("output", req.output)
 	log.Info("Generating stream...")
 
-	outputName := filepath.Join(req.output, fmt.Sprintf("%s%s", filepath.Base(req.input), hlsExtension))
+	inputFilename := filepath.Base(req.input)
+	inputFilename = strings.TrimSuffix(inputFilename, filepath.Ext(inputFilename))
+
+	outputName := filepath.Join(req.output, fmt.Sprintf("%s%s", inputFilename, hlsExtension))
 
 	cmd := exec.Command("ffmpeg", "-i", req.input, "-c:v", "libx264", "-preset", "superfast", "-c:a", "aac", "-b:a", "128k", "-ac", "2", "-f", "hls", "-hls_time", "4", "-hls_playlist_type", "event", "-hls_flags", "independent_segments", outputName)
 
