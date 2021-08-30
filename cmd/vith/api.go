@@ -41,11 +41,11 @@ func main() {
 
 	vithApp := vith.New(vithConfig)
 
-	go vithApp.Start()
+	go vithApp.Start(healthApp.Done())
 
 	go promServer.Start("prometheus", healthApp.End(), prometheusApp.Handler())
 	go appServer.Start("http", healthApp.End(), httputils.Handler(vithApp.Handler(), healthApp, recoverer.Middleware, prometheusApp.Middleware))
 
 	healthApp.WaitForTermination(appServer.Done())
-	server.GracefulWait(appServer.Done(), promServer.Done())
+	server.GracefulWait(appServer.Done(), promServer.Done(), vithApp.Done())
 }
