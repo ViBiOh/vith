@@ -20,8 +20,6 @@ main() {
 
   local DESTINATION_FOLDER="ffmpeg"
 
-  rm -rf "${DESTINATION_FOLDER:?}/"
-
   for arch in amd64 arm64 armhf; do
     local ARCHIVE_NAME="ffmpeg-git-${arch}-static.tar.xz"
 
@@ -32,9 +30,14 @@ main() {
 
     local TARGET_NAME="${DESTINATION_FOLDER}/linux/${DESTINATION_ARCH}"
 
+    if [[ -e ${TARGET_NAME} ]]; then
+      var_info "File already present for linux/${arch}, skipping download."
+      continue
+    fi
+
     var_info "Downloading static ffmpeg for linux/${arch}"
 
-    curl --disable --silent --show-error --location --max-time 300 --remote-name "https://johnvansickle.com/ffmpeg/builds/${ARCHIVE_NAME}"
+    curl --disable --silent --show-error --location --max-time 600 --remote-name "https://johnvansickle.com/ffmpeg/builds/${ARCHIVE_NAME}"
     mkdir -p "${TARGET_NAME}"
     tar -xf "${ARCHIVE_NAME}" -C "${TARGET_NAME}" --strip 1
     rm -rf "${ARCHIVE_NAME}"
