@@ -34,6 +34,9 @@ func (a App) Start() {
 }
 
 func (a App) generateStream(req streamRequest) {
+	log := logger.WithField("input", req.input).WithField("output", req.output)
+	log.Info("Generating stream...")
+
 	outputName := filepath.Join(req.output, fmt.Sprintf("%s%s", filepath.Base(req.input), hlsExtension))
 
 	cmd := exec.Command("ffmpeg", "-i", req.input, "-c:v", "libx264", "-preset", "superfast", "-c:a", "aac", "-b:a", "128k", "-ac", "2", "-f", "hls", "-hls_time", "4", "-hls_playlist_type", "event", "-hls_flags", "independent_segments", outputName)
@@ -47,14 +50,16 @@ func (a App) generateStream(req streamRequest) {
 
 	err := cmd.Run()
 	if err != nil {
-		logger.Error("unable to generate hls video: %s\n%s", err, buffer.Bytes())
+		log.Error("unable to generate hls video: %s\n%s", err, buffer.Bytes())
 
 		if err := a.cleanStream(outputName); err != nil {
-			logger.Error("unable to remove generated files: %s", err)
+			log.Error("unable to remove generated files: %s", err)
 		}
 
 		return
 	}
+
+	log.Info("Generation succeeded!")
 }
 
 func (a App) cleanStream(outputName string) error {

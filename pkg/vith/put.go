@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
+	"github.com/ViBiOh/httputils/v4/pkg/logger"
 )
 
 func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
@@ -45,6 +46,8 @@ func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
 		httperror.BadRequest(w, fmt.Errorf("output `%s` doesn't exist or is not a directory", outputName))
 		return
 	}
+
+	logger.WithField("input", inputName).Info("Adding stream generation in the work queue")
 
 	a.streamRequestQueue <- streamRequest{
 		input:  inputName,
