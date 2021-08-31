@@ -86,7 +86,7 @@ func (a App) hasDirectAccess() bool {
 	return len(a.workingDir) != 0
 }
 
-func isValidStreamName(streamName string) error {
+func isValidStreamName(streamName string, shouldExist bool) error {
 	if len(streamName) == 0 {
 		return errors.New("name is required")
 	}
@@ -99,8 +99,13 @@ func isValidStreamName(streamName string) error {
 		return fmt.Errorf("only `%s` files are allowed", hlsExtension)
 	}
 
-	if info, err := os.Stat(streamName); err != nil || info.IsDir() {
-		return fmt.Errorf("input `%s` doesn't exist or is a directory", streamName)
+	info, err := os.Stat(streamName)
+	if shouldExist {
+		if err != nil || info.IsDir() {
+			return fmt.Errorf("input `%s` doesn't exist or is a directory", streamName)
+		}
+	} else if err == nil {
+		return fmt.Errorf("input `%s` already exists", streamName)
 	}
 
 	return nil
