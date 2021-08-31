@@ -20,12 +20,12 @@ func (a App) handlePatch(w http.ResponseWriter, r *http.Request) {
 	sourceName := filepath.Join(a.workingDir, r.URL.Path)
 	destinationName := filepath.Join(a.workingDir, r.URL.Query().Get("to"))
 
-	if err := isValidStreamName(sourceName); err != nil {
+	if err := isValidStreamName(sourceName, true); err != nil {
 		httperror.BadRequest(w, fmt.Errorf("invalid source name: %s", err))
 		return
 	}
 
-	if err := isValidStreamName(destinationName); err != nil {
+	if err := isValidStreamName(destinationName, false); err != nil {
 		httperror.BadRequest(w, fmt.Errorf("invalid destination name: %s", err))
 		return
 	}
