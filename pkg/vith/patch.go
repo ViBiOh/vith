@@ -42,6 +42,9 @@ func (a App) renameStream(source, destination string) error {
 	rawSourceName := strings.TrimSuffix(source, hlsExtension)
 	rawDestinationName := strings.TrimSuffix(destination, hlsExtension)
 
+	baseSourceName := filepath.Base(rawSourceName)
+	baseDestinationName := filepath.Base(rawDestinationName)
+
 	content, err := os.ReadFile(source)
 	if err != nil {
 		return fmt.Errorf("unable to read source file `%s`: %s", source, err)
@@ -52,7 +55,7 @@ func (a App) renameStream(source, destination string) error {
 		return fmt.Errorf("unable to list hls segments for `%s`: %s", rawSourceName, err)
 	}
 
-	if err := os.WriteFile(destination, bytes.ReplaceAll(content, []byte(rawSourceName), []byte(rawDestinationName)), 0600); err != nil {
+	if err := os.WriteFile(destination, bytes.ReplaceAll(content, []byte(baseSourceName), []byte(baseDestinationName)), 0600); err != nil {
 		return fmt.Errorf("unable to write destination file `%s`: %s", destination, err)
 	}
 
