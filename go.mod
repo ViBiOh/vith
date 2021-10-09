@@ -2,7 +2,7 @@ module github.com/ViBiOh/vith
 
 go 1.17
 
-require github.com/ViBiOh/httputils/v4 v4.25.2
+require github.com/ViBiOh/httputils/v4 v4.25.3
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
