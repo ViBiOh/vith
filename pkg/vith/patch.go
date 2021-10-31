@@ -55,7 +55,7 @@ func (a App) renameStream(source, destination string) error {
 		return fmt.Errorf("unable to list hls segments for `%s`: %s", rawSourceName, err)
 	}
 
-	if err := os.WriteFile(destination, bytes.ReplaceAll(content, []byte(baseSourceName), []byte(baseDestinationName)), 0600); err != nil {
+	if err := os.WriteFile(destination, bytes.ReplaceAll(content, []byte(baseSourceName), []byte(baseDestinationName)), 0o600); err != nil {
 		return fmt.Errorf("unable to write destination file `%s`: %s", destination, err)
 	}
 

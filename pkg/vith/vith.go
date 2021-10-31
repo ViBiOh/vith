@@ -18,13 +18,11 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 )
 
-var (
-	bufferPool = sync.Pool{
-		New: func() interface{} {
-			return bytes.NewBuffer(make([]byte, 32*1024))
-		},
-	}
-)
+var bufferPool = sync.Pool{
+	New: func() interface{} {
+		return bytes.NewBuffer(make([]byte, 32*1024))
+	},
+}
 
 // App of package
 type App struct {
@@ -115,7 +113,7 @@ func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
 	duration, err := getContainerDuration(inputName)
 	if err != nil {
 		logger.Error("unable to get container duration: %s", err)
-		duration = 02 // so we take the first second
+		duration = 0o2 // so we take the first second
 	}
 
 	cmd := exec.Command("ffmpeg", "-ss", fmt.Sprintf("%.3f", duration/2), "-i", inputName, "-frames:v", "1", outputName)
@@ -137,7 +135,7 @@ func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
 		return
 	}
 
-	thumbnail, err := os.OpenFile(outputName, os.O_RDONLY, 0600)
+	thumbnail, err := os.OpenFile(outputName, os.O_RDONLY, 0o600)
 	if err != nil {
 		httperror.InternalServerError(w, err)
 		return
