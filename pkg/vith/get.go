@@ -25,7 +25,7 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inputName := filepath.Join(a.workingDir, r.URL.Path)
-	outputName := path.Join(a.tmpFolder, fmt.Sprintf("output_%s.jpeg", sha.New(time.Now())))
+	outputName := path.Join(a.tmpFolder, fmt.Sprintf("output_%s.webp", sha.New(time.Now())))
 
 	answerThumbnail(w, inputName, outputName)
 }
