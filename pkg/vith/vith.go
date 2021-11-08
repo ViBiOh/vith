@@ -110,14 +110,30 @@ func isValidStreamName(streamName string, shouldExist bool) error {
 }
 
 func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
-	var cmd *exec.Cmd
+	var ffmpegOpts []string
+	var customOpts []string
 
 	if duration, err := getContainerDuration(inputName); err != nil {
 		logger.Error("unable to get container duration: %s", err)
-		cmd = exec.Command("ffmpeg", "-ss", "1.000", "-i", inputName, "-an", "-frames:v", "1", "-vf", "scale=150:150:force_original_aspect_ratio=decrease,pad=150:150:(ow-iw)/2:(oh-ih)/2", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", outputName)
+		ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
+		customOpts = []string{
+			"-frames:v",
+			"1",
+		}
 	} else {
-		cmd = exec.Command("ffmpeg", "-ss", fmt.Sprintf("%.3f", duration/2), "-t", "5", "-i", inputName, "-an", "-vf", "fps=10,scale=150:150:force_original_aspect_ratio=decrease,pad=150:150:(ow-iw)/2:(oh-ih)/2", "-loop", "0", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", outputName)
+		ffmpegOpts = append(ffmpegOpts, "-ss", fmt.Sprintf("%.3f", duration/2), "-t", "5")
+		customOpts = []string{
+			"-vsync",
+			"0",
+			"-loop",
+			"0",
+		}
 	}
+
+	ffmpegOpts = append(ffmpegOpts, "-i", inputName, "-vf", "crop=min(iw,ih),scale=150:150,fps=10", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture")
+	ffmpegOpts = append(ffmpegOpts, customOpts...)
+	ffmpegOpts = append(ffmpegOpts, outputName)
+	cmd := exec.Command("ffmpeg", ffmpegOpts...)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
