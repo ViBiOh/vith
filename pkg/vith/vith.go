@@ -114,9 +114,9 @@ func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
 
 	if duration, err := getContainerDuration(inputName); err != nil {
 		logger.Error("unable to get container duration: %s", err)
-		cmd = exec.Command("ffmpeg", "-ss", "1.000", "-i", inputName, "-frames:v", "1", "-vf", "scale=150:150:force_original_aspect_ratio=decrease,pad=150:150:(ow-iw)/2:(oh-ih)/2", "-q:v", "1", outputName)
+		cmd = exec.Command("ffmpeg", "-ss", "1.000", "-i", inputName, "-an", "-frames:v", "1", "-vf", "scale=150:150:force_original_aspect_ratio=decrease,pad=150:150:(ow-iw)/2:(oh-ih)/2", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", outputName)
 	} else {
-		cmd = exec.Command("ffmpeg", "-ss", fmt.Sprintf("%.3f", duration/2), "-t", "5", "-i", inputName, "-vf", "fps=10,scale=150:150:force_original_aspect_ratio=decrease,pad=150:150:(ow-iw)/2:(oh-ih)/2", "-loop", "0", "-q:v", "1", outputName)
+		cmd = exec.Command("ffmpeg", "-ss", fmt.Sprintf("%.3f", duration/2), "-t", "5", "-i", inputName, "-an", "-vf", "fps=10,scale=150:150:force_original_aspect_ratio=decrease,pad=150:150:(ow-iw)/2:(oh-ih)/2", "-loop", "0", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", outputName)
 	}
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
