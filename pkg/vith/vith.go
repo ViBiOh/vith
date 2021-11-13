@@ -71,6 +71,17 @@ func (a App) AmqpHandler(message amqp.Delivery) error {
 		return fmt.Errorf("unable to parse payload: %s", err)
 	}
 
+	req.Input = filepath.Join(a.workingDir, req.Input)
+	req.Output = filepath.Join(a.workingDir, req.Output)
+
+	if info, err := os.Stat(req.Input); err != nil || info.IsDir() {
+		return fmt.Errorf("input `%s` doesn't exist or is a directory", req.Input)
+	}
+
+	if info, err := os.Stat(req.Output); err != nil || !info.IsDir() {
+		return fmt.Errorf("output `%s` doesn't exist or is not a directory", req.Output)
+	}
+
 	if err := a.generateStream(req); err != nil {
 		return fmt.Errorf("unable to generate stream: %s", err)
 	}
