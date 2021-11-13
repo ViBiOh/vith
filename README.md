@@ -108,7 +108,7 @@ Usage of vith:
   -userAgent string
         [alcotest] User-Agent for check {VITH_USER_AGENT} (default "Alcotest")
   -workDir string
-        [vith] Working directory for GET requests {VITH_WORK_DIR}
+        [vith] Working directory for direct access requests {VITH_WORK_DIR}
   -writeTimeout string
         [server] Write Timeout {VITH_WRITE_TIMEOUT} (default "2m")
 ```

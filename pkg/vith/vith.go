@@ -45,7 +45,7 @@ type Config struct {
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
 		tmpFolder:  flags.New(prefix, "vith", "TmpFolder").Default("/tmp", overrides).Label("Folder used for temporary files storage").ToString(fs),
-		workingDir: flags.New(prefix, "vith", "WorkDir").Default("", overrides).Label("Working directory for GET requests").ToString(fs),
+		workingDir: flags.New(prefix, "vith", "WorkDir").Default("", overrides).Label("Working directory for direct access requests").ToString(fs),
 	}
 }
 
