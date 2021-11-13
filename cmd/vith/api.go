@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/ViBiOh/httputils/v4/pkg/alcotest"
+	"github.com/ViBiOh/httputils/v4/pkg/amqp"
+	"github.com/ViBiOh/httputils/v4/pkg/amqphandler"
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/health"
 	"github.com/ViBiOh/httputils/v4/pkg/httputils"
@@ -28,6 +30,9 @@ func main() {
 
 	vithConfig := vith.Flags(fs, "")
 
+	amqpConfig := amqp.Flags(fs, "amqp")
+	amqphandlerConfig := amqphandler.Flags(fs, "amqp", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "vith"), flags.NewOverride("RoutingKey", "stream"))
+
 	logger.Fatal(fs.Parse(os.Args[1:]))
 
 	alcotest.DoAndExit(alcotestConfig)
@@ -41,11 +46,22 @@ func main() {
 
 	vithApp := vith.New(vithConfig)
 
+	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer())
+	if err != nil {
+		logger.Error("unable to create amqp client: %s", err)
+	}
+
+	amqphandlerApp, err := amqphandler.New(amqphandlerConfig, amqpClient, vithApp.AmqpHandler)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	go amqphandlerApp.Start(healthApp.Done())
 	go vithApp.Start(healthApp.Done())
 
 	go promServer.Start("prometheus", healthApp.End(), prometheusApp.Handler())
 	go appServer.Start("http", healthApp.End(), httputils.Handler(vithApp.Handler(), healthApp, recoverer.Middleware, prometheusApp.Middleware))
 
 	healthApp.WaitForTermination(appServer.Done())
-	server.GracefulWait(appServer.Done(), promServer.Done(), vithApp.Done())
+	server.GracefulWait(appServer.Done(), promServer.Done(), vithApp.Done(), amqphandlerApp.Done())
 }

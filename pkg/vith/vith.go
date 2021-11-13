@@ -2,6 +2,7 @@ package vith
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
+	"github.com/streadway/amqp"
 )
 
 var bufferPool = sync.Pool{
@@ -28,7 +30,7 @@ var bufferPool = sync.Pool{
 type App struct {
 	done               chan struct{}
 	stop               chan struct{}
-	streamRequestQueue chan streamRequest
+	streamRequestQueue chan StreamRequest
 	tmpFolder          string
 	workingDir         string
 }
@@ -52,10 +54,28 @@ func New(config Config) App {
 	return App{
 		tmpFolder:          *config.tmpFolder,
 		workingDir:         *config.workingDir,
-		streamRequestQueue: make(chan streamRequest, 4),
+		streamRequestQueue: make(chan StreamRequest, 4),
 		stop:               make(chan struct{}),
 		done:               make(chan struct{}),
 	}
+}
+
+// AmqpHandler for amqp request
+func (a App) AmqpHandler(message amqp.Delivery) error {
+	if !a.hasDirectAccess() {
+		return errors.New("vith has no direct access to filesystem")
+	}
+
+	var req StreamRequest
+	if err := json.Unmarshal(message.Body, &req); err != nil {
+		return fmt.Errorf("unable to parse payload: %s", err)
+	}
+
+	if err := a.generateStream(req); err != nil {
+		return fmt.Errorf("unable to generate stream: %s", err)
+	}
+
+	return nil
 }
 
 // Handler for request. Should be use with net/http

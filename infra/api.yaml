@@ -36,6 +36,8 @@ spec:
     config:
       VITH_LOGGER_JSON: "true"
       VITH_WORK_DIR: "/data"
+    secrets:
+      VITH_AMQP_URI: AgAcvsptQAXJd5wBamnkzlPQ9ZZ5yLA+ypf531MKLZzG5ibHhUZhP6fFfxD/CPgw7YhhlJsW7w/KLj0W72/gpp6FX36JZ6UrRGHgijEbPIOLUEtgBnzUQJuAF9SOsKsy72a5jxL+ZogfMgfp+9B5SnzM3RdPCwZ+JrKbMWVnLa4X+h8uWrip1JgX6lp7SM6aHt1ODBcC+7/3AnoqJhJ7J+53lw6gcK9aWo8hMfkUQAKhmFRJKOq0kg2w8QFwuu++ZEfgfsi7fcy/Mx6soxUDZOD7/Y5V1qXeOJw1P83CsAcrq5dA5Pn46MFnpF1ENnX+NRN79EIUr6WG3vZcqM7bMF10IeAUUmPrQUuvkBvt+sPe5Gt3jtPw9UmXLOnZep/OduuGbhimJdX8Mkw8wXqwaORQO52vtfjeuSNUyIQQgvtHkrBQmEF3Tj2Tnx3jpCReOSYv8DgId2KznmGM6UM3SU2EHSj6CHRh33xyWkjStVwvMFiG4Vy04qPGUD9w+lXT06kQ5i9rZwhn0/Vry+h6OagztIYVraKtWgMozCOCRGOPJjw073fW1l2+luSVwCglPMZImXKQqR10i+l9b4vnf50gZkmArM0xW8qavv4cVbU3sgkJtSvUNKoh7kxcRktD+t/tTSDuYn0VgywKJTpjo6buckmhBaF/0QqDuPKMdXfUo1CRtukr8YghQahrkICgLS0lmYDtWz/aD4yn37x+zLbTpQT2bo0UGeKl/ivAY2G8FPTDgD4OGFbjUzi46wCGTxQKwiJfvI3vh7ZA42Cq0BFcO3srJpBgOmlvo9tUMBQOfKzGPDCn
     resources:
       limits:
         memory: "1Gi"

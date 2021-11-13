@@ -43,6 +43,18 @@ Be careful when using the CLI values, if someone list the processes on the syste
 Usage of vith:
   -address string
         [server] Listen address {VITH_ADDRESS}
+  -amqpExchange string
+        [amqp] Exchange name {VITH_AMQP_EXCHANGE} (default "fibr")
+  -amqpMaxRetry uint
+        [amqp] Max send retries {VITH_AMQP_MAX_RETRY} (default 3)
+  -amqpQueue string
+        [amqp] Queue name {VITH_AMQP_QUEUE} (default "vith")
+  -amqpRetryInterval string
+        [amqp] Interval duration when send fails {VITH_AMQP_RETRY_INTERVAL} (default "1h")
+  -amqpRoutingKey string
+        [amqp] RoutingKey name {VITH_AMQP_ROUTING_KEY} (default "stream")
+  -amqpURI string
+        [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> {VITH_AMQP_URI}
   -cert string
         [server] Certificate file {VITH_CERT}
   -graceDuration string
