@@ -49,6 +49,8 @@ func main() {
 	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer())
 	if err != nil {
 		logger.Error("unable to create amqp client: %s", err)
+	} else {
+		defer amqpClient.Close()
 	}
 
 	amqphandlerApp, err := amqphandler.New(amqphandlerConfig, amqpClient, vithApp.AmqpHandler)
