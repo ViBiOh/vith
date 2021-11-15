@@ -31,7 +31,8 @@ func main() {
 	vithConfig := vith.Flags(fs, "")
 
 	amqpConfig := amqp.Flags(fs, "amqp")
-	amqphandlerConfig := amqphandler.Flags(fs, "amqp", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "vith"), flags.NewOverride("RoutingKey", "stream"))
+	streamHandlerConfig := amqphandler.Flags(fs, "stream", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "vith-stream"), flags.NewOverride("RoutingKey", "stream"))
+	thumbnailHandlerConfig := amqphandler.Flags(fs, "thumbnail", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "vith-thumbnail"), flags.NewOverride("RoutingKey", "video-thumbnail"))
 
 	logger.Fatal(fs.Parse(os.Args[1:]))
 
@@ -53,17 +54,19 @@ func main() {
 		defer amqpClient.Close()
 	}
 
-	amqphandlerApp, err := amqphandler.New(amqphandlerConfig, amqpClient, vithApp.AmqpHandler)
-	if err != nil {
-		logger.Fatal(err)
-	}
+	streamHandlerApp, err := amqphandler.New(streamHandlerConfig, amqpClient, vithApp.AmqpStreamHandler)
+	logger.Fatal(err)
 
-	go amqphandlerApp.Start(healthApp.Done())
+	thumbnailHandlerApp, err := amqphandler.New(thumbnailHandlerConfig, amqpClient, vithApp.AmqpThumbnailHandler)
+	logger.Fatal(err)
+
+	go streamHandlerApp.Start(healthApp.Done())
+	go thumbnailHandlerApp.Start(healthApp.Done())
 	go vithApp.Start(healthApp.Done())
 
 	go promServer.Start("prometheus", healthApp.End(), prometheusApp.Handler())
 	go appServer.Start("http", healthApp.End(), httputils.Handler(vithApp.Handler(), healthApp, recoverer.Middleware, prometheusApp.Middleware))
 
 	healthApp.WaitForTermination(appServer.Done())
-	server.GracefulWait(appServer.Done(), promServer.Done(), vithApp.Done(), amqphandlerApp.Done())
+	server.GracefulWait(appServer.Done(), promServer.Done(), vithApp.Done(), streamHandlerApp.Done(), thumbnailHandlerApp.Done())
 }

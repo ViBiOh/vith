@@ -2,7 +2,6 @@ package vith
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -17,7 +16,6 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
-	"github.com/streadway/amqp"
 )
 
 var bufferPool = sync.Pool{
@@ -58,35 +56,6 @@ func New(config Config) App {
 		stop:               make(chan struct{}),
 		done:               make(chan struct{}),
 	}
-}
-
-// AmqpHandler for amqp request
-func (a App) AmqpHandler(message amqp.Delivery) error {
-	if !a.hasDirectAccess() {
-		return errors.New("vith has no direct access to filesystem")
-	}
-
-	var req StreamRequest
-	if err := json.Unmarshal(message.Body, &req); err != nil {
-		return fmt.Errorf("unable to parse payload: %s", err)
-	}
-
-	req.Input = filepath.Join(a.workingDir, req.Input)
-	req.Output = filepath.Join(a.workingDir, req.Output)
-
-	if info, err := os.Stat(req.Input); err != nil || info.IsDir() {
-		return fmt.Errorf("input `%s` doesn't exist or is a directory", req.Input)
-	}
-
-	if info, err := os.Stat(req.Output); err != nil || !info.IsDir() {
-		return fmt.Errorf("output `%s` doesn't exist or is not a directory", req.Output)
-	}
-
-	if err := a.generateStream(req); err != nil {
-		return fmt.Errorf("unable to generate stream: %s", err)
-	}
-
-	return nil
 }
 
 // Handler for request. Should be use with net/http
@@ -140,7 +109,7 @@ func isValidStreamName(streamName string, shouldExist bool) error {
 	return nil
 }
 
-func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
+func generateThumbnail(inputName, outputName string) error {
 	var ffmpegOpts []string
 	var customOpts []string
 
@@ -174,12 +143,24 @@ func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
 	cmd.Stderr = buffer
 
 	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("%s: %s", buffer.String(), err)
+	}
 
+	return nil
+}
+
+func cleanFile(name string) {
+	if err := os.Remove(name); err != nil {
+		logger.Warn("unable to remove file %s: %s", name, err)
+	}
+}
+
+func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
 	defer cleanFile(outputName)
 
-	if err != nil {
+	if err := generateThumbnail(inputName, outputName); err != nil {
 		httperror.InternalServerError(w, err)
-		logger.Error("%s", buffer.String())
 		return
 	}
 
@@ -200,13 +181,7 @@ func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
 	}()
 
 	w.WriteHeader(http.StatusOK)
-	if _, err := io.CopyBuffer(w, thumbnail, buffer.Bytes()); err != nil {
+	if _, err := io.Copy(w, thumbnail); err != nil {
 		logger.Error("unable to copy file: %s", err)
-	}
-}
-
-func cleanFile(name string) {
-	if err := os.Remove(name); err != nil {
-		logger.Warn("unable to remove file %s: %s", name, err)
 	}
 }
