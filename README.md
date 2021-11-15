@@ -43,16 +43,6 @@ Be careful when using the CLI values, if someone list the processes on the syste
 Usage of vith:
   -address string
         [server] Listen address {VITH_ADDRESS}
-  -amqpExchange string
-        [amqp] Exchange name {VITH_AMQP_EXCHANGE} (default "fibr")
-  -amqpMaxRetry uint
-        [amqp] Max send retries {VITH_AMQP_MAX_RETRY} (default 3)
-  -amqpQueue string
-        [amqp] Queue name {VITH_AMQP_QUEUE} (default "vith")
-  -amqpRetryInterval string
-        [amqp] Interval duration when send fails {VITH_AMQP_RETRY_INTERVAL} (default "1h")
-  -amqpRoutingKey string
-        [amqp] RoutingKey name {VITH_AMQP_ROUTING_KEY} (default "stream")
   -amqpURI string
         [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> {VITH_AMQP_URI}
   -cert string
@@ -101,6 +91,26 @@ Usage of vith:
         [server] Read Timeout {VITH_READ_TIMEOUT} (default "2m")
   -shutdownTimeout string
         [server] Shutdown Timeout {VITH_SHUTDOWN_TIMEOUT} (default "10s")
+  -streamExchange string
+        [stream] Exchange name {VITH_STREAM_EXCHANGE} (default "fibr")
+  -streamMaxRetry uint
+        [stream] Max send retries {VITH_STREAM_MAX_RETRY} (default 3)
+  -streamQueue string
+        [stream] Queue name {VITH_STREAM_QUEUE} (default "vith-stream")
+  -streamRetryInterval string
+        [stream] Interval duration when send fails {VITH_STREAM_RETRY_INTERVAL} (default "1h")
+  -streamRoutingKey string
+        [stream] RoutingKey name {VITH_STREAM_ROUTING_KEY} (default "stream")
+  -thumbnailExchange string
+        [thumbnail] Exchange name {VITH_THUMBNAIL_EXCHANGE} (default "fibr")
+  -thumbnailMaxRetry uint
+        [thumbnail] Max send retries {VITH_THUMBNAIL_MAX_RETRY} (default 3)
+  -thumbnailQueue string
+        [thumbnail] Queue name {VITH_THUMBNAIL_QUEUE} (default "vith-thumbnail")
+  -thumbnailRetryInterval string
+        [thumbnail] Interval duration when send fails {VITH_THUMBNAIL_RETRY_INTERVAL} (default "1h")
+  -thumbnailRoutingKey string
+        [thumbnail] RoutingKey name {VITH_THUMBNAIL_ROUTING_KEY} (default "video-thumbnail")
   -tmpFolder string
         [vith] Folder used for temporary files storage {VITH_TMP_FOLDER} (default "/tmp")
   -url string
