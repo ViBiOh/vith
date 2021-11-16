@@ -50,9 +50,10 @@ func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
 	logger.WithField("input", inputName).Info("Adding stream generation in the work queue")
 
 	select {
-	case a.streamRequestQueue <- StreamRequest{
+	case a.streamRequestQueue <- Request{
 		Input:  inputName,
 		Output: outputName,
+		Video:  true,
 	}:
 		w.WriteHeader(http.StatusAccepted)
 	case <-a.stop:

@@ -15,10 +15,11 @@ const (
 	hlsExtension = ".m3u8"
 )
 
-// StreamRequest for generating stream
-type StreamRequest struct {
+// Request for generating stream
+type Request struct {
 	Input  string `json:"input"`
 	Output string `json:"output"`
+	Video  bool   `json:"video"`
 }
 
 // Done close when work is over
@@ -60,7 +61,7 @@ func (a App) stopOnce() {
 	}
 }
 
-func (a App) generateStream(req StreamRequest) error {
+func (a App) generateStream(req Request) error {
 	log := logger.WithField("input", req.Input).WithField("output", req.Output)
 	log.Info("Generating stream...")
 

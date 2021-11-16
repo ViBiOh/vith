@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
+	"github.com/ViBiOh/httputils/v4/pkg/query"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
@@ -31,7 +32,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	answerThumbnail(w, inputName, outputName)
+	answerThumbnail(w, inputName, outputName, query.GetBool(r, "video"))
 }
 
 func loadFile(writer io.WriteCloser, r *http.Request) (err error) {

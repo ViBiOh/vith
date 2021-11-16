@@ -28,7 +28,7 @@ var bufferPool = sync.Pool{
 type App struct {
 	done               chan struct{}
 	stop               chan struct{}
-	streamRequestQueue chan StreamRequest
+	streamRequestQueue chan Request
 	tmpFolder          string
 	workingDir         string
 }
@@ -52,7 +52,7 @@ func New(config Config) App {
 	return App{
 		tmpFolder:          *config.tmpFolder,
 		workingDir:         *config.workingDir,
-		streamRequestQueue: make(chan StreamRequest, 4),
+		streamRequestQueue: make(chan Request, 4),
 		stop:               make(chan struct{}),
 		done:               make(chan struct{}),
 	}
@@ -109,13 +109,15 @@ func isValidStreamName(streamName string, shouldExist bool) error {
 	return nil
 }
 
-func generateThumbnail(inputName, outputName string) error {
+func generateThumbnail(inputName, outputName string, video bool) error {
 	var ffmpegOpts []string
 	var customOpts []string
 
 	if duration, err := getContainerDuration(inputName); err != nil {
 		logger.Error("unable to get container duration: %s", err)
-		ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
+		if video {
+			ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
+		}
 		customOpts = []string{
 			"-frames:v",
 			"1",
@@ -130,7 +132,12 @@ func generateThumbnail(inputName, outputName string) error {
 		}
 	}
 
-	ffmpegOpts = append(ffmpegOpts, "-i", inputName, "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150,fps=10", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture")
+	var animatedOptions string
+	if video {
+		animatedOptions = ",fps=10"
+	}
+
+	ffmpegOpts = append(ffmpegOpts, "-i", inputName, "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150"+animatedOptions, "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture")
 	ffmpegOpts = append(ffmpegOpts, customOpts...)
 	ffmpegOpts = append(ffmpegOpts, outputName)
 	cmd := exec.Command("ffmpeg", ffmpegOpts...)
@@ -156,10 +163,10 @@ func cleanFile(name string) {
 	}
 }
 
-func answerThumbnail(w http.ResponseWriter, inputName, outputName string) {
+func answerThumbnail(w http.ResponseWriter, inputName, outputName string, video bool) {
 	defer cleanFile(outputName)
 
-	if err := generateThumbnail(inputName, outputName); err != nil {
+	if err := generateThumbnail(inputName, outputName, video); err != nil {
 		httperror.InternalServerError(w, err)
 		return
 	}
