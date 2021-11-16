@@ -51,6 +51,12 @@ Usage of vith:
         [http] Grace duration when SIGTERM received {VITH_GRACE_DURATION} (default "30s")
   -idleTimeout string
         [server] Idle Timeout {VITH_IDLE_TIMEOUT} (default "2m")
+  -imaginaryPassword string
+        [thumbnail] Imaginary Basic Auth Password {VITH_IMAGINARY_PASSWORD}
+  -imaginaryURL string
+        [thumbnail] Imaginary URL {VITH_IMAGINARY_URL} (default "http://image:9000")
+  -imaginaryUser string
+        [thumbnail] Imaginary Basic Auth User {VITH_IMAGINARY_USER}
   -key string
         [server] Key file {VITH_KEY}
   -loggerJson
@@ -96,7 +102,7 @@ Usage of vith:
   -streamMaxRetry uint
         [stream] Max send retries {VITH_STREAM_MAX_RETRY} (default 3)
   -streamQueue string
-        [stream] Queue name {VITH_STREAM_QUEUE} (default "vith-stream")
+        [stream] Queue name {VITH_STREAM_QUEUE} (default "stream")
   -streamRetryInterval string
         [stream] Interval duration when send fails {VITH_STREAM_RETRY_INTERVAL} (default "1h")
   -streamRoutingKey string
@@ -106,11 +112,11 @@ Usage of vith:
   -thumbnailMaxRetry uint
         [thumbnail] Max send retries {VITH_THUMBNAIL_MAX_RETRY} (default 3)
   -thumbnailQueue string
-        [thumbnail] Queue name {VITH_THUMBNAIL_QUEUE} (default "vith-thumbnail")
+        [thumbnail] Queue name {VITH_THUMBNAIL_QUEUE} (default "thumbnail")
   -thumbnailRetryInterval string
         [thumbnail] Interval duration when send fails {VITH_THUMBNAIL_RETRY_INTERVAL} (default "1h")
   -thumbnailRoutingKey string
-        [thumbnail] RoutingKey name {VITH_THUMBNAIL_ROUTING_KEY} (default "video-thumbnail")
+        [thumbnail] RoutingKey name {VITH_THUMBNAIL_ROUTING_KEY} (default "thumbnail")
   -tmpFolder string
         [vith] Folder used for temporary files storage {VITH_TMP_FOLDER} (default "/tmp")
   -url string

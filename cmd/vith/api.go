@@ -31,8 +31,8 @@ func main() {
 	vithConfig := vith.Flags(fs, "")
 
 	amqpConfig := amqp.Flags(fs, "amqp")
-	streamHandlerConfig := amqphandler.Flags(fs, "stream", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "vith-stream"), flags.NewOverride("RoutingKey", "stream"))
-	thumbnailHandlerConfig := amqphandler.Flags(fs, "thumbnail", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "vith-thumbnail"), flags.NewOverride("RoutingKey", "video-thumbnail"))
+	streamHandlerConfig := amqphandler.Flags(fs, "stream", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "stream"), flags.NewOverride("RoutingKey", "stream"))
+	thumbnailHandlerConfig := amqphandler.Flags(fs, "thumbnail", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "thumbnail"), flags.NewOverride("RoutingKey", "thumbnail"))
 
 	logger.Fatal(fs.Parse(os.Args[1:]))
 

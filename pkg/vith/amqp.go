@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ViBiOh/vith/pkg/model"
 	"github.com/streadway/amqp"
 )
 
@@ -16,9 +17,13 @@ func (a App) AmqpStreamHandler(message amqp.Delivery) error {
 		return errors.New("vith has no direct access to filesystem")
 	}
 
-	var req Request
+	var req model.Request
 	if err := json.Unmarshal(message.Body, &req); err != nil {
 		return fmt.Errorf("unable to parse payload: %s", err)
+	}
+
+	if req.ItemType != model.TypeVideo {
+		return errors.New("stream are possible for video type only")
 	}
 
 	req.Input = filepath.Join(a.workingDir, req.Input)
@@ -45,7 +50,7 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 		return errors.New("vith has no direct access to filesystem")
 	}
 
-	var req Request
+	var req model.Request
 	if err := json.Unmarshal(message.Body, &req); err != nil {
 		return fmt.Errorf("unable to parse payload: %s", err)
 	}
@@ -57,7 +62,13 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 		return fmt.Errorf("input `%s` doesn't exist or is a directory", req.Input)
 	}
 
-	if err := generateThumbnail(req.Input, req.Output, req.Video); err != nil {
+	if req.ItemType == model.TypePDF {
+		if err := a.pdf(req); err != nil {
+			return err
+		}
+	}
+
+	if err := thumbnail(req); err != nil {
 		return fmt.Errorf("unable to generate thumbnail: %s", err)
 	}
 
