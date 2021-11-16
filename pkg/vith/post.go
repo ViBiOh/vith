@@ -9,11 +9,25 @@ import (
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
-	"github.com/ViBiOh/httputils/v4/pkg/query"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
+	"github.com/ViBiOh/vith/pkg/model"
 )
 
 func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
+	itemType, err := model.ParseItemType(r.URL.Query().Get("type"))
+	if err != nil {
+		httperror.BadRequest(w, err)
+		return
+	}
+
+	if itemType == model.TypePDF {
+		if err := a.streamPdf(r.Body, w, r.ContentLength); err != nil {
+			httperror.InternalServerError(w, err)
+		}
+
+		return
+	}
+
 	name := sha.New(time.Now())
 
 	inputName := path.Join(a.tmpFolder, fmt.Sprintf("input_%s", name))
@@ -32,7 +46,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	answerThumbnail(w, inputName, outputName, query.GetBool(r, "video"))
+	httpThumbnail(w, model.NewRequest(inputName, outputName, itemType))
 }
 
 func loadFile(writer io.WriteCloser, r *http.Request) (err error) {

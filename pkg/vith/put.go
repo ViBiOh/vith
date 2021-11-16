@@ -10,6 +10,7 @@ import (
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
+	"github.com/ViBiOh/vith/pkg/model"
 )
 
 func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
@@ -20,6 +21,17 @@ func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
 
 	if strings.Contains(r.URL.Path, "..") {
 		httperror.BadRequest(w, errors.New("path with dots are not allowed"))
+		return
+	}
+
+	itemType, err := model.ParseItemType(r.URL.Query().Get("type"))
+	if err != nil {
+		httperror.BadRequest(w, err)
+		return
+	}
+
+	if itemType != model.TypeVideo {
+		httperror.BadRequest(w, errors.New("stream are possible for video type only"))
 		return
 	}
 
@@ -50,11 +62,7 @@ func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
 	logger.WithField("input", inputName).Info("Adding stream generation in the work queue")
 
 	select {
-	case a.streamRequestQueue <- Request{
-		Input:  inputName,
-		Output: outputName,
-		Video:  true,
-	}:
+	case a.streamRequestQueue <- model.NewRequest(inputName, outputName, itemType):
 		w.WriteHeader(http.StatusAccepted)
 	case <-a.stop:
 		w.WriteHeader(http.StatusServiceUnavailable)
