@@ -9,18 +9,12 @@ import (
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
+	"github.com/ViBiOh/vith/pkg/model"
 )
 
 const (
 	hlsExtension = ".m3u8"
 )
-
-// Request for generating stream
-type Request struct {
-	Input  string `json:"input"`
-	Output string `json:"output"`
-	Video  bool   `json:"video"`
-}
 
 // Done close when work is over
 func (a App) Done() <-chan struct{} {
@@ -61,7 +55,7 @@ func (a App) stopOnce() {
 	}
 }
 
-func (a App) generateStream(req Request) error {
+func (a App) generateStream(req model.Request) error {
 	log := logger.WithField("input", req.Input).WithField("output", req.Output)
 	log.Info("Generating stream...")
 
