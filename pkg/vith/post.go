@@ -42,11 +42,12 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	defer cleanFile(inputName)
 
 	if err := loadFile(inputFile, r); err != nil {
+		a.increaseMetric("http", "thumbnail", "load_error")
 		httperror.InternalServerError(w, err)
 		return
 	}
 
-	httpThumbnail(w, model.NewRequest(inputName, outputName, itemType))
+	a.httpThumbnail(w, model.NewRequest(inputName, outputName, itemType))
 }
 
 func loadFile(writer io.WriteCloser, r *http.Request) (err error) {
