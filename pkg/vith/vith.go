@@ -264,7 +264,7 @@ func (a App) streamPdf(reader io.ReadCloser, writer io.Writer, contentLength int
 	resp, err := request.DoWithClient(slowClient, r)
 	if err != nil {
 		if closeErr := reader.Close(); closeErr != nil {
-			logger.Error("unable to close reader: %s", err)
+			logger.Error("unable to close reader: %s", closeErr)
 		}
 
 		return fmt.Errorf("unable to request imaginary: %s", err)
