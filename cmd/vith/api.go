@@ -45,7 +45,7 @@ func main() {
 	prometheusApp := prometheus.New(prometheusConfig)
 	healthApp := health.New(healthConfig)
 
-	vithApp := vith.New(vithConfig)
+	vithApp := vith.New(vithConfig, prometheusApp.Registerer())
 
 	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer())
 	if err != nil {

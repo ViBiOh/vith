@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
@@ -36,9 +35,12 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 
 	info, err := os.Stat(inputName)
 	if err != nil || info.IsDir() {
+		a.increaseMetric("http", "thumbnail", "not_found")
 		httperror.BadRequest(w, fmt.Errorf("input `%s` doesn't exist or is a directory", inputName))
 		return
 	}
+
+	a.increaseMetric("http", "thumbnail", itemType.String())
 
 	if itemType == model.TypePDF {
 		reader, err := os.OpenFile(inputName, os.O_RDONLY, 0o600)
@@ -47,12 +49,13 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := a.streamPdf(reader, w, info.Size()); err != nil {
+			a.increaseMetric("http", "thumbnail", "error")
 			httperror.InternalServerError(w, err)
 		}
 
 		return
 	}
 
-	outputName := path.Join(a.tmpFolder, fmt.Sprintf("output_%s.webp", sha.New(time.Now())))
-	httpThumbnail(w, model.NewRequest(inputName, outputName, itemType))
+	outputName := path.Join(a.tmpFolder, fmt.Sprintf("output_%s.webp", sha.New(inputName)))
+	a.httpThumbnail(w, model.NewRequest(inputName, outputName, itemType))
 }

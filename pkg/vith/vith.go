@@ -18,8 +18,10 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
+	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/vith/pkg/model"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -45,6 +47,7 @@ type App struct {
 	done               chan struct{}
 	stop               chan struct{}
 	streamRequestQueue chan model.Request
+	metric             *prometheus.CounterVec
 	tmpFolder          string
 	workingDir         string
 
@@ -74,7 +77,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config) App {
+func New(config Config, prometheusRegisterer prometheus.Registerer) App {
 	imaginaryReq := request.New().WithClient(slowClient).Post(*config.imaginaryURL).BasicAuth(strings.TrimSpace(*config.imaginaryUser), *config.imaginaryPass)
 	if !imaginaryReq.IsZero() {
 		imaginaryReq = imaginaryReq.Path(fmt.Sprintf("/crop?width=%d&height=%d&stripmeta=true&noprofile=true&quality=80&type=webp", Width, Height))
@@ -86,6 +89,7 @@ func New(config Config) App {
 		streamRequestQueue: make(chan model.Request, 4),
 		stop:               make(chan struct{}),
 		done:               make(chan struct{}),
+		metric:             prom.CounterVec(prometheusRegisterer, "vith", "", "item", "source", "kind", "state"),
 		imaginaryReq:       imaginaryReq,
 	}
 }
@@ -141,10 +145,11 @@ func isValidStreamName(streamName string, shouldExist bool) error {
 	return nil
 }
 
-func httpThumbnail(w http.ResponseWriter, req model.Request) {
+func (a App) httpThumbnail(w http.ResponseWriter, req model.Request) {
 	defer cleanFile(req.Output)
 
 	if err := thumbnail(req); err != nil {
+		a.increaseMetric("http", "thumbnail", "error")
 		httperror.InternalServerError(w, err)
 		return
 	}
@@ -168,37 +173,34 @@ func httpThumbnail(w http.ResponseWriter, req model.Request) {
 func thumbnail(req model.Request) error {
 	var ffmpegOpts []string
 	var customOpts []string
-
-	isVideo := req.ItemType == model.TypeVideo
-
-	if duration, err := getContainerDuration(req.Input); err != nil {
-		logger.Error("unable to get container duration: %s", err)
-		if isVideo {
-			ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
-		}
-		customOpts = []string{
-			"-frames:v",
-			"1",
-		}
-	} else {
-		ffmpegOpts = append(ffmpegOpts, "-ss", fmt.Sprintf("%.3f", duration/2), "-t", "5")
-		customOpts = []string{
-			"-vsync",
-			"0",
-			"-loop",
-			"0",
-		}
-	}
-
 	var animatedOptions string
-	if isVideo {
+
+	if req.ItemType == model.TypeVideo {
+		if duration, err := getContainerDuration(req.Input); err != nil {
+			logger.Error("unable to get container duration: %s", err)
+
+			ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
+			customOpts = []string{
+				"-frames:v",
+				"1",
+			}
+		} else {
+			ffmpegOpts = append(ffmpegOpts, "-ss", fmt.Sprintf("%.3f", duration/2), "-t", "5")
+			customOpts = []string{
+				"-vsync",
+				"0",
+				"-loop",
+				"0",
+			}
+		}
+
 		animatedOptions = ",fps=10"
 	}
 
 	ffmpegOpts = append(ffmpegOpts, "-i", req.Input, "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150"+animatedOptions, "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture")
 	ffmpegOpts = append(ffmpegOpts, customOpts...)
 	ffmpegOpts = append(ffmpegOpts, req.Output)
-	cmd := exec.Command("ffmpeg", ffmpegOpts...)
+	cmd := exec.Command("./ffmpeg", ffmpegOpts...)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
@@ -241,13 +243,19 @@ func (a App) pdf(req model.Request) error {
 		return fmt.Errorf("unable to open output file: %s", err)
 	}
 
-	defer func() {
-		if closeErr := writer.Close(); closeErr != nil {
-			logger.Error("unable to close pdf writer: %s", closeErr)
-		}
-	}()
+	err = a.streamPdf(reader, writer, stats.Size())
 
-	return a.streamPdf(reader, writer, stats.Size())
+	if closeErr := writer.Close(); closeErr != nil {
+		err = fmt.Errorf("%s: %w", err, closeErr)
+	}
+
+	if err != nil {
+		if removeErr := os.Remove(req.Output); err != nil {
+			err = fmt.Errorf("%s: %w", err, removeErr)
+		}
+	}
+
+	return err
 }
 
 func (a App) streamPdf(reader io.ReadCloser, writer io.Writer, contentLength int64) error {
