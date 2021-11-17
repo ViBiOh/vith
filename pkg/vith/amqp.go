@@ -66,6 +66,7 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 		if err := a.pdf(req); err != nil {
 			return err
 		}
+		return nil
 	}
 
 	if err := thumbnail(req); err != nil {
