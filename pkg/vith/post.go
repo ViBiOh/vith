@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
+	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/vith/pkg/model"
 )
@@ -33,7 +34,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	inputName := path.Join(a.tmpFolder, fmt.Sprintf("input_%s", name))
 	outputName := path.Join(a.tmpFolder, fmt.Sprintf("output_%s.webp", name))
 
-	inputFile, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
+	writer, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		httperror.InternalServerError(w, err)
 		return
@@ -41,7 +42,13 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 
 	defer cleanFile(inputName)
 
-	if err := loadFile(inputFile, r); err != nil {
+	defer func() {
+		if closeErr := writer.Close(); closeErr != nil {
+			logger.WithField("fn", "vith.handlePost").WithField("item", inputName).Error("unable to close: %s", err)
+		}
+	}()
+
+	if err := loadFile(writer, r); err != nil {
 		a.increaseMetric("http", "thumbnail", "load_error")
 		httperror.InternalServerError(w, err)
 		return
@@ -50,21 +57,13 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	a.httpThumbnail(w, model.NewRequest(inputName, outputName, itemType))
 }
 
-func loadFile(writer io.WriteCloser, r *http.Request) (err error) {
+func loadFile(writer io.Writer, r *http.Request) (err error) {
 	defer func() {
 		if closeErr := r.Body.Close(); closeErr != nil {
-			if err == nil {
-				err = closeErr
-			} else {
+			if err != nil {
 				err = fmt.Errorf("%s: %w", err, closeErr)
-			}
-		}
-
-		if closeErr := writer.Close(); closeErr != nil {
-			if err == nil {
-				err = closeErr
 			} else {
-				err = fmt.Errorf("%s: %w", err, closeErr)
+				err = fmt.Errorf("unable to close: %s", err)
 			}
 		}
 	}()

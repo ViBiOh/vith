@@ -160,13 +160,15 @@ func (a App) httpThumbnail(w http.ResponseWriter, req model.Request) {
 		return
 	}
 
+	defer func() {
+		if closeErr := reader.Close(); closeErr != nil {
+			logger.WithField("fn", "vith.httpThumbnail").WithField("item", req.Output).Error("unable to close: %s", closeErr)
+		}
+	}()
+
 	w.WriteHeader(http.StatusOK)
 	if _, err := io.Copy(w, reader); err != nil {
 		logger.Error("unable to copy file: %s", err)
-	}
-
-	if err := reader.Close(); err != nil {
-		logger.Error("unable to close reader for http: %s", err)
 	}
 }
 
@@ -223,47 +225,53 @@ func cleanFile(name string) {
 	}
 }
 
-func (a App) pdf(req model.Request) error {
-	stats, err := os.Stat(req.Input)
+func (a App) pdf(req model.Request) (err error) {
+	var stats os.FileInfo
+	stats, err = os.Stat(req.Input)
 	if err != nil {
 		return fmt.Errorf("unable to stats input file: %s", err)
 	}
 
-	reader, err := os.OpenFile(req.Input, os.O_RDONLY, 0o600)
+	var reader io.ReadCloser
+	reader, err = os.OpenFile(req.Input, os.O_RDONLY, 0o600)
 	if err != nil {
 		return fmt.Errorf("unable to open input file: %s", err)
 	}
 
-	writer, err := os.OpenFile(req.Output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
-	if err != nil {
+	defer func() {
 		if closeErr := reader.Close(); closeErr != nil {
-			logger.Error("unable to close input reader: %s", closeErr)
+			logger.WithField("fn", "vith.pdf").WithField("item", req.Input).Error("unable to close: %s", closeErr)
 		}
+	}()
 
+	var writer io.WriteCloser
+	writer, err = os.OpenFile(req.Output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
+	if err != nil {
 		return fmt.Errorf("unable to open output file: %s", err)
 	}
 
-	err = a.streamPdf(reader, writer, stats.Size())
+	defer func() {
+		if err == nil {
+			return
+		}
 
-	if closeErr := writer.Close(); closeErr != nil {
-		err = fmt.Errorf("%s: %w", err, closeErr)
-	}
-
-	if err != nil {
-		if removeErr := os.Remove(req.Output); err != nil {
+		if removeErr := os.Remove(req.Output); removeErr != nil {
 			err = fmt.Errorf("%s: %w", err, removeErr)
 		}
-	}
+	}()
 
-	return err
+	defer func() {
+		if closeErr := writer.Close(); closeErr != nil {
+			logger.WithField("fn", "vith.pdf").WithField("item", req.Output).Error("unable to close: %s", closeErr)
+		}
+	}()
+
+	return a.streamPdf(reader, writer, stats.Size())
 }
 
 func (a App) streamPdf(reader io.ReadCloser, writer io.Writer, contentLength int64) error {
 	r, err := a.imaginaryReq.Build(context.Background(), reader)
 	if err != nil {
-		if closeErr := reader.Close(); closeErr != nil {
-			logger.Error("unable to close reader after build: %s", err)
-		}
 		return fmt.Errorf("unable to build request: %s", err)
 	}
 
