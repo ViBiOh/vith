@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/vith/pkg/model"
 )
@@ -50,11 +49,7 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		defer func() {
-			if closeErr := reader.Close(); closeErr != nil {
-				logger.WithField("fn", "vith.handleGet").WithField("item", inputName).Error("unable to close: %s", err)
-			}
-		}()
+		defer closeWithLog(reader, "vith.handleGet", inputName)
 
 		if err := a.streamPdf(reader, w, info.Size()); err != nil {
 			a.increaseMetric("http", "thumbnail", "error")

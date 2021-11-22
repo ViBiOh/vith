@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/vith/pkg/model"
 )
@@ -41,12 +40,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer cleanFile(inputName)
-
-	defer func() {
-		if closeErr := writer.Close(); closeErr != nil {
-			logger.WithField("fn", "vith.handlePost").WithField("item", inputName).Error("unable to close: %s", err)
-		}
-	}()
+	defer closeWithLog(writer, "vith.handlePost", inputName)
 
 	if err := loadFile(writer, r); err != nil {
 		a.increaseMetric("http", "thumbnail", "load_error")
