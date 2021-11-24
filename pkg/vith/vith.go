@@ -228,14 +228,6 @@ func (a App) pdf(req model.Request) (err error) {
 		return fmt.Errorf("unable to stats input file: %s", err)
 	}
 
-	var reader io.ReadCloser
-	reader, err = os.OpenFile(req.Input, os.O_RDONLY, 0o600)
-	if err != nil {
-		return fmt.Errorf("unable to open input file: %s", err)
-	}
-
-	defer closeWithLog(reader, "vith.pdf", req.Input)
-
 	var writer io.WriteCloser
 	writer, err = os.OpenFile(req.Output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
@@ -253,6 +245,12 @@ func (a App) pdf(req model.Request) (err error) {
 	}()
 
 	defer closeWithLog(writer, "vith.pdf", req.Output)
+
+	var reader io.ReadCloser
+	reader, err = os.OpenFile(req.Input, os.O_RDONLY, 0o600) // file will be closed by streamPdf
+	if err != nil {
+		return fmt.Errorf("unable to open input file: %s", err)
+	}
 
 	return a.streamPdf(reader, writer, stats.Size())
 }
@@ -277,7 +275,7 @@ func (a App) streamPdf(reader io.ReadCloser, writer io.Writer, contentLength int
 	return nil
 }
 
-func closeWithLog(closer io.Closer, item, fn string) {
+func closeWithLog(closer io.Closer, fn, item string) {
 	if err := closer.Close(); err != nil {
 		logger.WithField("fn", fn).WithField("item", item).Error("unable to close: %s", err)
 	}
