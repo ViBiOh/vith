@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/vith/pkg/model"
 	"github.com/streadway/amqp"
 )
@@ -44,6 +45,11 @@ func (a App) AmqpStreamHandler(message amqp.Delivery) error {
 	if info, err := os.Stat(req.Input); err != nil || info.IsDir() {
 		a.increaseMetric("amqp", "stream", "not_found")
 		return fmt.Errorf("input `%s` doesn't exist or is a directory", req.Input)
+	}
+
+	if _, err := os.Stat(req.Output); err == nil {
+		logger.Info("Stream for %s already exists, skipping.", req.Input)
+		return nil
 	}
 
 	if err := a.generateStream(req); err != nil {
@@ -84,6 +90,11 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 	if info, err := os.Stat(req.Input); err != nil || info.IsDir() {
 		a.increaseMetric("amqp", "thumbnail", "not_found")
 		return fmt.Errorf("input `%s` doesn't exist or is a directory", req.Input)
+	}
+
+	if _, err := os.Stat(req.Output); err == nil {
+		logger.Info("Thumbnail for %s already exists, skipping.", req.Input)
+		return nil
 	}
 
 	a.increaseMetric("amqp", "thumbnail", req.ItemType.String())
