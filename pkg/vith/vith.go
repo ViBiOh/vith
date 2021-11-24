@@ -3,14 +3,12 @@ package vith
 import (
 	"bytes"
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -30,6 +28,9 @@ const (
 
 	// Height is the width of each thumbnail generated
 	Height = 150
+
+	webpExtension = ".webp"
+	hlsExtension  = ".m3u8"
 )
 
 var (
@@ -118,31 +119,6 @@ func (a App) Handler() http.Handler {
 
 func (a App) hasDirectAccess() bool {
 	return len(a.workingDir) != 0
-}
-
-func isValidStreamName(streamName string, shouldExist bool) error {
-	if len(streamName) == 0 {
-		return errors.New("name is required")
-	}
-
-	if strings.Contains(streamName, "..") {
-		return errors.New("path with dots are not allowed")
-	}
-
-	if filepath.Ext(streamName) != hlsExtension {
-		return fmt.Errorf("only `%s` files are allowed", hlsExtension)
-	}
-
-	info, err := os.Stat(streamName)
-	if shouldExist {
-		if err != nil || info.IsDir() {
-			return fmt.Errorf("input `%s` doesn't exist or is a directory", streamName)
-		}
-	} else if err == nil {
-		return fmt.Errorf("input `%s` already exists", streamName)
-	}
-
-	return nil
 }
 
 func (a App) httpThumbnail(w http.ResponseWriter, req model.Request) {
