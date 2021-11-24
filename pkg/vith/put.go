@@ -35,27 +35,17 @@ func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	outputFolder := r.URL.Query().Get("output")
-	if len(outputFolder) == 0 {
-		httperror.BadRequest(w, errors.New("output query param is mandatory"))
-		return
-	}
-
-	if strings.Contains(outputFolder, "..") {
-		httperror.BadRequest(w, errors.New("path with dots are not allowed"))
+	output := r.URL.Query().Get("output")
+	if len(output) == 0 || strings.Contains(output, "..") {
+		httperror.BadRequest(w, errors.New("output query param is mandatory or contains `..`"))
 		return
 	}
 
 	inputName := filepath.Join(a.workingDir, r.URL.Path)
-	outputName := filepath.Join(a.workingDir, outputFolder)
+	outputName := filepath.Join(a.workingDir, output)
 
 	if info, err := os.Stat(inputName); err != nil || info.IsDir() {
 		httperror.BadRequest(w, fmt.Errorf("input `%s` doesn't exist or is a directory", inputName))
-		return
-	}
-
-	if info, err := os.Stat(outputName); err != nil || !info.IsDir() {
-		httperror.BadRequest(w, fmt.Errorf("output `%s` doesn't exist or is not a directory", outputName))
 		return
 	}
 

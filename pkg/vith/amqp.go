@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ViBiOh/vith/pkg/model"
 	"github.com/streadway/amqp"
@@ -27,17 +28,22 @@ func (a App) AmqpStreamHandler(message amqp.Delivery) error {
 		return errors.New("stream are possible for video type only")
 	}
 
+	if len(req.Input) == 0 || strings.Contains(req.Input, "..") {
+		a.increaseMetric("amqp", "stream", "input_invalid")
+		return errors.New("input is mandatory or contains `..`")
+	}
+
+	if len(req.Output) == 0 || strings.Contains(req.Output, "..") {
+		a.increaseMetric("amqp", "stream", "output_invalid")
+		return errors.New("output is mandatory or contains `..`")
+	}
+
 	req.Input = filepath.Join(a.workingDir, req.Input)
 	req.Output = filepath.Join(a.workingDir, req.Output)
 
 	if info, err := os.Stat(req.Input); err != nil || info.IsDir() {
 		a.increaseMetric("amqp", "stream", "not_found")
 		return fmt.Errorf("input `%s` doesn't exist or is a directory", req.Input)
-	}
-
-	if info, err := os.Stat(req.Output); err != nil || !info.IsDir() {
-		a.increaseMetric("amqp", "stream", "not_dir")
-		return fmt.Errorf("output `%s` doesn't exist or is not a directory", req.Output)
 	}
 
 	if err := a.generateStream(req); err != nil {
@@ -60,6 +66,16 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 	if err := json.Unmarshal(message.Body, &req); err != nil {
 		a.increaseMetric("amqp", "thumbnail", "invalid")
 		return fmt.Errorf("unable to parse payload: %s", err)
+	}
+
+	if len(req.Input) == 0 || strings.Contains(req.Input, "..") {
+		a.increaseMetric("amqp", "thumbnail", "input_invalid")
+		return errors.New("input is mandatory or contains `..`")
+	}
+
+	if len(req.Output) == 0 || strings.Contains(req.Output, "..") {
+		a.increaseMetric("amqp", "thumbnail", "output_invalid")
+		return errors.New("output is mandatory or contains `..`")
 	}
 
 	req.Input = filepath.Join(a.workingDir, req.Input)

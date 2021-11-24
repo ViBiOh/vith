@@ -2,6 +2,7 @@ package vith
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,10 +11,6 @@ import (
 
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/vith/pkg/model"
-)
-
-const (
-	hlsExtension = ".m3u8"
 )
 
 // Done close when work is over
@@ -59,12 +56,7 @@ func (a App) generateStream(req model.Request) error {
 	log := logger.WithField("input", req.Input).WithField("output", req.Output)
 	log.Info("Generating stream...")
 
-	inputFilename := filepath.Base(req.Input)
-	inputFilename = strings.TrimSuffix(inputFilename, filepath.Ext(inputFilename))
-
-	outputName := filepath.Join(req.Output, fmt.Sprintf("%s%s", inputFilename, hlsExtension))
-
-	cmd := exec.Command("ffmpeg", "-i", req.Input, "-codec:v", "libx264", "-preset", "superfast", "-codec:a", "aac", "-b:a", "128k", "-ac", "2", "-f", "hls", "-hls_time", "4", "-hls_playlist_type", "event", "-hls_flags", "independent_segments", "-threads", "2", outputName)
+	cmd := exec.Command("ffmpeg", "-i", req.Input, "-codec:v", "libx264", "-preset", "superfast", "-codec:a", "aac", "-b:a", "128k", "-ac", "2", "-f", "hls", "-hls_time", "4", "-hls_playlist_type", "event", "-hls_flags", "independent_segments", "-threads", "2", req.Output)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
@@ -76,7 +68,7 @@ func (a App) generateStream(req model.Request) error {
 	if err := cmd.Run(); err != nil {
 		err = fmt.Errorf("unable to generate stream video: %s\n%s", err, buffer.Bytes())
 
-		if cleanErr := a.cleanStream(outputName); cleanErr != nil {
+		if cleanErr := a.cleanStream(req.Output); cleanErr != nil {
 			err = fmt.Errorf("unable to remove generated files: %s: %w", cleanErr, err)
 		}
 
@@ -103,6 +95,31 @@ func (a App) cleanStream(outputName string) error {
 		if err := os.Remove(file); err != nil {
 			return fmt.Errorf("unable to remove `%s`: %s", file, err)
 		}
+	}
+
+	return nil
+}
+
+func isValidStreamName(streamName string, shouldExist bool) error {
+	if len(streamName) == 0 {
+		return errors.New("name is required")
+	}
+
+	if strings.Contains(streamName, "..") {
+		return errors.New("path with dots are not allowed")
+	}
+
+	if filepath.Ext(streamName) != hlsExtension {
+		return fmt.Errorf("only `%s` files are allowed", hlsExtension)
+	}
+
+	info, err := os.Stat(streamName)
+	if shouldExist {
+		if err != nil || info.IsDir() {
+			return fmt.Errorf("input `%s` doesn't exist or is a directory", streamName)
+		}
+	} else if err == nil {
+		return fmt.Errorf("input `%s` already exists", streamName)
 	}
 
 	return nil
