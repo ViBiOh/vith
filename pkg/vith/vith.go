@@ -29,8 +29,7 @@ const (
 	// Height is the width of each thumbnail generated
 	Height = 150
 
-	webpExtension = ".webp"
-	hlsExtension  = ".m3u8"
+	hlsExtension = ".m3u8"
 )
 
 var (
