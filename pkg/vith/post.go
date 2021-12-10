@@ -17,13 +17,18 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	itemType, err := model.ParseItemType(r.URL.Query().Get("type"))
 	if err != nil {
 		httperror.BadRequest(w, err)
+		a.increaseMetric("http", "thumbnail", "", "invalid")
 		return
 	}
 
 	if itemType == model.TypePDF {
 		if err := a.streamPdf(r.Body, w, r.ContentLength); err != nil {
 			httperror.InternalServerError(w, err)
+			a.increaseMetric("http", "thumbnail", itemType.String(), "error")
+			return
 		}
+
+		a.increaseMetric("http", "thumbnail", itemType.String(), "success")
 
 		return
 	}
@@ -36,6 +41,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	writer, err := os.OpenFile(inputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		httperror.InternalServerError(w, err)
+		a.increaseMetric("http", "thumbnail", itemType.String(), "file_error")
 		return
 	}
 
@@ -43,8 +49,8 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	defer closeWithLog(writer, "vith.handlePost", inputName)
 
 	if err := loadFile(writer, r); err != nil {
-		a.increaseMetric("http", "thumbnail", "load_error")
 		httperror.InternalServerError(w, err)
+		a.increaseMetric("http", "thumbnail", itemType.String(), "load_error")
 		return
 	}
 
