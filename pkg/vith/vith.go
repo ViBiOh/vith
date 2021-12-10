@@ -89,7 +89,7 @@ func New(config Config, prometheusRegisterer prometheus.Registerer) App {
 		streamRequestQueue: make(chan model.Request, 4),
 		stop:               make(chan struct{}),
 		done:               make(chan struct{}),
-		metric:             prom.CounterVec(prometheusRegisterer, "vith", "", "item", "source", "kind", "state"),
+		metric:             prom.CounterVec(prometheusRegisterer, "vith", "", "item", "source", "kind", "type", "state"),
 		imaginaryReq:       imaginaryReq,
 	}
 }
@@ -124,7 +124,7 @@ func (a App) httpThumbnail(w http.ResponseWriter, req model.Request) {
 	defer cleanFile(req.Output)
 
 	if err := thumbnail(req); err != nil {
-		a.increaseMetric("http", "thumbnail", "error")
+		a.increaseMetric("http", "thumbnail", req.ItemType.String(), "error")
 		httperror.InternalServerError(w, err)
 		return
 	}
@@ -141,6 +141,8 @@ func (a App) httpThumbnail(w http.ResponseWriter, req model.Request) {
 	if _, err := io.Copy(w, reader); err != nil {
 		logger.Error("unable to copy file: %s", err)
 	}
+
+	a.increaseMetric("http", "thumbnail", req.ItemType.String(), "success")
 }
 
 func thumbnail(req model.Request) error {
