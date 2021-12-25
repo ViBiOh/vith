@@ -78,7 +78,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 
 // New creates new App from Config
 func New(config Config, prometheusRegisterer prometheus.Registerer) App {
-	imaginaryReq := request.New().WithClient(slowClient).Post(*config.imaginaryURL).BasicAuth(strings.TrimSpace(*config.imaginaryUser), *config.imaginaryPass)
+	imaginaryReq := request.Post(*config.imaginaryURL).WithClient(slowClient).BasicAuth(strings.TrimSpace(*config.imaginaryUser), *config.imaginaryPass)
 	if !imaginaryReq.IsZero() {
 		imaginaryReq = imaginaryReq.Path(fmt.Sprintf("/crop?width=%d&height=%d&stripmeta=true&noprofile=true&quality=80&type=webp", Width, Height))
 	}
