@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -96,6 +97,19 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 	if _, err := os.Stat(req.Output); err == nil {
 		logger.Info("Thumbnail for %s already exists, skipping.", req.Input)
 		return nil
+	}
+
+	dirname := path.Dir(req.Output)
+	if _, err := os.Stat(dirname); err != nil {
+		if !os.IsNotExist(err) {
+			a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "dir_error")
+			return fmt.Errorf("unable to stat output directory: %s", err)
+		}
+
+		if err = os.MkdirAll(dirname, 0o700); err != nil {
+			a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "dir_error")
+			return fmt.Errorf("unable to create output directory: %s", err)
+		}
 	}
 
 	if req.ItemType == model.TypePDF {
