@@ -14,6 +14,10 @@ import (
 	"github.com/streadway/amqp"
 )
 
+type amqpResponse struct {
+	Pathname string `json:"item"`
+}
+
 // AmqpStreamHandler for amqp stream request
 func (a App) AmqpStreamHandler(message amqp.Delivery) error {
 	if !a.hasDirectAccess() {
@@ -86,17 +90,13 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 		return errors.New("output is mandatory or contains `..`")
 	}
 
+	pathname := req.Input
 	req.Input = filepath.Join(a.workingDir, req.Input)
 	req.Output = filepath.Join(a.workingDir, req.Output)
 
 	if info, err := os.Stat(req.Input); err != nil || info.IsDir() {
 		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "not_found")
 		return fmt.Errorf("input `%s` doesn't exist or is a directory", req.Input)
-	}
-
-	if _, err := os.Stat(req.Output); err == nil {
-		logger.Info("Thumbnail for %s already exists, skipping.", req.Input)
-		return nil
 	}
 
 	dirname := path.Dir(req.Output)
@@ -119,15 +119,18 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 		}
 
 		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "success")
-		return nil
+	} else {
+		if err := thumbnail(req); err != nil {
+			a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
+			return fmt.Errorf("unable to generate thumbnail: %s", err)
+		}
+
+		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "success")
 	}
 
-	if err := thumbnail(req); err != nil {
-		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
-		return fmt.Errorf("unable to generate thumbnail: %s", err)
+	if err := a.amqpClient.PublishJSON(amqpResponse{Pathname: pathname}, a.amqpExchange, a.amqpRoutingKey); err != nil {
+		return fmt.Errorf("unable to publish amqp message: %s", err)
 	}
-
-	a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "success")
 
 	return nil
 }

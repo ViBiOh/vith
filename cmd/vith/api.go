@@ -45,14 +45,14 @@ func main() {
 	prometheusApp := prometheus.New(prometheusConfig)
 	healthApp := health.New(healthConfig)
 
-	vithApp := vith.New(vithConfig, prometheusApp.Registerer())
-
 	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer())
 	if err != nil {
 		logger.Error("unable to create amqp client: %s", err)
 	} else {
 		defer amqpClient.Close()
 	}
+
+	vithApp := vith.New(vithConfig, prometheusApp.Registerer(), amqpClient)
 
 	streamHandlerApp, err := amqphandler.New(streamHandlerConfig, amqpClient, vithApp.AmqpStreamHandler)
 	logger.Fatal(err)
