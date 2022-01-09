@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -87,7 +88,7 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 		return errors.New("output is mandatory or contains `..`")
 	}
 
-	tempOutput := filepath.Join(a.tmpFolder, fmt.Sprintf("%s.%s", sha.New(req.Output), filepath.Ext(req.Output)))
+	tempOutput := filepath.Join(a.tmpFolder, fmt.Sprintf("%s%s", sha.New(req.Output), filepath.Ext(req.Output)))
 	realOutput := filepath.Join(a.workingDir, req.Output)
 
 	req.Input = filepath.Join(a.workingDir, req.Input)
@@ -136,8 +137,22 @@ func (a App) finalizeThumbnail(itemType model.ItemType, temporary, final string)
 		}
 	}
 
-	if err := os.Rename(temporary, final); err != nil {
-		return fmt.Errorf("unable to rename from `%s` to `%s`: %s", temporary, final, err)
+	reader, err := os.OpenFile(temporary, os.O_RDONLY, 0o600)
+	if err != nil {
+		return fmt.Errorf("unable to open temp file `%s`: %s", temporary, err)
+	}
+
+	defer closeWithLog(reader, "finalizeThumbnail", temporary)
+
+	writer, err := os.OpenFile(final, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
+	if err != nil {
+		return fmt.Errorf("unable to open final file `%s`: %s", temporary, err)
+	}
+
+	defer closeWithLog(writer, "finalizeThumbnail", final)
+
+	if _, err = io.Copy(writer, reader); err != nil {
+		return fmt.Errorf("unable to copy from `%s` to `%s`: %s", temporary, final, err)
 	}
 
 	return nil
