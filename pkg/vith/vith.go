@@ -13,7 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ViBiOh/httputils/v4/pkg/amqp"
 	"github.com/ViBiOh/httputils/v4/pkg/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
@@ -45,15 +44,12 @@ var (
 
 // App of package
 type App struct {
-	amqpClient         *amqp.Client
 	done               chan struct{}
 	stop               chan struct{}
 	streamRequestQueue chan model.Request
 	metric             *prometheus.CounterVec
 	tmpFolder          string
 	workingDir         string
-	amqpExchange       string
-	amqpRoutingKey     string
 	imaginaryReq       request.Request
 }
 
@@ -65,9 +61,6 @@ type Config struct {
 	imaginaryURL  *string
 	imaginaryUser *string
 	imaginaryPass *string
-
-	amqpExchange   *string
-	amqpRoutingKey *string
 }
 
 // Flags adds flags for configuring package
@@ -79,14 +72,11 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 		imaginaryURL:  flags.New(prefix, "thumbnail", "ImaginaryURL").Default("http://image:9000", nil).Label("Imaginary URL").ToString(fs),
 		imaginaryUser: flags.New(prefix, "thumbnail", "ImaginaryUser").Default("", nil).Label("Imaginary Basic Auth User").ToString(fs),
 		imaginaryPass: flags.New(prefix, "thumbnail", "ImaginaryPassword").Default("", nil).Label("Imaginary Basic Auth Password").ToString(fs),
-
-		amqpExchange:   flags.New(prefix, "exas", "Exchange").Default("fibr", nil).Label("AMQP Exchange Name").ToString(fs),
-		amqpRoutingKey: flags.New(prefix, "exas", "RoutingKey").Default("vith_output", nil).Label("AMQP Routing Key to fibr").ToString(fs),
 	}
 }
 
 // New creates new App from Config
-func New(config Config, prometheusRegisterer prometheus.Registerer, amqpClient *amqp.Client) App {
+func New(config Config, prometheusRegisterer prometheus.Registerer) App {
 	imaginaryReq := request.Post(*config.imaginaryURL).WithClient(slowClient).BasicAuth(strings.TrimSpace(*config.imaginaryUser), *config.imaginaryPass)
 	if !imaginaryReq.IsZero() {
 		imaginaryReq = imaginaryReq.Path(fmt.Sprintf("/crop?width=%d&height=%d&stripmeta=true&noprofile=true&quality=80&type=webp", Width, Height))
@@ -99,12 +89,7 @@ func New(config Config, prometheusRegisterer prometheus.Registerer, amqpClient *
 		stop:               make(chan struct{}),
 		done:               make(chan struct{}),
 		metric:             prom.CounterVec(prometheusRegisterer, "vith", "", "item", "source", "kind", "type", "state"),
-
-		imaginaryReq: imaginaryReq,
-
-		amqpClient:     amqpClient,
-		amqpExchange:   strings.TrimSpace(*config.amqpExchange),
-		amqpRoutingKey: strings.TrimSpace(*config.amqpRoutingKey),
+		imaginaryReq:       imaginaryReq,
 	}
 }
 

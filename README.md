@@ -99,6 +99,8 @@ Usage of vith:
         [server] Shutdown Timeout {VITH_SHUTDOWN_TIMEOUT} (default "10s")
   -streamExchange string
         [stream] Exchange name {VITH_STREAM_EXCHANGE} (default "fibr")
+  -streamExclusive
+        [stream] Queue exclusive mode (for fanout exchange) {VITH_STREAM_EXCLUSIVE}
   -streamMaxRetry uint
         [stream] Max send retries {VITH_STREAM_MAX_RETRY} (default 3)
   -streamQueue string
@@ -109,6 +111,8 @@ Usage of vith:
         [stream] RoutingKey name {VITH_STREAM_ROUTING_KEY} (default "stream")
   -thumbnailExchange string
         [thumbnail] Exchange name {VITH_THUMBNAIL_EXCHANGE} (default "fibr")
+  -thumbnailExclusive
+        [thumbnail] Queue exclusive mode (for fanout exchange) {VITH_THUMBNAIL_EXCLUSIVE}
   -thumbnailMaxRetry uint
         [thumbnail] Max send retries {VITH_THUMBNAIL_MAX_RETRY} (default 3)
   -thumbnailQueue string
