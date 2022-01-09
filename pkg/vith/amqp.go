@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
@@ -88,7 +87,7 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 		return errors.New("output is mandatory or contains `..`")
 	}
 
-	tempOutput := filepath.Join(a.tmpFolder, fmt.Sprintf("input_%s", sha.New(time.Now())))
+	tempOutput := filepath.Join(a.tmpFolder, fmt.Sprintf("%s.%s", sha.New(req.Output), filepath.Ext(req.Output)))
 	realOutput := filepath.Join(a.workingDir, req.Output)
 
 	req.Input = filepath.Join(a.workingDir, req.Input)
