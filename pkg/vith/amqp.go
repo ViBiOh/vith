@@ -1,6 +1,7 @@
 package vith
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -151,7 +152,10 @@ func (a App) finalizeThumbnail(itemType model.ItemType, temporary, final string)
 
 	defer closeWithLog(writer, "finalizeThumbnail", final)
 
-	if _, err = io.Copy(writer, reader); err != nil {
+	buffer := bufferPool.Get().(*bytes.Buffer)
+	defer bufferPool.Put(buffer)
+
+	if _, err = io.CopyBuffer(writer, reader, buffer.Bytes()); err != nil {
 		return fmt.Errorf("unable to copy from `%s` to `%s`: %s", temporary, final, err)
 	}
 
