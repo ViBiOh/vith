@@ -8,8 +8,10 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
+	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/vith/pkg/model"
 	"github.com/streadway/amqp"
 )
@@ -86,30 +88,20 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 		return errors.New("output is mandatory or contains `..`")
 	}
 
+	tempOutput := filepath.Join(a.tmpFolder, fmt.Sprintf("input_%s", sha.New(time.Now())))
+	realOutput := filepath.Join(a.workingDir, req.Output)
+
 	req.Input = filepath.Join(a.workingDir, req.Input)
-	req.Output = filepath.Join(a.workingDir, req.Output)
+	req.Output = tempOutput
 
 	if info, err := os.Stat(req.Input); err != nil || info.IsDir() {
 		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "not_found")
 		return fmt.Errorf("input `%s` doesn't exist or is a directory", req.Input)
 	}
 
-	if _, err := os.Stat(req.Output); err == nil {
+	if _, err := os.Stat(realOutput); err == nil {
 		logger.Info("Thumbnail for `%s` already exists, skipping.", req.Input)
 		return nil
-	}
-
-	dirname := path.Dir(req.Output)
-	if _, err := os.Stat(dirname); err != nil {
-		if !os.IsNotExist(err) {
-			a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "dir_error")
-			return fmt.Errorf("unable to stat output directory: %s", err)
-		}
-
-		if err = os.MkdirAll(dirname, 0o700); err != nil {
-			a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "dir_error")
-			return fmt.Errorf("unable to create output directory: %s", err)
-		}
 	}
 
 	if req.ItemType == model.TypePDF {
@@ -119,15 +111,35 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 		}
 
 		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "success")
-		return nil
+	} else {
+		if err := thumbnail(req); err != nil {
+			a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
+			return fmt.Errorf("unable to generate thumbnail: %s", err)
+		}
+
+		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "success")
 	}
 
-	if err := thumbnail(req); err != nil {
-		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
-		return fmt.Errorf("unable to generate thumbnail: %s", err)
+	return a.finalizeThumbnail(req.ItemType, tempOutput, realOutput)
+}
+
+func (a App) finalizeThumbnail(itemType model.ItemType, temporary, final string) error {
+	dirname := path.Dir(final)
+	if _, err := os.Stat(dirname); err != nil {
+		if !os.IsNotExist(err) {
+			a.increaseMetric("amqp", "thumbnail", itemType.String(), "dir_error")
+			return fmt.Errorf("unable to stat output directory: %s", err)
+		}
+
+		if err = os.MkdirAll(dirname, 0o700); err != nil {
+			a.increaseMetric("amqp", "thumbnail", itemType.String(), "dir_error")
+			return fmt.Errorf("unable to create output directory: %s", err)
+		}
 	}
 
-	a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "success")
+	if err := os.Rename(temporary, final); err != nil {
+		return fmt.Errorf("unable to rename from `%s` to `%s`: %s", temporary, final, err)
+	}
 
 	return nil
 }
