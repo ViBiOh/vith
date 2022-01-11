@@ -171,7 +171,7 @@ func thumbnail(req model.Request) error {
 		animatedOptions = ",fps=10"
 	}
 
-	ffmpegOpts = append(ffmpegOpts, "-i", req.Input, "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150"+animatedOptions, "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture")
+	ffmpegOpts = append(ffmpegOpts, "-i", req.Input, "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150"+animatedOptions, "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-f", "webp")
 	ffmpegOpts = append(ffmpegOpts, customOpts...)
 	ffmpegOpts = append(ffmpegOpts, req.Output)
 	cmd := exec.Command("ffmpeg", ffmpegOpts...)
