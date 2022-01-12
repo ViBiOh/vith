@@ -21,7 +21,8 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if itemType == model.TypePDF {
+	switch itemType {
+	case model.TypePDF:
 		if err := a.streamPdf(r.Body, w, r.ContentLength); err != nil {
 			httperror.InternalServerError(w, err)
 			a.increaseMetric("http", "thumbnail", itemType.String(), "error")
@@ -29,7 +30,16 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		a.increaseMetric("http", "thumbnail", itemType.String(), "success")
+		return
 
+	case model.TypeImage:
+		if err := streamThumbnail(r.Body, w); err != nil {
+			a.increaseMetric("http", "thumbnail", itemType.String(), "error")
+			httperror.InternalServerError(w, err)
+			return
+		}
+
+		a.increaseMetric("http", "thumbnail", itemType.String(), "success")
 		return
 	}
 
