@@ -119,10 +119,10 @@ func (a App) hasDirectAccess() bool {
 	return len(a.workingDir) != 0
 }
 
-func (a App) httpThumbnail(w http.ResponseWriter, req model.Request) {
+func (a App) httpVideoThumbnail(w http.ResponseWriter, req model.Request) {
 	defer cleanFile(req.Output)
 
-	if err := thumbnail(req); err != nil {
+	if err := videoThumbnail(req); err != nil {
 		a.increaseMetric("http", "thumbnail", req.ItemType.String(), "error")
 		httperror.InternalServerError(w, err)
 		return
@@ -144,34 +144,29 @@ func (a App) httpThumbnail(w http.ResponseWriter, req model.Request) {
 	a.increaseMetric("http", "thumbnail", req.ItemType.String(), "success")
 }
 
-func thumbnail(req model.Request) error {
+func videoThumbnail(req model.Request) error {
 	var ffmpegOpts []string
 	var customOpts []string
-	var animatedOptions string
 
-	if req.ItemType == model.TypeVideo {
-		if duration, err := getContainerDuration(req.Input); err != nil {
-			logger.Error("unable to get container duration: %s", err)
+	if duration, err := getContainerDuration(req.Input); err != nil {
+		logger.Error("unable to get container duration: %s", err)
 
-			ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
-			customOpts = []string{
-				"-frames:v",
-				"1",
-			}
-		} else {
-			ffmpegOpts = append(ffmpegOpts, "-ss", fmt.Sprintf("%.3f", duration/2), "-t", "5")
-			customOpts = []string{
-				"-vsync",
-				"0",
-				"-loop",
-				"0",
-			}
+		ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
+		customOpts = []string{
+			"-frames:v",
+			"1",
 		}
-
-		animatedOptions = ",fps=10"
+	} else {
+		ffmpegOpts = append(ffmpegOpts, "-ss", fmt.Sprintf("%.3f", duration/2), "-t", "5")
+		customOpts = []string{
+			"-vsync",
+			"0",
+			"-loop",
+			"0",
+		}
 	}
 
-	ffmpegOpts = append(ffmpegOpts, "-i", req.Input, "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150"+animatedOptions, "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-f", "webp")
+	ffmpegOpts = append(ffmpegOpts, "-i", req.Input, "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150,fps=10", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-f", "webp")
 	ffmpegOpts = append(ffmpegOpts, customOpts...)
 	ffmpegOpts = append(ffmpegOpts, req.Output)
 	cmd := exec.Command("ffmpeg", ffmpegOpts...)
@@ -235,6 +230,37 @@ func closeWithLog(closer io.Closer, fn, item string) {
 	if err := closer.Close(); err != nil {
 		logger.WithField("fn", fn).WithField("item", item).Error("unable to close: %s", err)
 	}
+}
+
+func (a App) fileThumbnail(inputName string, output io.Writer, source string, itemType model.ItemType) error {
+	reader, err := os.OpenFile(inputName, os.O_RDONLY, 0o600)
+	if err != nil {
+		a.increaseMetric(source, "thumbnail", itemType.String(), "file_error")
+		return fmt.Errorf("unable to open input file: %s", err)
+	}
+	defer closeWithLog(reader, "fileThumbnail", inputName)
+
+	switch itemType {
+	case model.TypePDF:
+		var info os.FileInfo
+		info, err = os.Stat(inputName)
+		if err != nil {
+			a.increaseMetric(source, "thumbnail", itemType.String(), "file_error")
+			return fmt.Errorf("unable to stat input file: %s", err)
+		}
+
+		err = a.streamPdf(reader, output, info.Size())
+	case model.TypeImage:
+		err = streamThumbnail(reader, output)
+	}
+
+	if err != nil {
+		a.increaseMetric(source, "thumbnail", itemType.String(), "error")
+		return err
+	}
+
+	a.increaseMetric(source, "thumbnail", itemType.String(), "success")
+	return nil
 }
 
 func streamThumbnail(input io.Reader, output io.Writer) error {

@@ -34,8 +34,8 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 
 	case model.TypeImage:
 		if err := streamThumbnail(r.Body, w); err != nil {
-			a.increaseMetric("http", "thumbnail", itemType.String(), "error")
 			httperror.InternalServerError(w, err)
+			a.increaseMetric("http", "thumbnail", itemType.String(), "error")
 			return
 		}
 
@@ -64,7 +64,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.httpThumbnail(w, model.NewRequest(inputName, outputName, itemType))
+	a.httpVideoThumbnail(w, model.NewRequest(inputName, outputName, itemType))
 }
 
 func loadFile(writer io.Writer, r *http.Request) (err error) {
