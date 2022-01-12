@@ -148,7 +148,7 @@ func videoThumbnail(req model.Request) error {
 	var ffmpegOpts []string
 	var customOpts []string
 
-	if duration, err := getContainerDuration(req.Input); err != nil {
+	if _, duration, err := getVideoDetailsFromName(req.Input); err != nil {
 		logger.Error("unable to get container duration: %s", err)
 
 		ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
