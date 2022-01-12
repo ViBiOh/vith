@@ -238,7 +238,11 @@ func (a App) fileThumbnail(inputName string, output io.Writer, source string, it
 		a.increaseMetric(source, "thumbnail", itemType.String(), "file_error")
 		return fmt.Errorf("unable to open input file: %s", err)
 	}
-	defer closeWithLog(reader, "fileThumbnail", inputName)
+
+	// PDF file are closed by request sender
+	if itemType != model.TypePDF {
+		defer closeWithLog(reader, "fileThumbnail", inputName)
+	}
 
 	switch itemType {
 	case model.TypePDF:
@@ -284,6 +288,7 @@ func streamThumbnail(input io.Reader, output io.Writer) error {
 func (a App) streamPdf(input io.ReadCloser, output io.Writer, contentLength int64) error {
 	r, err := a.imaginaryReq.Build(context.Background(), input)
 	if err != nil {
+		defer closeWithLog(input, "streamPdf", "")
 		return fmt.Errorf("unable to build request: %s", err)
 	}
 
