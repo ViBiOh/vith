@@ -106,11 +106,11 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 	}
 
 	if req.ItemType != model.TypeVideo {
-		writer, err := os.OpenFile(req.Output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
+		writer, err := os.OpenFile(realOutput, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 		if err != nil {
 			return fmt.Errorf("unable to open output file: %s", err)
 		}
-		defer closeWithLog(writer, "AmqpThumbnailHandler", req.Output)
+		defer closeWithLog(writer, "AmqpThumbnailHandler", realOutput)
 
 		return a.fileThumbnail(req.Input, writer, "amqp", req.ItemType)
 	}
