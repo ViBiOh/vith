@@ -5,8 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
@@ -14,7 +13,7 @@ import (
 )
 
 func (a App) handlePatch(w http.ResponseWriter, r *http.Request) {
-	if !a.hasDirectAccess() {
+	if !a.storageApp.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -30,20 +29,19 @@ func (a App) handlePatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sourceName := filepath.Join(a.workingDir, r.URL.Path)
-	destinationName := filepath.Join(a.workingDir, r.URL.Query().Get("to"))
+	destinationName := r.URL.Query().Get("to")
 
-	if err := isValidStreamName(sourceName, true); err != nil {
+	if err := a.isValidStreamName(r.URL.Path, true); err != nil {
 		httperror.BadRequest(w, fmt.Errorf("invalid source name: %s", err))
 		return
 	}
 
-	if err := isValidStreamName(destinationName, false); err != nil {
+	if err := a.isValidStreamName(destinationName, false); err != nil {
 		httperror.BadRequest(w, fmt.Errorf("invalid destination name: %s", err))
 		return
 	}
 
-	if err := a.renameStream(sourceName, destinationName); err != nil {
+	if err := a.renameStream(r.URL.Path, destinationName); err != nil {
 		httperror.InternalServerError(w, err)
 		return
 	}
@@ -55,31 +53,31 @@ func (a App) renameStream(source, destination string) error {
 	rawSourceName := strings.TrimSuffix(source, hlsExtension)
 	rawDestinationName := strings.TrimSuffix(destination, hlsExtension)
 
-	baseSourceName := filepath.Base(rawSourceName)
-	baseDestinationName := filepath.Base(rawDestinationName)
+	baseSourceName := path.Base(rawSourceName)
+	baseDestinationName := path.Base(rawDestinationName)
 
-	content, err := os.ReadFile(source)
+	content, err := a.readFile(source)
 	if err != nil {
-		return fmt.Errorf("unable to read source file `%s`: %s", source, err)
+		return fmt.Errorf("unable to read manifest `%s`: %s", source, err)
 	}
 
-	segments, err := filepath.Glob(rawSourceName + "*.ts")
+	segments, err := a.listFiles(rawSourceName + `.*\.ts`)
 	if err != nil {
 		return fmt.Errorf("unable to list hls segments for `%s`: %s", rawSourceName, err)
 	}
 
-	if err := os.WriteFile(destination, bytes.ReplaceAll(content, []byte(baseSourceName), []byte(baseDestinationName)), 0o600); err != nil {
+	if err := a.writeFile(destination, bytes.ReplaceAll(content, []byte(baseSourceName), []byte(baseDestinationName))); err != nil {
 		return fmt.Errorf("unable to write destination file `%s`: %s", destination, err)
 	}
 
 	for _, file := range segments {
 		newName := rawDestinationName + strings.TrimPrefix(file, rawSourceName)
-		if err := os.Rename(file, newName); err != nil {
+		if err := a.storageApp.Rename(file, newName); err != nil {
 			return fmt.Errorf("unable to rename `%s` to `%s`: %s", file, newName, err)
 		}
 	}
 
-	if err := os.Remove(source); err != nil {
+	if err := a.storageApp.Remove(source); err != nil {
 		return fmt.Errorf("unable to delete `%s`: %s", source, err)
 	}
 

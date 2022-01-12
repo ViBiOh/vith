@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 
+	"github.com/ViBiOh/absto/pkg/absto"
 	"github.com/ViBiOh/httputils/v4/pkg/alcotest"
 	"github.com/ViBiOh/httputils/v4/pkg/amqp"
 	"github.com/ViBiOh/httputils/v4/pkg/amqphandler"
@@ -29,6 +30,7 @@ func main() {
 	prometheusConfig := prometheus.Flags(fs, "prometheus", flags.NewOverride("Gzip", false))
 
 	vithConfig := vith.Flags(fs, "")
+	abstoConfig := absto.Flags(fs, "storage", flags.NewOverride("Directory", ""))
 
 	amqpConfig := amqp.Flags(fs, "amqp")
 	streamHandlerConfig := amqphandler.Flags(fs, "stream", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "stream"), flags.NewOverride("RoutingKey", "stream"))
@@ -45,6 +47,9 @@ func main() {
 	prometheusApp := prometheus.New(prometheusConfig)
 	healthApp := health.New(healthConfig)
 
+	storageProvider, err := absto.New(abstoConfig)
+	logger.Fatal(err)
+
 	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer())
 	if err != nil {
 		logger.Error("unable to create amqp client: %s", err)
@@ -52,7 +57,7 @@ func main() {
 		defer amqpClient.Close()
 	}
 
-	vithApp := vith.New(vithConfig, prometheusApp.Registerer())
+	vithApp := vith.New(vithConfig, prometheusApp.Registerer(), storageProvider)
 
 	streamHandlerApp, err := amqphandler.New(streamHandlerConfig, amqpClient, vithApp.AmqpStreamHandler)
 	logger.Fatal(err)

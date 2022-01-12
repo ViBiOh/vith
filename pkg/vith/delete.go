@@ -3,21 +3,14 @@ package vith
 import (
 	"errors"
 	"net/http"
-	"path/filepath"
-	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
 func (a App) handleDelete(w http.ResponseWriter, r *http.Request) {
-	if !a.hasDirectAccess() {
+	if !a.storageApp.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	if strings.Contains(r.URL.Path, "..") {
-		httperror.BadRequest(w, errors.New("path with dots are not allowed"))
 		return
 	}
 
@@ -32,14 +25,12 @@ func (a App) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inputName := filepath.Join(a.workingDir, r.URL.Path)
-
-	if err := isValidStreamName(inputName, true); err != nil {
+	if err := a.isValidStreamName(r.URL.Path, true); err != nil {
 		httperror.BadRequest(w, err)
 		return
 	}
 
-	if err := a.cleanStream(inputName); err != nil {
+	if err := a.cleanStream(r.URL.Path, a.storageApp.Remove, a.listFiles, `.*\.ts`); err != nil {
 		httperror.InternalServerError(w, err)
 	}
 
