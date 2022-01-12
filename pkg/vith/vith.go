@@ -231,8 +231,32 @@ func (a App) pdf(req model.Request) (err error) {
 	return a.streamPdf(reader, writer, stats.Size())
 }
 
-func (a App) streamPdf(reader io.ReadCloser, writer io.Writer, contentLength int64) error {
-	r, err := a.imaginaryReq.Build(context.Background(), reader)
+func closeWithLog(closer io.Closer, fn, item string) {
+	if err := closer.Close(); err != nil {
+		logger.WithField("fn", fn).WithField("item", item).Error("unable to close: %s", err)
+	}
+}
+
+func streamThumbnail(input io.Reader, output io.Writer) error {
+	cmd := exec.Command("ffmpeg", "-i", "pipe:0", "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-f", "webp", "pipe:1")
+
+	buffer := bufferPool.Get().(*bytes.Buffer)
+	defer bufferPool.Put(buffer)
+
+	buffer.Reset()
+	cmd.Stdin = input
+	cmd.Stdout = output
+	cmd.Stderr = buffer
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("%s: %s", buffer.String(), err)
+	}
+
+	return nil
+}
+
+func (a App) streamPdf(input io.ReadCloser, output io.Writer, contentLength int64) error {
+	r, err := a.imaginaryReq.Build(context.Background(), input)
 	if err != nil {
 		return fmt.Errorf("unable to build request: %s", err)
 	}
@@ -244,15 +268,12 @@ func (a App) streamPdf(reader io.ReadCloser, writer io.Writer, contentLength int
 		return fmt.Errorf("unable to request imaginary: %s", err)
 	}
 
-	if _, err = io.Copy(writer, resp.Body); err != nil {
+	buffer := bufferPool.Get().(*bytes.Buffer)
+	defer bufferPool.Put(buffer)
+
+	if _, err = io.CopyBuffer(output, resp.Body, buffer.Bytes()); err != nil {
 		return fmt.Errorf("unable to copy imaginary response: %s", err)
 	}
 
 	return nil
-}
-
-func closeWithLog(closer io.Closer, fn, item string) {
-	if err := closer.Close(); err != nil {
-		logger.WithField("fn", fn).WithField("item", item).Error("unable to close: %s", err)
-	}
 }
