@@ -2,11 +2,7 @@ package vith
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
@@ -14,13 +10,8 @@ import (
 )
 
 func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
-	if !a.hasDirectAccess() {
+	if !a.storageApp.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	if strings.Contains(r.URL.Path, "..") {
-		httperror.BadRequest(w, errors.New("path with dots are not allowed"))
 		return
 	}
 
@@ -36,23 +27,15 @@ func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
 	}
 
 	output := r.URL.Query().Get("output")
-	if len(output) == 0 || strings.Contains(output, "..") {
-		httperror.BadRequest(w, errors.New("output query param is mandatory or contains `..`"))
+	if len(output) == 0 {
+		httperror.BadRequest(w, errors.New("output query param is mandatory"))
 		return
 	}
 
-	inputName := filepath.Join(a.workingDir, r.URL.Path)
-	outputName := filepath.Join(a.workingDir, output)
-
-	if info, err := os.Stat(inputName); err != nil || info.IsDir() {
-		httperror.BadRequest(w, fmt.Errorf("input `%s` doesn't exist or is a directory", inputName))
-		return
-	}
-
-	logger.WithField("input", inputName).Info("Adding stream generation in the work queue")
+	logger.WithField("input", r.URL.Path).Info("Adding stream generation in the work queue")
 
 	select {
-	case a.streamRequestQueue <- model.NewRequest(inputName, outputName, itemType):
+	case a.streamRequestQueue <- model.NewRequest(r.URL.Path, output, itemType):
 		w.WriteHeader(http.StatusAccepted)
 	case <-a.stop:
 		w.WriteHeader(http.StatusServiceUnavailable)
