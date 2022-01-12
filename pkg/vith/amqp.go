@@ -105,21 +105,22 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 		return nil
 	}
 
-	if req.ItemType == model.TypePDF {
-		if err := a.pdf(req); err != nil {
-			a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
-			return fmt.Errorf("unable to generate pdf: %s", err)
+	if req.ItemType != model.TypeVideo {
+		writer, err := os.OpenFile(req.Output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
+		if err != nil {
+			return fmt.Errorf("unable to open output file: %s", err)
 		}
+		defer closeWithLog(writer, "AmqpThumbnailHandler", req.Output)
 
-		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "success")
-	} else {
-		if err := thumbnail(req); err != nil {
-			a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
-			return fmt.Errorf("unable to generate thumbnail: %s", err)
-		}
-
-		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "success")
+		return a.fileThumbnail(req.Input, writer, "amqp", req.ItemType)
 	}
+
+	if err := videoThumbnail(req); err != nil {
+		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
+		return fmt.Errorf("unable to generate thumbnail: %s", err)
+	}
+
+	a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "success")
 
 	return a.finalizeThumbnail(req.ItemType, tempOutput, realOutput)
 }
