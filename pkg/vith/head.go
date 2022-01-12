@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -36,68 +38,65 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inputName := filepath.Join(a.workingDir, r.URL.Path)
-
-	bitrate, err := getVideoBitrate(inputName)
+	bitrate, duration, err := getVideoDetailsFromName(filepath.Join(a.workingDir, r.URL.Path))
 	if err != nil {
 		httperror.InternalServerError(w, fmt.Errorf("unable to get bitrate: %s", err))
-	}
-
-	duration, err := getContainerDuration(inputName)
-	if err != nil {
-		httperror.InternalServerError(w, fmt.Errorf("unable to get duration: %s", err))
+		return
 	}
 
 	w.Header().Set("X-Vith-Bitrate", fmt.Sprintf("%d", bitrate))
 	w.Header().Set("X-Vith-Duration", fmt.Sprintf("%.3f", duration))
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusNoContent)
 }
 
-func getVideoBitrate(name string) (int64, error) {
-	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=bit_rate", "-of", "default=noprint_wrappers=1:nokey=1", name)
+func getVideoDetailsFromName(name string) (int64, float64, error) {
+	reader, err := os.OpenFile(name, os.O_RDONLY, 0o600)
+	if err != nil {
+		return 0, 0, fmt.Errorf("unable to open file: %s", err)
+	}
+	defer closeWithLog(reader, "getVideoBitrate", name)
+
+	return getVideoDetails(reader)
+}
+
+func getVideoDetails(input io.Reader) (bitrate int64, duration float64, err error) {
+	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=bit_rate:format=duration", "-of", "default=noprint_wrappers=1:nokey=1", "-")
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
 
 	buffer.Reset()
+	cmd.Stdin = input
 	cmd.Stdout = buffer
 	cmd.Stderr = buffer
 
-	if err := cmd.Run(); err != nil {
-		return 0.0, fmt.Errorf("ffmpeg error `%s`: %s", err, buffer.String())
+	if err = cmd.Run(); err != nil {
+		err = fmt.Errorf("ffmpeg error `%s`: %s", err, buffer.String())
+		return
 	}
 
-	output := strings.Trim(buffer.String(), "\n")
+	for _, output := range strings.Split(strings.Trim(buffer.String(), "\n"), "\n") {
+		if bitrate == 0 {
+			bitrate, err = strconv.ParseInt(output, 10, 64)
+			if err != nil {
+				if duration != 0 {
+					err = fmt.Errorf("unable to parse bitrate `%s`: %s", output, err)
+					return
+				}
+			} else {
+				continue
+			}
+		}
 
-	duration, err := strconv.ParseInt(output, 10, 64)
-	if err != nil {
-		return 0.0, fmt.Errorf("unable to parse bitrate `%s`: %s", output, err)
+		if duration == 0 {
+			duration, err = strconv.ParseFloat(output, 64)
+			if err != nil && bitrate != 0 {
+				err = fmt.Errorf("unable to parse duration `%s`: %s", output, err)
+				return
+			}
+		}
 	}
 
-	return duration, nil
-}
-
-func getContainerDuration(name string) (float64, error) {
-	cmd := exec.Command("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", name)
-
-	buffer := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buffer)
-
-	buffer.Reset()
-	cmd.Stdout = buffer
-	cmd.Stderr = buffer
-
-	if err := cmd.Run(); err != nil {
-		return 0.0, fmt.Errorf("ffmpeg error `%s`: %s", err, buffer.String())
-	}
-
-	output := strings.Trim(buffer.String(), "\n")
-
-	duration, err := strconv.ParseFloat(output, 64)
-	if err != nil {
-		return 0.0, fmt.Errorf("unable to parse duration `%s`: %s", output, err)
-	}
-
-	return duration, nil
+	return
 }
