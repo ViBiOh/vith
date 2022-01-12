@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -17,13 +15,8 @@ import (
 )
 
 func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
-	if !a.hasDirectAccess() {
+	if !a.storageApp.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	if strings.Contains(r.URL.Path, "..") {
-		httperror.BadRequest(w, errors.New("path with dots are not allowed"))
 		return
 	}
 
@@ -38,7 +31,14 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bitrate, duration, err := getVideoDetailsFromName(filepath.Join(a.workingDir, r.URL.Path))
+	reader, err := a.storageApp.ReaderFrom(r.URL.Path)
+	if err != nil {
+		httperror.InternalServerError(w, fmt.Errorf("unable to read from storage: %s", err))
+		return
+	}
+	defer closeWithLog(reader, "handleHead", r.URL.Path)
+
+	bitrate, duration, err := getVideoDetails(reader)
 	if err != nil {
 		httperror.InternalServerError(w, fmt.Errorf("unable to get bitrate: %s", err))
 		return
@@ -48,16 +48,6 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Vith-Duration", fmt.Sprintf("%.3f", duration))
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func getVideoDetailsFromName(name string) (int64, float64, error) {
-	reader, err := os.OpenFile(name, os.O_RDONLY, 0o600)
-	if err != nil {
-		return 0, 0, fmt.Errorf("unable to open file: %s", err)
-	}
-	defer closeWithLog(reader, "getVideoBitrate", name)
-
-	return getVideoDetails(reader)
 }
 
 func getVideoDetails(input io.Reader) (bitrate int64, duration float64, err error) {

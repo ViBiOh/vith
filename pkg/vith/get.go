@@ -1,20 +1,15 @@
 package vith
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-	"path"
-	"path/filepath"
-	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
-	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
 func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
-	if !a.hasDirectAccess() {
+	if !a.storageApp.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -26,21 +21,27 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.Contains(r.URL.Path, "..") {
-		httperror.BadRequest(w, errors.New("path with dots are not allowed"))
-		a.increaseMetric("http", "thumbnail", itemType.String(), "input_invalid")
-		return
-	}
-
-	inputName := filepath.Join(a.workingDir, r.URL.Path)
-
-	if itemType != model.TypeVideo {
-		if err := a.fileThumbnail(inputName, w, "http", itemType); err != nil {
-			httperror.InternalServerError(w, err)
+	switch itemType {
+	case model.TypeVideo:
+		var inputName string
+		var finalizeInput func()
+		inputName, finalizeInput, err = a.getInputVideoName(r.URL.Path)
+		if err != nil {
+			err = fmt.Errorf("unable to get input video name: %s", err)
+		} else {
+			defer finalizeInput()
+			err = a.streamVideoThumbnail(inputName, w)
 		}
+
+	default:
+		err = a.streamThumbnail(r.URL.Path, w, itemType)
+	}
+
+	if err != nil {
+		httperror.InternalServerError(w, err)
+		a.increaseMetric("http", "thumbnail", itemType.String(), "error")
 		return
 	}
 
-	outputName := path.Join(a.tmpFolder, fmt.Sprintf("output_%s.webp", sha.New(inputName)))
-	a.httpVideoThumbnail(w, model.NewRequest(inputName, outputName, itemType))
+	a.increaseMetric("http", "thumbnail", itemType.String(), "success")
 }
