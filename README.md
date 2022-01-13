@@ -97,6 +97,18 @@ Usage of vith:
         [server] Read Timeout {VITH_READ_TIMEOUT} (default "2m")
   -shutdownTimeout string
         [server] Shutdown Timeout {VITH_SHUTDOWN_TIMEOUT} (default "10s")
+  -storageAccessKey string
+        [storage] Storage Object Access Key {VITH_STORAGE_ACCESS_KEY}
+  -storageBucket string
+        [storage] Storage Object Bucket {VITH_STORAGE_BUCKET}
+  -storageDirectory string
+        [storage] Path to directory {VITH_STORAGE_DIRECTORY}
+  -storageEndpoint string
+        [storage] Storage Object endpoint {VITH_STORAGE_ENDPOINT}
+  -storageSSL
+        [storage] Use SSL {VITH_STORAGE_SSL} (default true)
+  -storageSecretAccess string
+        [storage] Storage Object Secret Access {VITH_STORAGE_SECRET_ACCESS}
   -streamExchange string
         [stream] Exchange name {VITH_STREAM_EXCHANGE} (default "fibr")
   -streamExclusive
@@ -127,8 +139,6 @@ Usage of vith:
         [alcotest] URL to check {VITH_URL}
   -userAgent string
         [alcotest] User-Agent for check {VITH_USER_AGENT} (default "Alcotest")
-  -workDir string
-        [vith] Working directory for direct access requests {VITH_WORK_DIR}
   -writeTimeout string
         [server] Write Timeout {VITH_WRITE_TIMEOUT} (default "2m")
 ```
