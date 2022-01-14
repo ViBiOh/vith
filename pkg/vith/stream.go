@@ -134,7 +134,7 @@ func (a App) getOutputStreamName(name string) (localName string, onEnd func(), e
 				return
 			}
 
-			if err = copyLocalFile(localName, manifest); err != nil {
+			if err = copyAndCloseLocalFile(localName, manifest); err != nil {
 				logger.Error("unable to copy manifest to `%s`: %s", name, err)
 				return
 			}
@@ -156,7 +156,7 @@ func (a App) getOutputStreamName(name string) (localName string, onEnd func(), e
 					return
 				}
 
-				if err = copyLocalFile(file, segment); err != nil {
+				if err = copyAndCloseLocalFile(file, segment); err != nil {
 					logger.Error("unable to copy segment to `%s`: %s", segmentName, err)
 					return
 				}

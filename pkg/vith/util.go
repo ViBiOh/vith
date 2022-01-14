@@ -53,7 +53,7 @@ func (a App) getOutputVideoName(name string) (string, func() error) {
 			}
 			defer closeWithLog(writer, "getOutputVideoName", name)
 
-			if err = copyLocalFile(outputName, writer); err != nil {
+			if err = copyAndCloseLocalFile(outputName, writer); err != nil {
 				return fmt.Errorf("unable to write to storage: %s", err)
 			}
 
@@ -84,6 +84,11 @@ func (a App) saveFileLocally(input io.ReadCloser, name string) (string, error) {
 
 	_, err = io.Copy(writer, input)
 	return outputName, err
+}
+
+func copyAndCloseLocalFile(name string, output io.WriteCloser) error {
+	defer closeWithLog(output, "copyAndCloseLocalFile", name)
+	return copyLocalFile(name, output)
 }
 
 func copyLocalFile(name string, output io.Writer) error {
