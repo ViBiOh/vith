@@ -128,13 +128,13 @@ func (a App) getOutputStreamName(name string) (localName string, onEnd func(), e
 		localName = filepath.Join(a.tmpFolder, path.Base(name))
 
 		onEnd = func() {
-			manifest, err := a.storageApp.WriterTo(name)
+			manifest, closer, err := a.storageApp.WriterTo(name)
 			if err != nil {
 				logger.Error("unable to get writer for manifest `%s`: %s", name, err)
 				return
 			}
 
-			if err = copyAndCloseLocalFile(localName, manifest); err != nil {
+			if err = copyAndCloseLocalFile(localName, manifest, closer); err != nil {
 				logger.Error("unable to copy manifest to `%s`: %s", name, err)
 				return
 			}
@@ -150,13 +150,13 @@ func (a App) getOutputStreamName(name string) (localName string, onEnd func(), e
 
 			for _, file := range segments {
 				segmentName := path.Join(outputDir, filepath.Base(file))
-				segment, err := a.storageApp.WriterTo(segmentName)
+				segment, closer, err := a.storageApp.WriterTo(segmentName)
 				if err != nil {
 					logger.Error("unable to get writer for segment `%s`: %s", segmentName, err)
 					return
 				}
 
-				if err = copyAndCloseLocalFile(file, segment); err != nil {
+				if err = copyAndCloseLocalFile(file, segment, closer); err != nil {
 					logger.Error("unable to copy segment to `%s`: %s", segmentName, err)
 					return
 				}
