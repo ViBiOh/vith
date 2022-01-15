@@ -26,11 +26,11 @@ func (a App) readFile(name string) ([]byte, error) {
 }
 
 func (a App) writeFile(name string, content []byte) error {
-	writer, err := a.storageApp.WriterTo(name)
+	writer, closer, err := a.storageApp.WriterTo(name)
 	if err != nil {
 		return fmt.Errorf("unable to open writer to storage: %s", err)
 	}
-	defer closeWithLog(writer, "writeFile", name)
+	defer closerWithLog(closer, "writeFile", name)
 
 	if _, err := writer.Write(content); err != nil {
 		return fmt.Errorf("unable to write content: %s", err)

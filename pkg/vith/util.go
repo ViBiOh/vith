@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/ViBiOh/absto/pkg/filesystem"
+	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/absto/pkg/s3"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
@@ -47,13 +48,12 @@ func (a App) getOutputVideoName(name string) (string, func() error) {
 		outputName := a.getLocalFilename(fmt.Sprintf("output_%s", name))
 
 		return outputName, func() error {
-			writer, err := a.storageApp.WriterTo(name)
+			writer, closer, err := a.storageApp.WriterTo(name)
 			if err != nil {
 				return fmt.Errorf("unable to open writer to storage: %s", err)
 			}
-			defer closeWithLog(writer, "getOutputVideoName", name)
 
-			if err = copyAndCloseLocalFile(outputName, writer); err != nil {
+			if err = copyAndCloseLocalFile(outputName, writer, closer); err != nil {
 				return fmt.Errorf("unable to write to storage: %s", err)
 			}
 
@@ -86,8 +86,8 @@ func (a App) saveFileLocally(input io.ReadCloser, name string) (string, error) {
 	return outputName, err
 }
 
-func copyAndCloseLocalFile(name string, output io.WriteCloser) error {
-	defer closeWithLog(output, "copyAndCloseLocalFile", name)
+func copyAndCloseLocalFile(name string, output io.Writer, closer absto.Closer) error {
+	defer closerWithLog(closer, "copyAndCloseLocalFile", name)
 	return copyLocalFile(name, output)
 }
 
@@ -118,6 +118,12 @@ func cleanLocalFile(name string) {
 
 func closeWithLog(closer io.Closer, fn, item string) {
 	if err := closer.Close(); err != nil {
+		logger.WithField("fn", fn).WithField("item", item).Error("unable to close: %s", err)
+	}
+}
+
+func closerWithLog(closer absto.Closer, fn, item string) {
+	if err := closer(); err != nil {
 		logger.WithField("fn", fn).WithField("item", item).Error("unable to close: %s", err)
 	}
 }

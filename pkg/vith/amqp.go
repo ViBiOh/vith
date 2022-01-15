@@ -86,11 +86,11 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 		return finalizeOutput()
 	}
 
-	writer, err := a.storageApp.WriterTo(req.Output)
+	writer, closer, err := a.storageApp.WriterTo(req.Output)
 	if err != nil {
 		err = fmt.Errorf("unable to open writer to storage: %s", err)
 	} else {
-		defer closeWithLog(writer, "AmqpThumbnailHandler", req.Output)
+		defer closerWithLog(closer, "AmqpThumbnailHandler", req.Output)
 		err = a.streamThumbnail(req.Input, writer, req.ItemType)
 	}
 
