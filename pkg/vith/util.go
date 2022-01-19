@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/ViBiOh/absto/pkg/filesystem"
-	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/absto/pkg/s3"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
@@ -19,25 +18,25 @@ var noopFunc func() = func() {}
 func (a App) getInputVideoName(name string) (string, func(), error) {
 	switch a.storageApp.Name() {
 	case filesystem.Name:
-		return a.storageApp.Path(name), func() {}, nil
+		return a.storageApp.Path(name), noopFunc, nil
 
 	case s3.Name:
 		var reader io.ReadCloser
-		reader, err := a.storageApp.ReaderFrom(name)
+		reader, err := a.storageApp.ReadFrom(name)
 		if err != nil {
-			return "", func() {}, fmt.Errorf("unable to read from storage: %s", err)
+			return "", noopFunc, fmt.Errorf("unable to read from storage: %s", err)
 		}
 
 		localName, err := a.saveFileLocally(reader, fmt.Sprintf("input_%s", name))
 		if err != nil {
 			cleanLocalFile(localName)
-			return "", func() {}, fmt.Errorf("unable to save file locally: %s", err)
+			return "", noopFunc, fmt.Errorf("unable to save file locally: %s", err)
 		}
 
 		return localName, func() { cleanLocalFile(localName) }, nil
 
 	default:
-		return "", func() {}, errors.New("unknown storage provider")
+		return "", noopFunc, errors.New("unknown storage provider")
 	}
 }
 
@@ -47,21 +46,11 @@ func (a App) getOutputVideoName(name string) (string, func() error) {
 		return a.storageApp.Path(name), func() error { return nil }
 
 	case s3.Name:
-		outputName := a.getLocalFilename(fmt.Sprintf("output_%s", name))
+		localName := a.getLocalFilename(fmt.Sprintf("output_%s", name))
 
-		return outputName, func() error {
-			writer, closer, err := a.storageApp.WriterTo(name)
-			if err != nil {
-				return fmt.Errorf("unable to open writer to storage: %s", err)
-			}
-
-			if err = copyAndCloseLocalFile(outputName, writer, closer); err != nil {
-				return fmt.Errorf("unable to write to storage: %s", err)
-			}
-
-			cleanLocalFile(outputName)
-
-			return nil
+		return localName, func() error {
+			defer cleanLocalFile(localName)
+			return a.copyAndCloseLocalFile(localName, name)
 		}
 
 	default:
@@ -88,9 +77,18 @@ func (a App) saveFileLocally(input io.ReadCloser, name string) (string, error) {
 	return outputName, err
 }
 
-func copyAndCloseLocalFile(name string, output io.Writer, closer absto.Closer) error {
-	defer closerWithLog(closer, "copyAndCloseLocalFile", name)
-	return copyLocalFile(name, output)
+func (a App) copyAndCloseLocalFile(src, target string) error {
+	input, err := os.OpenFile(src, os.O_RDONLY, 0o600)
+	if err != nil {
+		return fmt.Errorf("unable to open local file: %s", err)
+	}
+	defer closeWithLog(input, "copyLocalFile", "input")
+
+	if err := a.storageApp.WriteTo(target, input); err != nil {
+		return fmt.Errorf("unable to write to storage: %s", err)
+	}
+
+	return nil
 }
 
 func copyLocalFile(name string, output io.Writer) error {
@@ -120,12 +118,6 @@ func cleanLocalFile(name string) {
 
 func closeWithLog(closer io.Closer, fn, item string) {
 	if err := closer.Close(); err != nil {
-		logger.WithField("fn", fn).WithField("item", item).Error("unable to close: %s", err)
-	}
-}
-
-func closerWithLog(closer absto.Closer, fn, item string) {
-	if err := closer(); err != nil {
 		logger.WithField("fn", fn).WithField("item", item).Error("unable to close: %s", err)
 	}
 }

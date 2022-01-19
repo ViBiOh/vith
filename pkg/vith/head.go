@@ -31,7 +31,7 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reader, err := a.storageApp.ReaderFrom(r.URL.Path)
+	reader, err := a.storageApp.ReadFrom(r.URL.Path)
 	if err != nil {
 		httperror.InternalServerError(w, fmt.Errorf("unable to read from storage: %s", err))
 		return

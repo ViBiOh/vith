@@ -21,11 +21,6 @@ func (a App) storageThumbnail(itemType model.ItemType, input, output string) (er
 		return fmt.Errorf("unable to create directory for output: %s", err)
 	}
 
-	writer, closer, err := a.storageApp.WriterTo(output)
-	if err != nil {
-		return fmt.Errorf("unable to open writer to storage: %s", err)
-	}
-
 	switch itemType {
 	case model.TypeVideo:
 		var inputName string
@@ -42,18 +37,14 @@ func (a App) storageThumbnail(itemType model.ItemType, input, output string) (er
 		}
 
 	default:
-		err = a.streamThumbnail(input, writer, itemType)
-	}
-
-	if closeErr := closer(); closeErr != nil {
-		err = httpModel.WrapError(err, closeErr)
+		err = a.streamThumbnail(input, output, itemType)
 	}
 
 	return err
 }
 
-func (a App) streamThumbnail(name string, output io.Writer, itemType model.ItemType) error {
-	reader, err := a.storageApp.ReaderFrom(name)
+func (a App) streamThumbnail(name, output string, itemType model.ItemType) error {
+	reader, err := a.storageApp.ReadFrom(name)
 	if err != nil {
 		return fmt.Errorf("unable to open input file: %s", err)
 	}
@@ -63,21 +54,34 @@ func (a App) streamThumbnail(name string, output io.Writer, itemType model.ItemT
 		defer closeWithLog(reader, "streamThumbnail", name)
 	}
 
-	switch itemType {
-	case model.TypePDF:
-		var item absto.Item
-		item, err = a.storageApp.Info(name)
-		if err != nil {
-			return fmt.Errorf("unable to stat input file: %s", err)
+	done := make(chan error)
+	outputReader, outputWriter := io.Pipe()
+
+	go func() {
+		defer close(done)
+
+		switch itemType {
+		case model.TypePDF:
+			var item absto.Item
+			item, err := a.storageApp.Info(name)
+			if err != nil {
+				done <- fmt.Errorf("unable to stat input file: %s", err)
+				return
+			}
+
+			done <- a.pdfThumbnail(reader, outputWriter, item.Size)
+
+		case model.TypeImage:
+			done <- imageThumbnail(reader, outputWriter)
+
+		default:
+			done <- fmt.Errorf("unhandled itemType `%s` for streaming thumbnail", itemType)
 		}
+	}()
 
-		err = a.pdfThumbnail(reader, output, item.Size)
-
-	case model.TypeImage:
-		err = imageThumbnail(reader, output)
-
-	default:
-		err = fmt.Errorf("unhandled itemType `%s` for streaming thumbnail", itemType)
+	err = a.storageApp.WriteTo(output, outputReader)
+	if thumbnailErr := <-done; thumbnailErr != nil {
+		err = httpModel.WrapError(err, thumbnailErr)
 	}
 
 	return err
