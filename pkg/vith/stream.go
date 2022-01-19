@@ -117,7 +117,7 @@ func (a App) isValidStreamName(streamName string, shouldExist bool) error {
 }
 
 func (a App) getOutputStreamName(name string) (localName string, onEnd func(), err error) {
-	onEnd = func() {}
+	onEnd = noopFunc
 
 	switch a.storageApp.Name() {
 	case filesystem.Name:

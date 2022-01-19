@@ -1,7 +1,7 @@
 package vith
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
@@ -21,27 +21,19 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch itemType {
-	case model.TypeVideo:
-		var inputName string
-		var finalizeInput func()
-		inputName, finalizeInput, err = a.getInputVideoName(r.URL.Path)
-		if err != nil {
-			err = fmt.Errorf("unable to get input video name: %s", err)
-		} else {
-			defer finalizeInput()
-			err = a.streamVideoThumbnail(inputName, w)
-		}
-
-	default:
-		err = a.streamThumbnail(r.URL.Path, w, itemType)
+	output := r.URL.Query().Get("output")
+	if len(output) == 0 {
+		httperror.BadRequest(w, errors.New("output query param is mandatory"))
+		a.increaseMetric("http", "thumbnail", itemType.String(), "invalid")
+		return
 	}
 
-	if err != nil {
+	if err := a.storageThumbnail(itemType, r.URL.Path, output); err != nil {
 		httperror.InternalServerError(w, err)
 		a.increaseMetric("http", "thumbnail", itemType.String(), "error")
 		return
 	}
 
+	w.WriteHeader(http.StatusNoContent)
 	a.increaseMetric("http", "thumbnail", itemType.String(), "success")
 }
