@@ -91,6 +91,16 @@ func (a App) streamThumbnail(name, output string, itemType model.ItemType) error
 		err = httpModel.WrapError(err, thumbnailErr)
 	}
 
+	if closeErr := outputReader.Close(); closeErr != nil {
+		err = httpModel.WrapError(err, closeErr)
+	}
+
+	if err != nil {
+		if removeErr := a.storageApp.Remove(output); removeErr != nil {
+			err = httpModel.WrapError(err, fmt.Errorf("unable to remove: %s", removeErr))
+		}
+	}
+
 	return err
 }
 
