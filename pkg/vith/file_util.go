@@ -1,6 +1,7 @@
 package vith
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"path"
@@ -11,7 +12,7 @@ import (
 )
 
 func (a App) readFile(name string) ([]byte, error) {
-	reader, err := a.storageApp.ReaderFrom(name)
+	reader, err := a.storageApp.ReadFrom(name)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read file: %s", err)
 	}
@@ -26,13 +27,7 @@ func (a App) readFile(name string) ([]byte, error) {
 }
 
 func (a App) writeFile(name string, content []byte) error {
-	writer, closer, err := a.storageApp.WriterTo(name)
-	if err != nil {
-		return fmt.Errorf("unable to open writer to storage: %s", err)
-	}
-	defer closerWithLog(closer, "writeFile", name)
-
-	if _, err := writer.Write(content); err != nil {
+	if err := a.storageApp.WriteTo(name, bytes.NewBuffer(content)); err != nil {
 		return fmt.Errorf("unable to write content: %s", err)
 	}
 
