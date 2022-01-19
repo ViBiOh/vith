@@ -7,12 +7,50 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
+	httpModel "github.com/ViBiOh/httputils/v4/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/vith/pkg/model"
 )
+
+func (a App) storageThumbnail(itemType model.ItemType, input, output string) (err error) {
+	if err := a.storageApp.CreateDir(path.Dir(output)); err != nil {
+		return fmt.Errorf("unable to create directory for output: %s", err)
+	}
+
+	writer, closer, err := a.storageApp.WriterTo(output)
+	if err != nil {
+		return fmt.Errorf("unable to open writer to storage: %s", err)
+	}
+
+	switch itemType {
+	case model.TypeVideo:
+		var inputName string
+		var finalizeInput func()
+
+		inputName, finalizeInput, err = a.getInputVideoName(input)
+		if err != nil {
+			err = fmt.Errorf("unable to get input video name: %s", err)
+		} else {
+			defer finalizeInput()
+
+			outputName, finalizeOutput := a.getOutputVideoName(output)
+			err = httpModel.WrapError(a.videoThumbnail(inputName, outputName), finalizeOutput())
+		}
+
+	default:
+		err = a.streamThumbnail(input, writer, itemType)
+	}
+
+	if closeErr := closer(); closeErr != nil {
+		err = httpModel.WrapError(err, closeErr)
+	}
+
+	return err
+}
 
 func (a App) streamThumbnail(name string, output io.Writer, itemType model.ItemType) error {
 	reader, err := a.storageApp.ReaderFrom(name)
