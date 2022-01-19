@@ -60,23 +60,30 @@ func (a App) streamThumbnail(name, output string, itemType model.ItemType) error
 	go func() {
 		defer close(done)
 
+		var err error
+
 		switch itemType {
 		case model.TypePDF:
 			var item absto.Item
-			item, err := a.storageApp.Info(name)
+			item, err = a.storageApp.Info(name)
 			if err != nil {
-				done <- fmt.Errorf("unable to stat input file: %s", err)
-				return
+				err = fmt.Errorf("unable to stat input file: %s", err)
+			} else {
+				err = a.pdfThumbnail(reader, outputWriter, item.Size)
 			}
 
-			done <- a.pdfThumbnail(reader, outputWriter, item.Size)
-
 		case model.TypeImage:
-			done <- imageThumbnail(reader, outputWriter)
+			err = imageThumbnail(reader, outputWriter)
 
 		default:
-			done <- fmt.Errorf("unhandled itemType `%s` for streaming thumbnail", itemType)
+			err = fmt.Errorf("unhandled itemType `%s` for streaming thumbnail", itemType)
 		}
+
+		if closeErr := outputWriter.Close(); closeErr != nil {
+			err = httpModel.WrapError(err, closeErr)
+		}
+
+		done <- err
 	}()
 
 	err = a.storageApp.WriteTo(output, outputReader)
