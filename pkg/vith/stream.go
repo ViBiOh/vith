@@ -69,7 +69,11 @@ func (a App) generateStream(req model.Request) error {
 	if err != nil {
 		return fmt.Errorf("unable to get video filename: %s", err)
 	}
-	defer finalizeStream()
+	defer func() {
+		if finalizeErr := finalizeStream(); finalizeErr != nil {
+			logger.Error("unable to finalize stream: %s", finalizeErr)
+		}
+	}()
 
 	cmd := exec.Command("ffmpeg", "-i", inputName, "-codec:v", "libx264", "-preset", "superfast", "-codec:a", "aac", "-b:a", "128k", "-ac", "2", "-f", "hls", "-hls_time", "4", "-hls_playlist_type", "event", "-hls_flags", "independent_segments", "-threads", "2", outputName)
 
@@ -116,8 +120,10 @@ func (a App) isValidStreamName(streamName string, shouldExist bool) error {
 	return nil
 }
 
-func (a App) getOutputStreamName(name string) (localName string, onEnd func(), err error) {
-	onEnd = noopFunc
+func (a App) getOutputStreamName(name string) (localName string, onEnd func() error, err error) {
+	onEnd = func() error {
+		return nil
+	}
 
 	switch a.storageApp.Name() {
 	case filesystem.Name:
@@ -126,40 +132,41 @@ func (a App) getOutputStreamName(name string) (localName string, onEnd func(), e
 
 	case s3.Name:
 		localName = filepath.Join(a.tmpFolder, path.Base(name))
-
-		onEnd = func() {
-			if err = a.copyAndCloseLocalFile(localName, name); err != nil {
-				logger.Error("unable to copy manifest to `%s`: %s", name, err)
-				return
-			}
-
-			baseHlsName := strings.TrimSuffix(localName, hlsExtension)
-			segments, err := filepath.Glob(fmt.Sprintf("%s*.ts", baseHlsName))
-			if err != nil {
-				logger.Error("unable to list hls segments for `%s`: %s", baseHlsName, err)
-				return
-			}
-
-			outputDir := path.Dir(name)
-
-			for _, file := range segments {
-				segmentName := path.Join(outputDir, filepath.Base(file))
-				if err = a.copyAndCloseLocalFile(file, segmentName); err != nil {
-					logger.Error("unable to copy segment to `%s`: %s", segmentName, err)
-					return
-				}
-			}
-
-			if cleanErr := a.cleanLocalStream(localName); cleanErr != nil {
-				logger.Error("unable to clean stream for `%s`: %s", localName, err)
-				return
-			}
-		}
+		onEnd = a.finalizeStreamForS3(localName, name)
 		return
 
 	default:
 		err = fmt.Errorf("unknown storage app")
 		return
+	}
+}
+
+func (a App) finalizeStreamForS3(localName, destName string) func() error {
+	return func() error {
+		if err := a.copyAndCloseLocalFile(localName, destName); err != nil {
+			return fmt.Errorf("unable to copy manifest to `%s`: %s", destName, err)
+		}
+
+		baseHlsName := strings.TrimSuffix(localName, hlsExtension)
+		segments, err := filepath.Glob(fmt.Sprintf("%s*.ts", baseHlsName))
+		if err != nil {
+			return fmt.Errorf("unable to list hls segments for `%s`: %s", baseHlsName, err)
+		}
+
+		outputDir := path.Dir(destName)
+
+		for _, file := range segments {
+			segmentName := path.Join(outputDir, filepath.Base(file))
+			if err = a.copyAndCloseLocalFile(file, segmentName); err != nil {
+				return fmt.Errorf("unable to copy segment to `%s`: %s", segmentName, err)
+			}
+		}
+
+		if cleanErr := a.cleanLocalStream(localName); cleanErr != nil {
+			return fmt.Errorf("unable to clean stream for `%s`: %s", localName, err)
+		}
+
+		return nil
 	}
 }
 
