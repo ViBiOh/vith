@@ -13,7 +13,9 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
-var noopFunc func() = func() {}
+var noopFunc func() = func() {
+	// nothing to do
+}
 
 func (a App) getInputVideoName(name string) (string, func(), error) {
 	switch a.storageApp.Name() {
