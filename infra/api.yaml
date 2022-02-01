@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: app
-      version: "0.0.78"
+      version: "0.0.79"
       sourceRef:
         kind: HelmRepository
         name: vibioh
@@ -39,6 +39,10 @@ spec:
     secrets:
       VITH_AMQP_URI: AgAcvsptQAXJd5wBamnkzlPQ9ZZ5yLA+ypf531MKLZzG5ibHhUZhP6fFfxD/CPgw7YhhlJsW7w/KLj0W72/gpp6FX36JZ6UrRGHgijEbPIOLUEtgBnzUQJuAF9SOsKsy72a5jxL+ZogfMgfp+9B5SnzM3RdPCwZ+JrKbMWVnLa4X+h8uWrip1JgX6lp7SM6aHt1ODBcC+7/3AnoqJhJ7J+53lw6gcK9aWo8hMfkUQAKhmFRJKOq0kg2w8QFwuu++ZEfgfsi7fcy/Mx6soxUDZOD7/Y5V1qXeOJw1P83CsAcrq5dA5Pn46MFnpF1ENnX+NRN79EIUr6WG3vZcqM7bMF10IeAUUmPrQUuvkBvt+sPe5Gt3jtPw9UmXLOnZep/OduuGbhimJdX8Mkw8wXqwaORQO52vtfjeuSNUyIQQgvtHkrBQmEF3Tj2Tnx3jpCReOSYv8DgId2KznmGM6UM3SU2EHSj6CHRh33xyWkjStVwvMFiG4Vy04qPGUD9w+lXT06kQ5i9rZwhn0/Vry+h6OagztIYVraKtWgMozCOCRGOPJjw073fW1l2+luSVwCglPMZImXKQqR10i+l9b4vnf50gZkmArM0xW8qavv4cVbU3sgkJtSvUNKoh7kxcRktD+t/tTSDuYn0VgywKJTpjo6buckmhBaF/0QqDuPKMdXfUo1CRtukr8YghQahrkICgLS0lmYDtWz/aD4yn37x+zLbTpQT2bo0UGeKl/ivAY2G8FPTDgD4OGFbjUzi46wCGTxQKwiJfvI3vh7ZA42Cq0BFcO3srJpBgOmlvo9tUMBQOfKzGPDCn
       VITH_IMAGINARY_URL: AgCdp3Vep19qT2G/6M7Zn5ffYLNKez9UdV0zHQHwDoNHlLTXS9bDfaSDzlvMfl0qVJGo1VfhlOvLhYP4SjRDNG4gSOS2fgf0KoXbvCvwHr9xxG0kFR9rSF2fzquxgjJhHlGG4APy7T/ScU4/yJAtXYnh2UKknADLHS01ZUE8APB+AhNanUc5Ty4ygn3B8GmHXnjuadPt6vjxbm00gZ/mp90fpGIyToF/uFnh8XgXUrVKf4kieGSRS29HyWImzbQobmS+K0b1dzyYYkdOePPMIHfBWdkFiwtP7qJl1Uw5OQaPrxhyjCX8/nYtjxNDOyQVHAvnClsPOCThd75Kf0wrIV1gdR+Q6E7C0Kh0jptjMCLpgch2cmQqPmTMoZ6Yv9gwcsX57Oc7XhR0wPCcCqfdHmJi0EbVghqZMabjsMkFA8KBOwt9n1NtJY5Hvf4ux0Zyywty7bI1FTjKR+I6MKopzQvMd5AxYEg9Rp/oza2JNLcPMrkL5543XPtu/JosQ9C0EKKNg6IGIxPP7YOOeLzZfKjUdWs5k1/x6r4gNyDHCmUoGpXFfCgJAmVNg1bwGZt61CC/9m+sxQfEk0rKTcSoYbYZDgI9N/+iCy67ldwdTXy81+9fW1Ag7RQzbP6pjXlBolSK684spQ65C6V8P+cv/r8A3lpAk3j+3WPV+LszPnRQ0eaMXNoOhciqXvwR7E71K9L/JBjJP0Duo3xk6o42Q6skUSUyyARWH4XuvtNCNlwAjOGWWdexr363cjDfve6mUKSX0CPkjLzMfJ3glUw4hNQ=
+    tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/storage
+        operator: Exists
     resources:
       limits:
         memory: "1Gi"
