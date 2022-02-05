@@ -22,7 +22,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 		err = a.pdfThumbnail(r.Body, w, r.ContentLength)
 
 	case model.TypeImage:
-		err = imageThumbnail(r.Body, w)
+		err = a.streamImageThumbnail(r.Body, w)
 
 	case model.TypeVideo:
 		var inputName string
