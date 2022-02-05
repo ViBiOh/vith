@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"time"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
@@ -73,7 +74,7 @@ func (a App) streamThumbnail(name, output string, itemType model.ItemType) error
 			}
 
 		case model.TypeImage:
-			err = imageThumbnail(reader, outputWriter)
+			err = a.streamImageThumbnail(reader, outputWriter)
 
 		default:
 			err = fmt.Errorf("unhandled itemType `%s` for streaming thumbnail", itemType)
@@ -128,18 +129,35 @@ func (a App) pdfThumbnail(input io.ReadCloser, output io.Writer, contentLength i
 	return nil
 }
 
-func imageThumbnail(input io.Reader, output io.Writer) error {
-	cmd := exec.Command("ffmpeg", "-i", "pipe:0", "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-f", "webp", "pipe:1")
+func (a App) streamImageThumbnail(input io.Reader, output io.Writer) error {
+	outputName := a.getLocalFilename(fmt.Sprintf("image_%s", time.Now().String()))
+
+	if err := imageThumbnail(input, outputName); err != nil {
+		return fmt.Errorf("unable to generate image thumbnail: %s", err)
+	}
+
+	defer cleanLocalFile(outputName)
+
+	if err := copyLocalFile(outputName, output); err != nil {
+		return fmt.Errorf("unable to copy image thumbnail: %s", err)
+	}
+
+	return nil
+}
+
+func imageThumbnail(input io.Reader, outputName string) error {
+	cmd := exec.Command("ffmpeg", "-i", "pipe:0", "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
 
 	buffer.Reset()
 	cmd.Stdin = input
-	cmd.Stdout = output
+	cmd.Stdout = buffer
 	cmd.Stderr = buffer
 
 	if err := cmd.Run(); err != nil {
+		cleanLocalFile(outputName)
 		return fmt.Errorf("%s: %s", buffer.String(), err)
 	}
 
