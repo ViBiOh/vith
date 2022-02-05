@@ -23,6 +23,15 @@ func (a App) storageThumbnail(itemType model.ItemType, input, output string) (er
 	}
 
 	switch itemType {
+	case model.TypeImage:
+		var reader io.Reader
+		reader, err = a.storageApp.ReadFrom(input)
+		if err != nil {
+			return fmt.Errorf("unable to open input file: %s", err)
+		}
+
+		err = imageThumbnail(reader, output)
+
 	case model.TypeVideo:
 		var inputName string
 		var finalizeInput func()
@@ -72,9 +81,6 @@ func (a App) streamThumbnail(name, output string, itemType model.ItemType) error
 			} else {
 				err = a.pdfThumbnail(reader, outputWriter, item.Size)
 			}
-
-		case model.TypeImage:
-			err = a.streamImageThumbnail(reader, outputWriter)
 
 		default:
 			err = fmt.Errorf("unhandled itemType `%s` for streaming thumbnail", itemType)
