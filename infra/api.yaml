@@ -25,14 +25,14 @@ spec:
     nameOverride: vith
     image:
       name: vibioh/vith
-      tag: "202202012230" # {"$imagepolicy": "default:flux-vith-api:tag"}
+      tag: "202202050921" # {"$imagepolicy": "default:flux-vith-api:tag"}
     volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: vith
+    - name: data
+      persistentVolumeClaim:
+        claimName: vith
     volumeMounts:
-      - name: data
-        mountPath: /data
+    - name: data
+      mountPath: /data
     config:
       VITH_LOGGER_JSON: "true"
       VITH_STORAGE_DIRECTORY: "/data"
@@ -40,9 +40,9 @@ spec:
       VITH_AMQP_URI: AgDfQPUodz1X4hhur5c9jY6GJC5eeyy8uffDlQcszwUiAUhXB5gwM86V2eciaQy0jG7SredifjIGD9/YoVictH1jb+73bU21EspudKP4QvZda0BK9b67785+AsCaovBzomwH1D1jPnxX24Wmf1b50BhCo0L7S8vcLg0vH8JgzEyvpqchJ/BISlDzpicOYpxgL//o/QVBVoRXNxfENGpGvvKCyoKsdm1yDimJB8iUKl2yJ3rhkv6kfBfe4eA2hHSCWNBaJ8yx78qCLISyWg+FYqCHSvvFJjKRVKultiud87UHA4ViZcGDyxBV33G+OLukaCTlSlEtKo12tAafenUbbJ614rNkQNzZwm2riPTOUm/qO3hJbyD8Eq7I56z4uMYjudiU0uzCkNNKSdcbg1QAARNKcGtVvptjzfLlcyZfjiy3uPjsAP89svPhVLJxE2Gf3vZbKGeJA+e6o7iRb/Kqqxq59vx97RWqARATG1ImaVAZH+KxoHcRVqidxiG38rI/MUGElYTDEgoofRTSe4VwsfD/aF1Nx0m3h71YUDp1RRLhru2BZ2KyWvvg9EVIrwo8b2dT1jpt23N2Ycu2Mf+NVl6tGx6COAi/0a4qKkSvBqDoDol5+8SgJHwnQNKgJmdcwfwuHDiqz2x+H5jY5QDY7p+ILJ87j21nH6WyPVW73M4Gj48801wFwI+a5dDHwToAfzKUiqPfAyMXVbohGOqhaFrnupZtPobXwS1RHoT00SX+lnmy1QovgCulz/pfkj/cFK43NrM=
       VITH_IMAGINARY_URL: AgBbmUtg08ZxcKjlLl8JfSn9x4MZNofWBT69c6X1YmMBEs1UYajl6M0ibGC7nYUFltKBBvBYMoWUjm+vaMapNfavHiIZiPV4eko3OaiTgexiqv8+Ml62anDHIigS1jSsNCEU/LRVZRLSzT/RtYlxssu4UBF0aC+XK2FYQo9Yg0Ng6OpXaf9WGpeWnEJ4gYWsROzhSrik8/MZU3pOW1sQ1IqC8lzVQQWBsQlsACX+rqVGupASeOIddjQXMsPNF3FLt5YAwXrdm9jC1XoFXyqJ8tJwwSAsNfiquBb9Qd+EuiBkeUoEMlD9o05bzEgNW26INWAV3psMJNnRE0NPaKMoXurt4+N+7zBp7DRrTngKnqZj0uA0K1GIqA9R+ShMnk4qFi57McPXdhxrsreED+UHQ/gOCD6Rw+YcS/uJf+t+pct1B5V2ZCRQCh68AgXdDJws+D4iNN9LscyhEKCLVcb2D7+RQA+0duBQptqeYJMHLq3FVsxSttAsTqLest8C3urrf+Puzwc66GDlPHZebzijT8jbns/Gz5Bf3lMlLuit0RpISZil1Yi0vXdO95xQ7z3Nt40UlJeb4JGqtAzEDbjM2PPFZt9czGHUiVemQaHC6LNzJskjvUr9F8f8AFEODt6pG/j2nt306WZf6ZXbfdgoGPSbRMcqv8IsxSpCq/8aeCNbFLo4pGxeWAs9d5bYxEjg5gHB6xjJLmm5p67fVPg0Ksphd9cqnOjm67cHA2AQF+1xi1h64sS0faqhHX3Agy+aqHXK3rmgb2rNz0KQ1hgqvvI=
     tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/storage
-        operator: Exists
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/storage
+      operator: Exists
     resources:
       limits:
         memory: "1Gi"
