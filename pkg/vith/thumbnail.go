@@ -30,7 +30,7 @@ func (a App) storageThumbnail(itemType model.ItemType, input, output string) (er
 			return fmt.Errorf("unable to open input file: %s", err)
 		}
 
-		err = imageThumbnail(reader, output)
+		err = imageThumbnail(reader, a.storageApp.Path(output))
 
 	case model.TypeVideo:
 		var inputName string
