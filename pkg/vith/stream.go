@@ -59,7 +59,7 @@ func (a App) generateStream(req model.Request) error {
 	log := logger.WithField("input", req.Input).WithField("output", req.Output)
 	log.Info("Generating stream...")
 
-	inputName, finalizeInput, err := a.getInputVideoName(req.Input)
+	inputName, finalizeInput, err := a.getInputName(req.Input)
 	if err != nil {
 		return fmt.Errorf("unable to get input video name: %s", err)
 	}
