@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"time"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
@@ -18,36 +17,26 @@ import (
 )
 
 func (a App) storageThumbnail(itemType model.ItemType, input, output string) (err error) {
-	if err := a.storageApp.CreateDir(path.Dir(output)); err != nil {
-		return fmt.Errorf("unable to create directory for output: %s", err)
+	if err = a.storageApp.CreateDir(path.Dir(output)); err != nil {
+		err = fmt.Errorf("unable to create directory for output: %s", err)
+		return
 	}
 
-	switch itemType {
-	case model.TypeImage:
-		var reader io.Reader
-		reader, err = a.storageApp.ReadFrom(input)
-		if err != nil {
-			return fmt.Errorf("unable to open input file: %s", err)
-		}
-
-		err = imageThumbnail(reader, a.storageApp.Path(output))
-
-	case model.TypeVideo:
-		var inputName string
-		var finalizeInput func()
-
-		inputName, finalizeInput, err = a.getInputVideoName(input)
-		if err != nil {
-			err = fmt.Errorf("unable to get input video name: %s", err)
-		} else {
-			defer finalizeInput()
-
-			outputName, finalizeOutput := a.getOutputVideoName(output)
-			err = httpModel.WrapError(a.videoThumbnail(inputName, outputName), finalizeOutput())
-		}
-
-	default:
+	if itemType == model.TypePDF {
 		err = a.streamThumbnail(input, output, itemType)
+		return
+	}
+
+	var inputName string
+	var finalizeInput func()
+
+	inputName, finalizeInput, err = a.getInputName(input)
+	if err != nil {
+		err = fmt.Errorf("unable to get input name: %s", err)
+	} else {
+		outputName, finalizeOutput := a.getOutputName(output)
+		err = httpModel.WrapError(getThumbnailGenerator(itemType)(inputName, outputName), finalizeOutput())
+		finalizeInput()
 	}
 
 	return err
@@ -135,30 +124,13 @@ func (a App) pdfThumbnail(input io.ReadCloser, output io.Writer, contentLength i
 	return nil
 }
 
-func (a App) streamImageThumbnail(input io.Reader, output io.Writer) error {
-	outputName := a.getLocalFilename(fmt.Sprintf("image_%s", time.Now().String()))
-
-	if err := imageThumbnail(input, outputName); err != nil {
-		return fmt.Errorf("unable to generate image thumbnail: %s", err)
-	}
-
-	defer cleanLocalFile(outputName)
-
-	if err := copyLocalFile(outputName, output); err != nil {
-		return fmt.Errorf("unable to copy image thumbnail: %s", err)
-	}
-
-	return nil
-}
-
-func imageThumbnail(input io.Reader, outputName string) error {
-	cmd := exec.Command("ffmpeg", "-i", "pipe:0", "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", outputName)
+func imageThumbnail(inputName, outputName string) error {
+	cmd := exec.Command("ffmpeg", "-i", inputName, "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
 
 	buffer.Reset()
-	cmd.Stdin = input
 	cmd.Stdout = buffer
 	cmd.Stderr = buffer
 
@@ -170,23 +142,7 @@ func imageThumbnail(input io.Reader, outputName string) error {
 	return nil
 }
 
-func (a App) streamVideoThumbnail(inputName string, output io.Writer) error {
-	outputName := a.getLocalFilename(fmt.Sprintf("output_%s", inputName))
-
-	if err := a.videoThumbnail(inputName, outputName); err != nil {
-		return fmt.Errorf("unable to generate video thumbnail: %s", err)
-	}
-
-	defer cleanLocalFile(outputName)
-
-	if err := copyLocalFile(outputName, output); err != nil {
-		return fmt.Errorf("unable to copy video thumbnail: %s", err)
-	}
-
-	return nil
-}
-
-func (a App) videoThumbnail(inputName, outputName string) error {
+func videoThumbnail(inputName, outputName string) error {
 	var ffmpegOpts []string
 	var customOpts []string
 

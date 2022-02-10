@@ -2,6 +2,7 @@ package vith
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -21,16 +22,18 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	case model.TypePDF:
 		err = a.pdfThumbnail(r.Body, w, r.ContentLength)
 
-	case model.TypeImage:
-		err = a.streamImageThumbnail(r.Body, w)
-
-	case model.TypeVideo:
+	case model.TypeImage, model.TypeVideo:
 		var inputName string
 		inputName, err = a.saveFileLocally(r.Body, time.Now().String())
 		defer cleanLocalFile(inputName)
 
 		if err == nil {
-			err = a.streamVideoThumbnail(inputName, w)
+			outputName := a.getLocalFilename(fmt.Sprintf("output_%s", inputName))
+			defer cleanLocalFile(outputName)
+
+			if err = getThumbnailGenerator(itemType)(inputName, outputName); err != nil {
+				err = copyLocalFile(outputName, w)
+			}
 		}
 
 	default:

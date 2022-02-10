@@ -11,13 +11,31 @@ import (
 	"github.com/ViBiOh/absto/pkg/s3"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
+	"github.com/ViBiOh/vith/pkg/model"
 )
 
 var noopFunc func() = func() {
 	// nothing to do
 }
 
-func (a App) getInputVideoName(name string) (string, func(), error) {
+var noErrFunc func() error = func() error {
+	return nil
+}
+
+func getThumbnailGenerator(itemType model.ItemType) func(string, string) error {
+	switch itemType {
+	case model.TypeVideo:
+		return videoThumbnail
+	case model.TypeImage:
+		return imageThumbnail
+	default:
+		return func(_, _ string) error {
+			return fmt.Errorf("unknown generator for `%s`", itemType)
+		}
+	}
+}
+
+func (a App) getInputName(name string) (string, func(), error) {
 	switch a.storageApp.Name() {
 	case filesystem.Name:
 		return a.storageApp.Path(name), noopFunc, nil
@@ -42,10 +60,10 @@ func (a App) getInputVideoName(name string) (string, func(), error) {
 	}
 }
 
-func (a App) getOutputVideoName(name string) (string, func() error) {
+func (a App) getOutputName(name string) (string, func() error) {
 	switch a.storageApp.Name() {
 	case filesystem.Name:
-		return a.storageApp.Path(name), func() error { return nil }
+		return a.storageApp.Path(name), noErrFunc
 
 	case s3.Name:
 		localName := a.getLocalFilename(fmt.Sprintf("output_%s", name))
