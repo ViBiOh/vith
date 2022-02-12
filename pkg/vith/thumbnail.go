@@ -183,5 +183,5 @@ func getVideoDetailsFromLocal(name string) (int64, float64, error) {
 	}
 	defer closeWithLog(reader, "getVideoBitrate", name)
 
-	return getVideoDetails(reader)
+	return getVideoDetails(name)
 }
