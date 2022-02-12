@@ -31,7 +31,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 			outputName := a.getLocalFilename(fmt.Sprintf("output_%s", inputName))
 			defer cleanLocalFile(outputName)
 
-			if err = getThumbnailGenerator(itemType)(inputName, outputName); err != nil {
+			if err = getThumbnailGenerator(itemType)(inputName, outputName); err == nil {
 				err = copyLocalFile(outputName, w)
 			}
 		}
