@@ -1,6 +1,5 @@
 ---
 name: Build
-
 on:
   push:
     branches:
@@ -8,14 +7,11 @@ on:
   pull_request:
     branches:
       - main
-
 env:
   SCRIPTS_NO_INTERACTIVE: "true"
-
 defaults:
   run:
     shell: bash
-
 jobs:
   build:
     name: Golang
@@ -35,7 +31,6 @@ jobs:
           git --no-pager diff -- ':(exclude)go.sum' && git diff --quiet -- ':(exclude)go.sum'
       - name: Codecov
         uses: codecov/codecov-action@v1
-
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
@@ -50,7 +45,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
   package:
     name: Docker
     runs-on: ubuntu-latest
@@ -76,6 +70,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
+      - name: Cache LFS
+        uses: actions/cache@v2
+        with:
+          path: |
+            ffmpeg/
+          key: lfs-1644678750
       - name: Docker
         if: env.DOCKER_USER && env.DOCKER_PASS
         env:
@@ -84,7 +84,6 @@ jobs:
         run: |
           git lfs pull
           DOCKER_IMAGE="${{ secrets.DOCKER_USER }}/$(make name)" IMAGE_VERSION="$(make version)" ./scripts/release docker
-
   publish:
     name: Publish
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
