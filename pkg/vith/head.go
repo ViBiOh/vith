@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"os/exec"
 	"strconv"
@@ -31,14 +30,15 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reader, err := a.storageApp.ReadFrom(r.URL.Path)
+	inputName, finalizeInput, err := a.getInputName(r.URL.Path)
 	if err != nil {
-		httperror.InternalServerError(w, fmt.Errorf("unable to read from storage: %s", err))
+		httperror.InternalServerError(w, fmt.Errorf("unable to get input name: %s", err))
 		return
 	}
-	defer closeWithLog(reader, "handleHead", r.URL.Path)
 
-	bitrate, duration, err := getVideoDetails(reader)
+	defer finalizeInput()
+
+	bitrate, duration, err := getVideoDetails(inputName)
 	if err != nil {
 		httperror.InternalServerError(w, fmt.Errorf("unable to get bitrate: %s", err))
 		return
@@ -50,19 +50,18 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func getVideoDetails(input io.Reader) (bitrate int64, duration float64, err error) {
-	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=bit_rate:format=duration", "-of", "default=noprint_wrappers=1:nokey=1", "-")
+func getVideoDetails(inputName string) (bitrate int64, duration float64, err error) {
+	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=bit_rate:format=duration", "-of", "default=noprint_wrappers=1:nokey=1", inputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
 
 	buffer.Reset()
-	cmd.Stdin = input
 	cmd.Stdout = buffer
 	cmd.Stderr = buffer
 
 	if err = cmd.Run(); err != nil {
-		err = fmt.Errorf("ffmpeg error `%s`: %s", err, buffer.String())
+		err = fmt.Errorf("ffprobe error `%s`: %s", err, buffer.String())
 		return
 	}
 
