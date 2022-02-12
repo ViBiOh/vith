@@ -42,6 +42,9 @@ main() {
     tar -xf "${ARCHIVE_NAME}" -C "${TARGET_NAME}" --strip 1
     rm -rf "${ARCHIVE_NAME}"
   done
+
+  # Update cache value in CI
+  CACHE_VALUE="$(date "+%s")" yq eval '.jobs.package.steps[] |= select(.name == "Cache LFS") |= .with.key |= "lfs-" + env(CACHE_VALUE)' .github/workflows/build.yaml
 }
 
 main "${@}"
