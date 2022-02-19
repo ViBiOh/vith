@@ -28,7 +28,7 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.storageThumbnail(itemType, r.URL.Path, output); err != nil {
+	if err := a.storageThumbnail(r.Context(), itemType, r.URL.Path, output); err != nil {
 		httperror.InternalServerError(w, err)
 		a.increaseMetric("http", "thumbnail", itemType.String(), "error")
 		return

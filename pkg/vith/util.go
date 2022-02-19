@@ -1,6 +1,7 @@
 package vith
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -22,14 +23,14 @@ var noErrFunc func() error = func() error {
 	return nil
 }
 
-func getThumbnailGenerator(itemType model.ItemType) func(string, string) error {
+func (a App) getThumbnailGenerator(itemType model.ItemType) func(context.Context, string, string) error {
 	switch itemType {
 	case model.TypeVideo:
-		return videoThumbnail
+		return a.videoThumbnail
 	case model.TypeImage:
-		return imageThumbnail
+		return a.imageThumbnail
 	default:
-		return func(_, _ string) error {
+		return func(_ context.Context, _, _ string) error {
 			return fmt.Errorf("unknown generator for `%s`", itemType)
 		}
 	}

@@ -20,7 +20,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 
 	switch itemType {
 	case model.TypePDF:
-		err = a.pdfThumbnail(r.Body, w, r.ContentLength)
+		err = a.pdfThumbnail(r.Context(), r.Body, w, r.ContentLength)
 
 	case model.TypeImage, model.TypeVideo:
 		var inputName string
@@ -31,7 +31,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 			outputName := a.getLocalFilename(fmt.Sprintf("output_%s", inputName))
 			defer cleanLocalFile(outputName)
 
-			if err = getThumbnailGenerator(itemType)(inputName, outputName); err == nil {
+			if err = a.getThumbnailGenerator(itemType)(r.Context(), inputName, outputName); err == nil {
 				err = copyLocalFile(outputName, w)
 			}
 		}
