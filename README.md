@@ -43,6 +43,8 @@ Be careful when using the CLI values, if someone list the processes on the syste
 Usage of vith:
   -address string
         [server] Listen address {VITH_ADDRESS}
+  -amqpPrefetch int
+        [amqp] Prefetch count for QoS {VITH_AMQP_PREFETCH} (default 1)
   -amqpURI string
         [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> {VITH_AMQP_URI}
   -cert string
@@ -135,6 +137,10 @@ Usage of vith:
         [thumbnail] RoutingKey name {VITH_THUMBNAIL_ROUTING_KEY} (default "thumbnail")
   -tmpFolder string
         [vith] Folder used for temporary files storage {VITH_TMP_FOLDER} (default "/tmp")
+  -tracerRate string
+        [tracer] Jaeger sample rate, 'always', 'never' or a float value {VITH_TRACER_RATE} (default "always")
+  -tracerURL string
+        [tracer] Jaeger endpoint URL (e.g. http://jaeger:14268/api/traces) {VITH_TRACER_URL}
   -url string
         [alcotest] URL to check {VITH_URL}
   -userAgent string
