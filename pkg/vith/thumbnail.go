@@ -14,16 +14,17 @@ import (
 	httpModel "github.com/ViBiOh/httputils/v4/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/vith/pkg/model"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func (a App) storageThumbnail(itemType model.ItemType, input, output string) (err error) {
+func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, input, output string) (err error) {
 	if err = a.storageApp.CreateDir(path.Dir(output)); err != nil {
 		err = fmt.Errorf("unable to create directory for output: %s", err)
 		return
 	}
 
 	if itemType == model.TypePDF {
-		err = a.streamThumbnail(input, output, itemType)
+		err = a.streamThumbnail(ctx, input, output, itemType)
 		return
 	}
 
@@ -35,14 +36,14 @@ func (a App) storageThumbnail(itemType model.ItemType, input, output string) (er
 		err = fmt.Errorf("unable to get input name: %s", err)
 	} else {
 		outputName, finalizeOutput := a.getOutputName(output)
-		err = httpModel.WrapError(getThumbnailGenerator(itemType)(inputName, outputName), finalizeOutput())
+		err = httpModel.WrapError(a.getThumbnailGenerator(itemType)(ctx, inputName, outputName), finalizeOutput())
 		finalizeInput()
 	}
 
 	return err
 }
 
-func (a App) streamThumbnail(name, output string, itemType model.ItemType) error {
+func (a App) streamThumbnail(ctx context.Context, name, output string, itemType model.ItemType) error {
 	reader, err := a.storageApp.ReadFrom(name)
 	if err != nil {
 		return fmt.Errorf("unable to open input file: %s", err)
@@ -68,7 +69,7 @@ func (a App) streamThumbnail(name, output string, itemType model.ItemType) error
 			if err != nil {
 				err = fmt.Errorf("unable to stat input file: %s", err)
 			} else {
-				err = a.pdfThumbnail(reader, outputWriter, item.Size)
+				err = a.pdfThumbnail(ctx, reader, outputWriter, item.Size)
 			}
 
 		default:
@@ -100,8 +101,8 @@ func (a App) streamThumbnail(name, output string, itemType model.ItemType) error
 	return err
 }
 
-func (a App) pdfThumbnail(input io.ReadCloser, output io.Writer, contentLength int64) error {
-	r, err := a.imaginaryReq.Build(context.Background(), input)
+func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Writer, contentLength int64) error {
+	r, err := a.imaginaryReq.Build(ctx, input)
 	if err != nil {
 		defer closeWithLog(input, "pdfThumbnail", "")
 		return fmt.Errorf("unable to build request: %s", err)
@@ -124,7 +125,12 @@ func (a App) pdfThumbnail(input io.ReadCloser, output io.Writer, contentLength i
 	return nil
 }
 
-func imageThumbnail(inputName, outputName string) error {
+func (a App) imageThumbnail(ctx context.Context, inputName, outputName string) error {
+	if a.tracer != nil {
+		_, span := a.tracer.Start(ctx, "ffmpeg")
+		defer span.End()
+	}
+
 	cmd := exec.Command("ffmpeg", "-i", inputName, "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
@@ -142,11 +148,17 @@ func imageThumbnail(inputName, outputName string) error {
 	return nil
 }
 
-func videoThumbnail(inputName, outputName string) error {
+func (a App) videoThumbnail(ctx context.Context, inputName, outputName string) error {
+	if a.tracer != nil {
+		var span trace.Span
+		ctx, span = a.tracer.Start(ctx, "ffmpeg")
+		defer span.End()
+	}
+
 	var ffmpegOpts []string
 	var customOpts []string
 
-	if _, duration, err := getVideoDetailsFromLocal(inputName); err != nil {
+	if _, duration, err := a.getVideoDetailsFromLocal(ctx, inputName); err != nil {
 		logger.Error("unable to get container duration for `%s`: %s", inputName, err)
 
 		ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
@@ -176,12 +188,12 @@ func videoThumbnail(inputName, outputName string) error {
 	return nil
 }
 
-func getVideoDetailsFromLocal(name string) (int64, float64, error) {
+func (a App) getVideoDetailsFromLocal(ctx context.Context, name string) (int64, float64, error) {
 	reader, err := os.OpenFile(name, os.O_RDONLY, 0o600)
 	if err != nil {
 		return 0, 0, fmt.Errorf("unable to open file: %s", err)
 	}
 	defer closeWithLog(reader, "getVideoBitrate", name)
 
-	return getVideoDetails(name)
+	return a.getVideoDetails(ctx, name)
 }

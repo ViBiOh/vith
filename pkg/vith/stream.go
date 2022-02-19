@@ -2,6 +2,7 @@ package vith
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -41,7 +42,7 @@ func (a App) Start(done <-chan struct{}) {
 	}()
 
 	for req := range a.streamRequestQueue {
-		if err := a.generateStream(req); err != nil {
+		if err := a.generateStream(context.Background(), req); err != nil {
 			logger.Error("unable to generate stream: %s", err)
 		}
 	}
@@ -55,7 +56,12 @@ func (a App) stopOnce() {
 	}
 }
 
-func (a App) generateStream(req model.Request) error {
+func (a App) generateStream(ctx context.Context, req model.Request) error {
+	if a.tracer != nil {
+		_, span := a.tracer.Start(ctx, "stream")
+		defer span.End()
+	}
+
 	log := logger.WithField("input", req.Input).WithField("output", req.Output)
 	log.Info("Generating stream...")
 

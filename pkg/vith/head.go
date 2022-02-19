@@ -2,6 +2,7 @@ package vith
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -38,7 +39,7 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 
 	defer finalizeInput()
 
-	bitrate, duration, err := getVideoDetails(inputName)
+	bitrate, duration, err := a.getVideoDetails(r.Context(), inputName)
 	if err != nil {
 		httperror.InternalServerError(w, fmt.Errorf("unable to get bitrate: %s", err))
 		return
@@ -50,7 +51,12 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func getVideoDetails(inputName string) (bitrate int64, duration float64, err error) {
+func (a App) getVideoDetails(ctx context.Context, inputName string) (bitrate int64, duration float64, err error) {
+	if a.tracer != nil {
+		_, span := a.tracer.Start(ctx, "ffprobe")
+		defer span.End()
+	}
+
 	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=bit_rate:format=duration", "-of", "default=noprint_wrappers=1:nokey=1", inputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
