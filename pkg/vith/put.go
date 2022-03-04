@@ -35,7 +35,7 @@ func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
 	logger.WithField("input", r.URL.Path).Info("Adding stream generation in the work queue")
 
 	select {
-	case a.streamRequestQueue <- model.NewRequest(r.URL.Path, output, itemType):
+	case a.streamRequestQueue <- model.NewRequest(r.URL.Path, output, itemType, defaultScale):
 		w.WriteHeader(http.StatusAccepted)
 	case <-a.stop:
 		w.WriteHeader(http.StatusServiceUnavailable)

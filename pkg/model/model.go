@@ -70,10 +70,11 @@ type Request struct {
 }
 
 // NewRequest creates a new request
-func NewRequest(input, output string, itemType ItemType) Request {
+func NewRequest(input, output string, itemType ItemType, scale uint64) Request {
 	return Request{
 		Input:    input,
 		Output:   output,
+		Scale:    scale,
 		ItemType: itemType,
 	}
 }
