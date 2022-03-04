@@ -65,6 +65,7 @@ func (it *ItemType) UnmarshalJSON(b []byte) error {
 type Request struct {
 	Input    string   `json:"input"`
 	Output   string   `json:"output"`
+	Scale    uint64   `json:"scale"`
 	ItemType ItemType `json:"type"`
 }
 

@@ -82,7 +82,7 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 		return fmt.Errorf("unable to parse payload: %s", err)
 	}
 
-	if err := a.storageThumbnail(ctx, req.ItemType, req.Input, req.Output); err != nil {
+	if err := a.storageThumbnail(ctx, req.ItemType, req.Input, req.Output, req.Scale); err != nil {
 		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
 		return err
 	}

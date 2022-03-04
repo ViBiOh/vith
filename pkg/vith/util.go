@@ -23,14 +23,14 @@ var noErrFunc func() error = func() error {
 	return nil
 }
 
-func (a App) getThumbnailGenerator(itemType model.ItemType) func(context.Context, string, string) error {
+func (a App) getThumbnailGenerator(itemType model.ItemType) func(context.Context, string, string, uint64) error {
 	switch itemType {
 	case model.TypeVideo:
 		return a.videoThumbnail
 	case model.TypeImage:
 		return a.imageThumbnail
 	default:
-		return func(_ context.Context, _, _ string) error {
+		return func(_ context.Context, _, _ string, _ uint64) error {
 			return fmt.Errorf("unknown generator for `%s`", itemType)
 		}
 	}

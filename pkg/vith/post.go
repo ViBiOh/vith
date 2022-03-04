@@ -4,11 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/vith/pkg/model"
 )
+
+const defaultScale uint64 = 150
 
 func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	itemType, err := model.ParseItemType(r.URL.Query().Get("type"))
@@ -16,6 +19,16 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 		httperror.BadRequest(w, err)
 		a.increaseMetric("http", "thumbnail", "", "invalid")
 		return
+	}
+
+	scale := defaultScale
+	if rawScale := r.URL.Query().Get("scale"); len(rawScale) > 0 {
+		scale, err = strconv.ParseUint(r.URL.Query().Get("scale"), 10, 64)
+		if err != nil {
+			httperror.BadRequest(w, fmt.Errorf("unable to parse scale: %s", err))
+			a.increaseMetric("http", "thumbnail", "", "invalid")
+			return
+		}
 	}
 
 	switch itemType {
@@ -31,7 +44,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 			outputName := a.getLocalFilename(fmt.Sprintf("output_%s", inputName))
 			defer cleanLocalFile(outputName)
 
-			if err = a.getThumbnailGenerator(itemType)(r.Context(), inputName, outputName); err == nil {
+			if err = a.getThumbnailGenerator(itemType)(r.Context(), inputName, outputName, scale); err == nil {
 				err = copyLocalFile(outputName, w)
 			}
 		}
