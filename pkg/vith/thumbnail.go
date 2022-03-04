@@ -17,7 +17,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, input, output string) (err error) {
+func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, input, output string, scale uint64) (err error) {
 	if err = a.storageApp.CreateDir(path.Dir(output)); err != nil {
 		err = fmt.Errorf("unable to create directory for output: %s", err)
 		return
@@ -36,7 +36,7 @@ func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, inpu
 		err = fmt.Errorf("unable to get input name: %s", err)
 	} else {
 		outputName, finalizeOutput := a.getOutputName(output)
-		err = httpModel.WrapError(a.getThumbnailGenerator(itemType)(ctx, inputName, outputName), finalizeOutput())
+		err = httpModel.WrapError(a.getThumbnailGenerator(itemType)(ctx, inputName, outputName, scale), finalizeOutput())
 		finalizeInput()
 	}
 
@@ -125,13 +125,13 @@ func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Wr
 	return nil
 }
 
-func (a App) imageThumbnail(ctx context.Context, inputName, outputName string) error {
+func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
 	if a.tracer != nil {
 		_, span := a.tracer.Start(ctx, "ffmpeg")
 		defer span.End()
 	}
 
-	cmd := exec.Command("ffmpeg", "-i", inputName, "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", outputName)
+	cmd := exec.Command("ffmpeg", "-i", inputName, "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
@@ -148,7 +148,7 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string) e
 	return nil
 }
 
-func (a App) videoThumbnail(ctx context.Context, inputName, outputName string) error {
+func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
 	if a.tracer != nil {
 		var span trace.Span
 		ctx, span = a.tracer.Start(ctx, "ffmpeg")
@@ -168,7 +168,7 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string) e
 		customOpts = []string{"-vsync", "0", "-loop", "0"}
 	}
 
-	ffmpegOpts = append(ffmpegOpts, "-i", inputName, "-vf", "crop='min(iw,ih)':'min(iw,ih)',scale=150:150,fps=10", "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp")
+	ffmpegOpts = append(ffmpegOpts, "-i", inputName, "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d,fps=5", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp")
 	ffmpegOpts = append(ffmpegOpts, customOpts...)
 	ffmpegOpts = append(ffmpegOpts, outputName)
 	cmd := exec.Command("ffmpeg", ffmpegOpts...)
