@@ -33,7 +33,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 
 	switch itemType {
 	case model.TypePDF:
-		err = a.pdfThumbnail(r.Context(), r.Body, w, r.ContentLength)
+		err = a.pdfThumbnail(r.Context(), r.Body, w, r.ContentLength, scale)
 
 	case model.TypeImage, model.TypeVideo:
 		var inputName string

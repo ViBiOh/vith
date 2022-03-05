@@ -3,7 +3,6 @@ package vith
 import (
 	"bytes"
 	"flag"
-	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -20,11 +19,11 @@ import (
 )
 
 const (
-	// Width is the width of each thumbnail generated
-	Width = 150
+	// SmallSize is the size of each thumbnail generated
+	SmallSize = 150
 
-	// Height is the width of each thumbnail generated
-	Height = 150
+	// LargeSize is the size of each thumbnail generated
+	LargeSize = 1000
 
 	hlsExtension = ".m3u8"
 )
@@ -74,9 +73,6 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 // New creates new App from Config
 func New(config Config, prometheusRegisterer prometheus.Registerer, storageApp absto.Storage, tracerApp tracer.App) App {
 	imaginaryReq := request.Post(*config.imaginaryURL).WithClient(slowClient).BasicAuth(strings.TrimSpace(*config.imaginaryUser), *config.imaginaryPass)
-	if !imaginaryReq.IsZero() {
-		imaginaryReq = imaginaryReq.Path(fmt.Sprintf("/crop?width=%d&height=%d&stripmeta=true&noprofile=true&quality=80&type=webp", Width, Height))
-	}
 
 	return App{
 		tmpFolder:          *config.tmpFolder,
