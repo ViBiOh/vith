@@ -24,7 +24,7 @@ func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, inpu
 	}
 
 	if itemType == model.TypePDF {
-		err = a.streamThumbnail(ctx, input, output, itemType)
+		err = a.streamThumbnail(ctx, input, output, itemType, scale)
 		return
 	}
 
@@ -43,7 +43,7 @@ func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, inpu
 	return err
 }
 
-func (a App) streamThumbnail(ctx context.Context, name, output string, itemType model.ItemType) error {
+func (a App) streamThumbnail(ctx context.Context, name, output string, itemType model.ItemType, scale uint64) error {
 	reader, err := a.storageApp.ReadFrom(name)
 	if err != nil {
 		return fmt.Errorf("unable to open input file: %s", err)
@@ -69,7 +69,7 @@ func (a App) streamThumbnail(ctx context.Context, name, output string, itemType 
 			if err != nil {
 				err = fmt.Errorf("unable to stat input file: %s", err)
 			} else {
-				err = a.pdfThumbnail(ctx, reader, outputWriter, item.Size)
+				err = a.pdfThumbnail(ctx, reader, outputWriter, item.Size, scale)
 			}
 
 		default:
@@ -101,8 +101,8 @@ func (a App) streamThumbnail(ctx context.Context, name, output string, itemType 
 	return err
 }
 
-func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Writer, contentLength int64) error {
-	r, err := a.imaginaryReq.Build(ctx, input)
+func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Writer, contentLength int64, scale uint64) error {
+	r, err := a.imaginaryReq.Path(fmt.Sprintf("/crop?width=%d&height=%d&stripmeta=true&noprofile=true&quality=80&type=webp", scale, scale)).Build(ctx, input)
 	if err != nil {
 		defer closeWithLog(input, "pdfThumbnail", "")
 		return fmt.Errorf("unable to build request: %s", err)
