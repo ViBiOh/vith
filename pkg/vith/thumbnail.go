@@ -160,9 +160,7 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 
 	if _, duration, err := a.getVideoDetailsFromLocal(ctx, inputName); err != nil {
 		logger.Error("unable to get container duration for `%s`: %s", inputName, err)
-
 		ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
-		customOpts = []string{"-frames:v", "1"}
 	} else {
 		ffmpegOpts = append(ffmpegOpts, "-ss", fmt.Sprintf("%.3f", duration/2))
 	}
@@ -172,6 +170,8 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 		format += ",fps=10"
 		ffmpegOpts = append(ffmpegOpts, "-t", "5")
 		customOpts = []string{"-vsync", "0", "-loop", "0"}
+	} else {
+		customOpts = []string{"-frames:v", "1"}
 	}
 
 	ffmpegOpts = append(ffmpegOpts, "-i", inputName, "-vf", format, "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp")
