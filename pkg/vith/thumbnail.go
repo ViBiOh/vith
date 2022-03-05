@@ -164,13 +164,14 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 		ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
 		customOpts = []string{"-frames:v", "1"}
 	} else {
-		ffmpegOpts = append(ffmpegOpts, "-ss", fmt.Sprintf("%.3f", duration/2), "-t", "5")
-		customOpts = []string{"-vsync", "0", "-loop", "0"}
+		ffmpegOpts = append(ffmpegOpts, "-ss", fmt.Sprintf("%.3f", duration/2))
 	}
 
 	format := fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale)
 	if scale == SmallSize {
 		format += ",fps=10"
+		ffmpegOpts = append(ffmpegOpts, "-t", "5")
+		customOpts = []string{"-vsync", "0", "-loop", "0"}
 	}
 
 	ffmpegOpts = append(ffmpegOpts, "-i", inputName, "-vf", format, "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp")
