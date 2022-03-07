@@ -22,9 +22,6 @@ const (
 	// SmallSize is the size of each thumbnail generated
 	SmallSize = 150
 
-	// LargeSize is the size of each thumbnail generated
-	LargeSize = 1000
-
 	hlsExtension = ".m3u8"
 )
 
