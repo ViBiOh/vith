@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
@@ -16,6 +17,8 @@ import (
 	"github.com/ViBiOh/vith/pkg/model"
 	"go.opentelemetry.io/otel/trace"
 )
+
+const thumbnailDuration = 5
 
 func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, input, output string, scale uint64) (err error) {
 	if err = a.storageApp.CreateDir(path.Dir(output)); err != nil {
@@ -131,7 +134,7 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, s
 		defer span.End()
 	}
 
-	cmd := exec.Command("ffmpeg", "-i", inputName, "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", outputName)
+	cmd := exec.Command("ffmpeg", "-i", inputName, "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
@@ -162,13 +165,18 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 		logger.Error("unable to get container duration for `%s`: %s", inputName, err)
 		ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
 	} else {
-		ffmpegOpts = append(ffmpegOpts, "-ss", fmt.Sprintf("%.3f", duration/2))
+		startPoint := duration / 2
+		if duration > thumbnailDuration {
+			startPoint -= thumbnailDuration / 2
+		}
+
+		ffmpegOpts = append(ffmpegOpts, "-ss", fmt.Sprintf("%.3f", startPoint))
 	}
 
 	format := fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale)
 	if scale == SmallSize {
 		format += ",fps=10"
-		ffmpegOpts = append(ffmpegOpts, "-t", "5")
+		ffmpegOpts = append(ffmpegOpts, "-t", strconv.Itoa(thumbnailDuration))
 		customOpts = []string{"-vsync", "0", "-loop", "0"}
 	} else {
 		customOpts = []string{"-frames:v", "1"}
