@@ -3,7 +3,7 @@ module github.com/ViBiOh/vith
 go 1.17
 
 require (
-	github.com/ViBiOh/absto v0.1.5
+	github.com/ViBiOh/absto v0.2.0
 	github.com/ViBiOh/flags v0.0.1
 	github.com/ViBiOh/httputils/v4 v4.37.2
 	github.com/prometheus/client_golang v1.12.1
@@ -44,6 +44,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220307211146-efcb8507fb70 // indirect
 	golang.org/x/net v0.0.0-20220114011407-0dd24b26b47d // indirect
 	golang.org/x/sys v0.0.0-20220310020820-b874c991c1a5 // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/ini.v1 v1.66.3 // indirect

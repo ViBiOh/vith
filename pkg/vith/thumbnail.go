@@ -21,7 +21,7 @@ import (
 const thumbnailDuration = 5
 
 func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, input, output string, scale uint64) (err error) {
-	if err = a.storageApp.CreateDir(path.Dir(output)); err != nil {
+	if err = a.storageApp.CreateDir(ctx, path.Dir(output)); err != nil {
 		err = fmt.Errorf("unable to create directory for output: %s", err)
 		return
 	}
@@ -34,11 +34,11 @@ func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, inpu
 	var inputName string
 	var finalizeInput func()
 
-	inputName, finalizeInput, err = a.getInputName(input)
+	inputName, finalizeInput, err = a.getInputName(ctx, input)
 	if err != nil {
 		err = fmt.Errorf("unable to get input name: %s", err)
 	} else {
-		outputName, finalizeOutput := a.getOutputName(output)
+		outputName, finalizeOutput := a.getOutputName(ctx, output)
 		err = httpModel.WrapError(a.getThumbnailGenerator(itemType)(ctx, inputName, outputName, scale), finalizeOutput())
 		finalizeInput()
 	}
@@ -47,7 +47,7 @@ func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, inpu
 }
 
 func (a App) streamThumbnail(ctx context.Context, name, output string, itemType model.ItemType, scale uint64) error {
-	reader, err := a.storageApp.ReadFrom(name)
+	reader, err := a.storageApp.ReadFrom(ctx, name)
 	if err != nil {
 		return fmt.Errorf("unable to open input file: %s", err)
 	}
@@ -68,7 +68,7 @@ func (a App) streamThumbnail(ctx context.Context, name, output string, itemType 
 		switch itemType {
 		case model.TypePDF:
 			var item absto.Item
-			item, err = a.storageApp.Info(name)
+			item, err = a.storageApp.Info(ctx, name)
 			if err != nil {
 				err = fmt.Errorf("unable to stat input file: %s", err)
 			} else {
@@ -86,7 +86,7 @@ func (a App) streamThumbnail(ctx context.Context, name, output string, itemType 
 		done <- err
 	}()
 
-	err = a.storageApp.WriteTo(output, outputReader)
+	err = a.storageApp.WriteTo(ctx, output, outputReader)
 	if thumbnailErr := <-done; thumbnailErr != nil {
 		err = httpModel.WrapError(err, thumbnailErr)
 	}
@@ -96,7 +96,7 @@ func (a App) streamThumbnail(ctx context.Context, name, output string, itemType 
 	}
 
 	if err != nil {
-		if removeErr := a.storageApp.Remove(output); removeErr != nil {
+		if removeErr := a.storageApp.Remove(ctx, output); removeErr != nil {
 			err = httpModel.WrapError(err, fmt.Errorf("unable to remove: %s", removeErr))
 		}
 	}

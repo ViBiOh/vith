@@ -31,7 +31,9 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inputName, finalizeInput, err := a.getInputName(r.URL.Path)
+	ctx := r.Context()
+
+	inputName, finalizeInput, err := a.getInputName(ctx, r.URL.Path)
 	if err != nil {
 		httperror.InternalServerError(w, fmt.Errorf("unable to get input name: %s", err))
 		return
@@ -39,7 +41,7 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 
 	defer finalizeInput()
 
-	bitrate, duration, err := a.getVideoDetails(r.Context(), inputName)
+	bitrate, duration, err := a.getVideoDetails(ctx, inputName)
 	if err != nil {
 		httperror.InternalServerError(w, fmt.Errorf("unable to get bitrate: %s", err))
 		return

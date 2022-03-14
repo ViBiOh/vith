@@ -47,7 +47,7 @@ func (a App) AmqpStreamHandler(message amqp.Delivery) error {
 		return errors.New("output is mandatory")
 	}
 
-	if err := a.storageApp.CreateDir(path.Dir(req.Output)); err != nil {
+	if err := a.storageApp.CreateDir(ctx, path.Dir(req.Output)); err != nil {
 		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
 		return fmt.Errorf("unable to create directory for output: %s", err)
 	}

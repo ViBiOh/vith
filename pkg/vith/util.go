@@ -36,14 +36,14 @@ func (a App) getThumbnailGenerator(itemType model.ItemType) func(context.Context
 	}
 }
 
-func (a App) getInputName(name string) (string, func(), error) {
+func (a App) getInputName(ctx context.Context, name string) (string, func(), error) {
 	switch a.storageApp.Name() {
 	case filesystem.Name:
 		return a.storageApp.Path(name), noopFunc, nil
 
 	case s3.Name:
 		var reader io.ReadCloser
-		reader, err := a.storageApp.ReadFrom(name)
+		reader, err := a.storageApp.ReadFrom(ctx, name)
 		if err != nil {
 			return "", noopFunc, fmt.Errorf("unable to read from storage: %s", err)
 		}
@@ -61,7 +61,7 @@ func (a App) getInputName(name string) (string, func(), error) {
 	}
 }
 
-func (a App) getOutputName(name string) (string, func() error) {
+func (a App) getOutputName(ctx context.Context, name string) (string, func() error) {
 	switch a.storageApp.Name() {
 	case filesystem.Name:
 		return a.storageApp.Path(name), noErrFunc
@@ -71,7 +71,7 @@ func (a App) getOutputName(name string) (string, func() error) {
 
 		return localName, func() error {
 			defer cleanLocalFile(localName)
-			return a.copyAndCloseLocalFile(localName, name)
+			return a.copyAndCloseLocalFile(ctx, localName, name)
 		}
 
 	default:
@@ -98,14 +98,14 @@ func (a App) saveFileLocally(input io.ReadCloser, name string) (string, error) {
 	return outputName, err
 }
 
-func (a App) copyAndCloseLocalFile(src, target string) error {
+func (a App) copyAndCloseLocalFile(ctx context.Context, src, target string) error {
 	input, err := os.OpenFile(src, os.O_RDONLY, 0o600)
 	if err != nil {
 		return fmt.Errorf("unable to open local file: %s", err)
 	}
 	defer closeWithLog(input, "copyLocalFile", "input")
 
-	if err := a.storageApp.WriteTo(target, input); err != nil {
+	if err := a.storageApp.WriteTo(ctx, target, input); err != nil {
 		return fmt.Errorf("unable to write to storage: %s", err)
 	}
 
