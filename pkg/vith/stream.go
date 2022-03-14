@@ -65,13 +65,13 @@ func (a App) generateStream(ctx context.Context, req model.Request) error {
 	log := logger.WithField("input", req.Input).WithField("output", req.Output)
 	log.Info("Generating stream...")
 
-	inputName, finalizeInput, err := a.getInputName(req.Input)
+	inputName, finalizeInput, err := a.getInputName(ctx, req.Input)
 	if err != nil {
 		return fmt.Errorf("unable to get input video name: %s", err)
 	}
 	defer finalizeInput()
 
-	outputName, finalizeStream, err := a.getOutputStreamName(req.Output)
+	outputName, finalizeStream, err := a.getOutputStreamName(ctx, req.Output)
 	if err != nil {
 		return fmt.Errorf("unable to get video filename: %s", err)
 	}
@@ -94,7 +94,7 @@ func (a App) generateStream(ctx context.Context, req model.Request) error {
 	if err != nil {
 		err = fmt.Errorf("unable to generate stream video: %s\n%s", err, buffer.Bytes())
 
-		if cleanErr := a.cleanLocalStream(outputName); cleanErr != nil {
+		if cleanErr := a.cleanLocalStream(ctx, outputName); cleanErr != nil {
 			err = fmt.Errorf("unable to remove generated files: %s: %w", cleanErr, err)
 		}
 
@@ -105,7 +105,7 @@ func (a App) generateStream(ctx context.Context, req model.Request) error {
 	return nil
 }
 
-func (a App) isValidStreamName(streamName string, shouldExist bool) error {
+func (a App) isValidStreamName(ctx context.Context, streamName string, shouldExist bool) error {
 	if len(streamName) == 0 {
 		return errors.New("name is required")
 	}
@@ -114,7 +114,7 @@ func (a App) isValidStreamName(streamName string, shouldExist bool) error {
 		return fmt.Errorf("only `%s` files are allowed", hlsExtension)
 	}
 
-	info, err := a.storageApp.Info(streamName)
+	info, err := a.storageApp.Info(ctx, streamName)
 	if shouldExist {
 		if err != nil || info.IsDir {
 			return fmt.Errorf("input `%s` doesn't exist or is a directory", streamName)
@@ -126,7 +126,7 @@ func (a App) isValidStreamName(streamName string, shouldExist bool) error {
 	return nil
 }
 
-func (a App) getOutputStreamName(name string) (localName string, onEnd func() error, err error) {
+func (a App) getOutputStreamName(ctx context.Context, name string) (localName string, onEnd func() error, err error) {
 	onEnd = func() error {
 		return nil
 	}
@@ -138,7 +138,7 @@ func (a App) getOutputStreamName(name string) (localName string, onEnd func() er
 
 	case s3.Name:
 		localName = filepath.Join(a.tmpFolder, path.Base(name))
-		onEnd = a.finalizeStreamForS3(localName, name)
+		onEnd = a.finalizeStreamForS3(ctx, localName, name)
 		return
 
 	default:
@@ -147,9 +147,9 @@ func (a App) getOutputStreamName(name string) (localName string, onEnd func() er
 	}
 }
 
-func (a App) finalizeStreamForS3(localName, destName string) func() error {
+func (a App) finalizeStreamForS3(ctx context.Context, localName, destName string) func() error {
 	return func() error {
-		if err := a.copyAndCloseLocalFile(localName, destName); err != nil {
+		if err := a.copyAndCloseLocalFile(ctx, localName, destName); err != nil {
 			return fmt.Errorf("unable to copy manifest to `%s`: %s", destName, err)
 		}
 
@@ -163,12 +163,12 @@ func (a App) finalizeStreamForS3(localName, destName string) func() error {
 
 		for _, file := range segments {
 			segmentName := path.Join(outputDir, filepath.Base(file))
-			if err = a.copyAndCloseLocalFile(file, segmentName); err != nil {
+			if err = a.copyAndCloseLocalFile(ctx, file, segmentName); err != nil {
 				return fmt.Errorf("unable to copy segment to `%s`: %s", segmentName, err)
 			}
 		}
 
-		if cleanErr := a.cleanLocalStream(localName); cleanErr != nil {
+		if cleanErr := a.cleanLocalStream(ctx, localName); cleanErr != nil {
 			return fmt.Errorf("unable to clean stream for `%s`: %s", localName, err)
 		}
 
@@ -176,6 +176,10 @@ func (a App) finalizeStreamForS3(localName, destName string) func() error {
 	}
 }
 
-func (a App) cleanLocalStream(name string) error {
-	return a.cleanStream(name, os.Remove, filepath.Glob, "*.ts")
+func (a App) cleanLocalStream(ctx context.Context, name string) error {
+	return a.cleanStream(ctx, name, func(_ context.Context, name string) error {
+		return os.Remove(name)
+	}, func(_ context.Context, name string) ([]string, error) {
+		return filepath.Glob(name)
+	}, "*.ts")
 }

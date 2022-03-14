@@ -38,7 +38,7 @@ func main() {
 	prometheusConfig := prometheus.Flags(fs, "prometheus", flags.NewOverride("Gzip", false))
 
 	vithConfig := vith.Flags(fs, "")
-	abstoConfig := absto.Flags(fs, "storage", flags.NewOverride("Directory", ""))
+	abstoConfig := absto.Flags(fs, "storage", flags.NewOverride("FileSystemDirectory", ""))
 
 	amqpConfig := amqp.Flags(fs, "amqp")
 	streamHandlerConfig := amqphandler.Flags(fs, "stream", flags.NewOverride("Exchange", "fibr"), flags.NewOverride("Queue", "stream"), flags.NewOverride("RoutingKey", "stream"))

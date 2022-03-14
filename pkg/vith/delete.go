@@ -25,12 +25,14 @@ func (a App) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.isValidStreamName(r.URL.Path, true); err != nil {
+	ctx := r.Context()
+
+	if err := a.isValidStreamName(ctx, r.URL.Path, true); err != nil {
 		httperror.BadRequest(w, err)
 		return
 	}
 
-	if err := a.cleanStream(r.URL.Path, a.storageApp.Remove, a.listFiles, `.*\.ts`); err != nil {
+	if err := a.cleanStream(ctx, r.URL.Path, a.storageApp.Remove, a.listFiles, `.*\.ts`); err != nil {
 		httperror.InternalServerError(w, err)
 	}
 
