@@ -64,7 +64,7 @@ func main() {
 	prometheusApp := prometheus.New(prometheusConfig)
 	healthApp := health.New(healthConfig)
 
-	storageProvider, err := absto.New(abstoConfig)
+	storageProvider, err := absto.New(abstoConfig, tracerApp.GetTracer("storage"))
 	logger.Fatal(err)
 
 	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer())
