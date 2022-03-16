@@ -111,6 +111,8 @@ Usage of vith:
         [storage] Use SSL {VITH_STORAGE_OBJECT_SSL} (default true)
   -storageObjectSecretAccess string
         [storage] Storage Object Secret Access {VITH_STORAGE_OBJECT_SECRET_ACCESS}
+  -storagePartSize uint
+        [storage] PartSize configuration {VITH_STORAGE_PART_SIZE} (default 5242880)
   -streamExchange string
         [stream] Exchange name {VITH_STREAM_EXCHANGE} (default "fibr")
   -streamExclusive
