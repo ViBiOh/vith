@@ -1,6 +1,6 @@
 module github.com/ViBiOh/vith
 
-go 1.17
+go 1.18
 
 require (
 	github.com/ViBiOh/absto v0.4.1
