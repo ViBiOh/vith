@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/ViBiOh/absto v0.4.1
-	github.com/ViBiOh/flags v0.0.1
+	github.com/ViBiOh/flags v0.1.0
 	github.com/ViBiOh/httputils/v4 v4.37.2
 	github.com/prometheus/client_golang v1.12.1
 	github.com/streadway/amqp v1.0.0
