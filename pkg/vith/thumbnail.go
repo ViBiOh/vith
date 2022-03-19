@@ -27,7 +27,7 @@ func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, inpu
 	}
 
 	if itemType == model.TypePDF {
-		err = a.streamThumbnail(ctx, input, output, itemType, scale)
+		err = a.streamPdf(ctx, input, output, itemType, scale)
 		return
 	}
 
@@ -46,15 +46,10 @@ func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, inpu
 	return err
 }
 
-func (a App) streamThumbnail(ctx context.Context, name, output string, itemType model.ItemType, scale uint64) error {
+func (a App) streamPdf(ctx context.Context, name, output string, itemType model.ItemType, scale uint64) error {
 	reader, err := a.storageApp.ReadFrom(ctx, name)
 	if err != nil {
 		return fmt.Errorf("unable to open input file: %s", err)
-	}
-
-	// PDF file are closed by request sender
-	if itemType != model.TypePDF {
-		defer closeWithLog(reader, "streamThumbnail", name)
 	}
 
 	done := make(chan error)
@@ -65,18 +60,12 @@ func (a App) streamThumbnail(ctx context.Context, name, output string, itemType 
 
 		var err error
 
-		switch itemType {
-		case model.TypePDF:
-			var item absto.Item
-			item, err = a.storageApp.Info(ctx, name)
-			if err != nil {
-				err = fmt.Errorf("unable to stat input file: %s", err)
-			} else {
-				err = a.pdfThumbnail(ctx, reader, outputWriter, item.Size, scale)
-			}
-
-		default:
-			err = fmt.Errorf("unhandled itemType `%s` for streaming thumbnail", itemType)
+		var item absto.Item
+		item, err = a.storageApp.Info(ctx, name)
+		if err != nil {
+			err = fmt.Errorf("unable to stat input file: %s", err)
+		} else {
+			err = a.pdfThumbnail(ctx, reader, outputWriter, item.Size, scale)
 		}
 
 		if closeErr := outputWriter.Close(); closeErr != nil {

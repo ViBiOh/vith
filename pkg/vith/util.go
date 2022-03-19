@@ -99,13 +99,18 @@ func (a App) saveFileLocally(input io.ReadCloser, name string) (string, error) {
 }
 
 func (a App) copyAndCloseLocalFile(ctx context.Context, src, target string) error {
+	info, err := os.Stat(src)
+	if err != nil {
+		return fmt.Errorf("unable to stat local file `%s`: %s", src, err)
+	}
+
 	input, err := os.OpenFile(src, os.O_RDONLY, 0o600)
 	if err != nil {
-		return fmt.Errorf("unable to open local file: %s", err)
+		return fmt.Errorf("unable to open local file `%s`: %s", src, err)
 	}
 	defer closeWithLog(input, "copyLocalFile", "input")
 
-	if err := a.storageApp.WriteTo(ctx, target, input); err != nil {
+	if err := a.storageApp.WriteSizedTo(ctx, target, info.Size(), input); err != nil {
 		return fmt.Errorf("unable to write to storage: %s", err)
 	}
 
