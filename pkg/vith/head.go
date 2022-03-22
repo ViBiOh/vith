@@ -12,6 +12,7 @@ import (
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/vith/pkg/model"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
@@ -53,13 +54,14 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (a App) getVideoDetails(ctx context.Context, inputName string) (bitrate int64, duration float64, err error) {
+func (a App) getVideoDetails(ctx context.Context, inputName string) (int64, float64, error) {
 	if a.tracer != nil {
-		_, span := a.tracer.Start(ctx, "ffprobe")
+		var span trace.Span
+		ctx, span = a.tracer.Start(ctx, "ffprobe")
 		defer span.End()
 	}
 
-	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=bit_rate:format=duration", "-of", "default=noprint_wrappers=1:nokey=1", inputName)
+	cmd := exec.CommandContext(ctx, "ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=bit_rate:format=duration", "-of", "default=noprint_wrappers=1:nokey=1", inputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
@@ -68,12 +70,15 @@ func (a App) getVideoDetails(ctx context.Context, inputName string) (bitrate int
 	cmd.Stdout = buffer
 	cmd.Stderr = buffer
 
-	if err = cmd.Run(); err != nil {
-		err = fmt.Errorf("ffprobe error `%s`: %s", err, buffer.String())
-		return
+	if err := cmd.Run(); err != nil {
+		return 0, 0.0, fmt.Errorf("ffprobe error `%s`: %s", err, buffer.String())
 	}
 
-	for _, output := range strings.Split(strings.Trim(buffer.String(), "\n"), "\n") {
+	return parseFfprobeOutput(buffer.String())
+}
+
+func parseFfprobeOutput(raw string) (bitrate int64, duration float64, err error) {
+	for _, output := range strings.Split(strings.Trim(raw, "\n"), "\n") {
 		if bitrate == 0 {
 			bitrate, err = strconv.ParseInt(output, 10, 64)
 			if err != nil {

@@ -119,11 +119,12 @@ func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Wr
 
 func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
 	if a.tracer != nil {
-		_, span := a.tracer.Start(ctx, "ffmpeg")
+		var span trace.Span
+		ctx, span = a.tracer.Start(ctx, "ffmpeg")
 		defer span.End()
 	}
 
-	cmd := exec.Command("ffmpeg", "-i", inputName, "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
+	cmd := exec.CommandContext(ctx, "ffmpeg", "-i", inputName, "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
