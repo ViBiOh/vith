@@ -15,6 +15,7 @@ import (
 	"github.com/ViBiOh/absto/pkg/s3"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/vith/pkg/model"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Done close when work is over
@@ -58,7 +59,8 @@ func (a App) stopOnce() {
 
 func (a App) generateStream(ctx context.Context, req model.Request) error {
 	if a.tracer != nil {
-		_, span := a.tracer.Start(ctx, "stream")
+		var span trace.Span
+		ctx, span = a.tracer.Start(ctx, "stream")
 		defer span.End()
 	}
 
@@ -81,7 +83,7 @@ func (a App) generateStream(ctx context.Context, req model.Request) error {
 		}
 	}()
 
-	cmd := exec.Command("ffmpeg", "-i", inputName, "-codec:v", "libx264", "-preset", "superfast", "-codec:a", "aac", "-b:a", "128k", "-ac", "2", "-y", "-f", "hls", "-hls_time", "4", "-hls_playlist_type", "event", "-hls_flags", "independent_segments", "-threads", "2", outputName)
+	cmd := exec.CommandContext(ctx, "ffmpeg", "-i", inputName, "-codec:v", "libx264", "-preset", "superfast", "-codec:a", "aac", "-b:a", "128k", "-ac", "2", "-y", "-f", "hls", "-hls_time", "4", "-hls_playlist_type", "event", "-hls_flags", "independent_segments", "-threads", "2", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
