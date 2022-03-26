@@ -35,8 +35,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/ViBiOh/absto v0.5.2 h1:jGqWu+WmX5Wi93nOW7c/byI6HCGoJpot6plzxWu4NSc=
 github.com/ViBiOh/absto v0.5.2/go.mod h1:aTDf0Vv4EbjA4mpAM3oL9vCS7aCp3PZ0RTL6OZgM1dU=
-github.com/ViBiOh/flags v0.1.0 h1:adKGFXmbeCZW97B386vjZ5Q/rvWiBxa/WedOS4+teMg=
-github.com/ViBiOh/flags v0.1.0/go.mod h1:W0YgB4Nqou2j/2vevgO3kyrcS2f+ci/+w+jDGzVZilk=
+github.com/ViBiOh/flags v1.0.0 h1:ECiQMH2tK04PaCkPRuziWAtxYGtx2Ej8O15ZZ2Jx4Ww=
+github.com/ViBiOh/flags v1.0.0/go.mod h1:W0YgB4Nqou2j/2vevgO3kyrcS2f+ci/+w+jDGzVZilk=
 github.com/ViBiOh/httputils/v4 v4.38.1 h1:BndrRQDU/B7yAK6LwZxg1NVajMtwUz8CeDcmdvZnOIw=
 github.com/ViBiOh/httputils/v4 v4.38.1/go.mod h1:sY+x57i1EmZjvb+uFLJVtAdjfpRlCwRjLFNPTkrPnPA=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
