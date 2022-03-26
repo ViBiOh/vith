@@ -59,11 +59,11 @@ type Config struct {
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		tmpFolder: flags.New(prefix, "vith", "TmpFolder").Default("/tmp", overrides).Label("Folder used for temporary files storage").ToString(fs),
+		tmpFolder: flags.String(fs, prefix, "vith", "TmpFolder", "Folder used for temporary files storage", "/tmp", overrides),
 
-		imaginaryURL:  flags.New(prefix, "thumbnail", "ImaginaryURL").Default("http://image:9000", nil).Label("Imaginary URL").ToString(fs),
-		imaginaryUser: flags.New(prefix, "thumbnail", "ImaginaryUser").Default("", nil).Label("Imaginary Basic Auth User").ToString(fs),
-		imaginaryPass: flags.New(prefix, "thumbnail", "ImaginaryPassword").Default("", nil).Label("Imaginary Basic Auth Password").ToString(fs),
+		imaginaryURL:  flags.String(fs, prefix, "thumbnail", "ImaginaryURL", "Imaginary URL", "http://image:9000", nil),
+		imaginaryUser: flags.String(fs, prefix, "thumbnail", "ImaginaryUser", "Imaginary Basic Auth User", "", nil),
+		imaginaryPass: flags.String(fs, prefix, "thumbnail", "ImaginaryPassword", "Imaginary Basic Auth Password", "", nil),
 	}
 }
 
