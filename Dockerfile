@@ -1,4 +1,4 @@
-FROM alpine
+FROM linuxserver/ffmpeg
 
 EXPOSE 1080
 
