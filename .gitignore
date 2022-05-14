@@ -4,6 +4,11 @@ scripts/
 # Golang
 bin/
 ffmpeg/
+release/
 coverage.*
 profile.out
 .env
+
+# Docker
+ca-certificates.crt
+zoneinfo.zip
