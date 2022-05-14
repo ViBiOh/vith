@@ -85,9 +85,8 @@ jobs:
           if ! [[ -e "./ffmpeg/linux/amd64" ]]; then
             git lfs pull
           fi
-          file ./ffmpeg/linux/amd64/ffmpeg
-          file ./ffmpeg/linux/arm64/ffmpeg
-          file ./ffmpeg/linux/arm/ffmpeg
+          ls -litrah ./ffmpeg/linux/arm64/
+          head ./ffmpeg/linux/arm64/ffmpeg
           DOCKER_IMAGE="${{ secrets.DOCKER_USER }}/$(make name)" IMAGE_VERSION="$(make version)" ./scripts/release docker
   publish:
     name: Publish
