@@ -47,7 +47,7 @@ main() {
   done
 
   # Update cache value in CI
-  CACHE_VALUE="$(date "+%s")" yq eval --inplace '.jobs.package.steps[] |= select(.name == "Cache LFS") |= .with.key |= "lfs-" + env(CACHE_VALUE)' "${SCRIPT_DIR}/.github/workflows/build.yaml"
+  # CACHE_VALUE="$(date "+%s")" yq eval --inplace '.jobs.package.steps[] |= select(.name == "Cache LFS") |= .with.key |= "lfs-" + env(CACHE_VALUE)' "${SCRIPT_DIR}/.github/workflows/build.yaml"
 }
 
 main "${@}"
