@@ -31,7 +31,6 @@ jobs:
           git --no-pager diff -- ':(exclude)go.sum' && git diff --quiet -- ':(exclude)go.sum'
       - name: Codecov
         uses: codecov/codecov-action@v1
-
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
@@ -46,7 +45,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
   package:
     name: Docker
     runs-on: ubuntu-latest
@@ -72,14 +70,22 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
+      - name: Cache LFS
+        uses: actions/cache@v2
+        with:
+          path: |
+            ffmpeg/
+          key: lfs-1652547132
       - name: Docker
         if: env.DOCKER_USER && env.DOCKER_PASS
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
         run: |
+          if ! [[ -e "./ffmpeg/linux/amd64" ]]; then
+            git lfs pull
+          fi
           DOCKER_IMAGE="${{ secrets.DOCKER_USER }}/$(make name)" IMAGE_VERSION="$(make version)" ./scripts/release docker
-
   publish:
     name: Publish
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
