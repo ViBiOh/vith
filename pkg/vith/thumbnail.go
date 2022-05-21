@@ -14,8 +14,8 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	httpModel "github.com/ViBiOh/httputils/v4/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/vith/pkg/model"
-	"go.opentelemetry.io/otel/trace"
 )
 
 const thumbnailDuration = 5
@@ -118,11 +118,8 @@ func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Wr
 }
 
 func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
-	if a.tracer != nil {
-		var span trace.Span
-		ctx, span = a.tracer.Start(ctx, "ffmpeg")
-		defer span.End()
-	}
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg")
+	defer end()
 
 	cmd := exec.CommandContext(ctx, "ffmpeg", "-i", inputName, "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
 
@@ -142,11 +139,8 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, s
 }
 
 func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
-	if a.tracer != nil {
-		var span trace.Span
-		ctx, span = a.tracer.Start(ctx, "ffmpeg")
-		defer span.End()
-	}
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg")
+	defer end()
 
 	var ffmpegOpts []string
 	var customOpts []string
