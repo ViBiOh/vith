@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/vith/pkg/model"
 	"github.com/streadway/amqp"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // AmqpStreamHandler for amqp stream request
@@ -20,11 +20,8 @@ func (a App) AmqpStreamHandler(message amqp.Delivery) error {
 
 	ctx := context.Background()
 
-	if a.tracer != nil {
-		var span trace.Span
-		ctx, span = a.tracer.Start(ctx, "amqp")
-		defer span.End()
-	}
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "amqp")
+	defer end()
 
 	var req model.Request
 	if err := json.Unmarshal(message.Body, &req); err != nil {
@@ -70,11 +67,8 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 
 	ctx := context.Background()
 
-	if a.tracer != nil {
-		var span trace.Span
-		ctx, span = a.tracer.Start(ctx, "amqp")
-		defer span.End()
-	}
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "amqp")
+	defer end()
 
 	var req model.Request
 	if err := json.Unmarshal(message.Body, &req); err != nil {
