@@ -14,8 +14,8 @@ import (
 	"github.com/ViBiOh/absto/pkg/filesystem"
 	"github.com/ViBiOh/absto/pkg/s3"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/vith/pkg/model"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // Done close when work is over
@@ -58,11 +58,8 @@ func (a App) stopOnce() {
 }
 
 func (a App) generateStream(ctx context.Context, req model.Request) error {
-	if a.tracer != nil {
-		var span trace.Span
-		ctx, span = a.tracer.Start(ctx, "stream")
-		defer span.End()
-	}
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "stream")
+	defer end()
 
 	log := logger.WithField("input", req.Input).WithField("output", req.Output)
 	log.Info("Generating stream...")

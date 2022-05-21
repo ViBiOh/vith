@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/vith/pkg/model"
-	"go.opentelemetry.io/otel/trace"
 )
 
 func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
@@ -55,11 +55,8 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a App) getVideoDetails(ctx context.Context, inputName string) (int64, float64, error) {
-	if a.tracer != nil {
-		var span trace.Span
-		ctx, span = a.tracer.Start(ctx, "ffprobe")
-		defer span.End()
-	}
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffprobe")
+	defer end()
 
 	cmd := exec.CommandContext(ctx, "ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=bit_rate:format=duration", "-of", "default=noprint_wrappers=1:nokey=1", inputName)
 
