@@ -3,9 +3,9 @@ module github.com/ViBiOh/vith
 go 1.18
 
 require (
-	github.com/ViBiOh/absto v0.5.8
-	github.com/ViBiOh/flags v1.0.0
-	github.com/ViBiOh/httputils/v4 v4.43.0
+	github.com/ViBiOh/absto v0.5.9
+	github.com/ViBiOh/flags v1.1.0
+	github.com/ViBiOh/httputils/v4 v4.43.1
 	github.com/prometheus/client_golang v1.12.2
 	github.com/streadway/amqp v1.0.0
 	go.opentelemetry.io/otel/trace v1.7.0
@@ -25,7 +25,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
-	github.com/minio/minio-go/v7 v7.0.27 // indirect
+	github.com/minio/minio-go/v7 v7.0.28 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
