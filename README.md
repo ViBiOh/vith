@@ -49,10 +49,10 @@ Usage of vith:
         [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> {VITH_AMQP_URI}
   -cert string
         [server] Certificate file {VITH_CERT}
-  -graceDuration string
-        [http] Grace duration when SIGTERM received {VITH_GRACE_DURATION} (default "30s")
-  -idleTimeout string
-        [server] Idle Timeout {VITH_IDLE_TIMEOUT} (default "2m")
+  -graceDuration duration
+        [http] Grace duration when SIGTERM received {VITH_GRACE_DURATION} (default 30s)
+  -idleTimeout duration
+        [server] Idle Timeout {VITH_IDLE_TIMEOUT} (default 2m0s)
   -imaginaryPassword string
         [thumbnail] Imaginary Basic Auth Password {VITH_IMAGINARY_PASSWORD}
   -imaginaryURL string
@@ -81,24 +81,24 @@ Usage of vith:
         [prometheus] Certificate file {VITH_PROMETHEUS_CERT}
   -prometheusGzip
         [prometheus] Enable gzip compression of metrics output {VITH_PROMETHEUS_GZIP}
-  -prometheusIdleTimeout string
-        [prometheus] Idle Timeout {VITH_PROMETHEUS_IDLE_TIMEOUT} (default "10s")
+  -prometheusIdleTimeout duration
+        [prometheus] Idle Timeout {VITH_PROMETHEUS_IDLE_TIMEOUT} (default 10s)
   -prometheusIgnore string
         [prometheus] Ignored path prefixes for metrics, comma separated {VITH_PROMETHEUS_IGNORE}
   -prometheusKey string
         [prometheus] Key file {VITH_PROMETHEUS_KEY}
   -prometheusPort uint
         [prometheus] Listen port (0 to disable) {VITH_PROMETHEUS_PORT} (default 9090)
-  -prometheusReadTimeout string
-        [prometheus] Read Timeout {VITH_PROMETHEUS_READ_TIMEOUT} (default "5s")
-  -prometheusShutdownTimeout string
-        [prometheus] Shutdown Timeout {VITH_PROMETHEUS_SHUTDOWN_TIMEOUT} (default "5s")
-  -prometheusWriteTimeout string
-        [prometheus] Write Timeout {VITH_PROMETHEUS_WRITE_TIMEOUT} (default "10s")
-  -readTimeout string
-        [server] Read Timeout {VITH_READ_TIMEOUT} (default "2m")
-  -shutdownTimeout string
-        [server] Shutdown Timeout {VITH_SHUTDOWN_TIMEOUT} (default "10s")
+  -prometheusReadTimeout duration
+        [prometheus] Read Timeout {VITH_PROMETHEUS_READ_TIMEOUT} (default 5s)
+  -prometheusShutdownTimeout duration
+        [prometheus] Shutdown Timeout {VITH_PROMETHEUS_SHUTDOWN_TIMEOUT} (default 5s)
+  -prometheusWriteTimeout duration
+        [prometheus] Write Timeout {VITH_PROMETHEUS_WRITE_TIMEOUT} (default 10s)
+  -readTimeout duration
+        [server] Read Timeout {VITH_READ_TIMEOUT} (default 2m0s)
+  -shutdownTimeout duration
+        [server] Shutdown Timeout {VITH_SHUTDOWN_TIMEOUT} (default 10s)
   -storageFileSystemDirectory /data
         [storage] Path to directory. Default is dynamic. /data on a server and Current Working Directory in a terminal. {VITH_STORAGE_FILE_SYSTEM_DIRECTORY}
   -storageObjectAccessKey string
@@ -121,8 +121,8 @@ Usage of vith:
         [stream] Max send retries {VITH_STREAM_MAX_RETRY} (default 3)
   -streamQueue string
         [stream] Queue name {VITH_STREAM_QUEUE} (default "stream")
-  -streamRetryInterval string
-        [stream] Interval duration when send fails {VITH_STREAM_RETRY_INTERVAL} (default "1h")
+  -streamRetryInterval duration
+        [stream] Interval duration when send fails {VITH_STREAM_RETRY_INTERVAL} (default 1h0m0s)
   -streamRoutingKey string
         [stream] RoutingKey name {VITH_STREAM_ROUTING_KEY} (default "stream")
   -thumbnailExchange string
@@ -133,8 +133,8 @@ Usage of vith:
         [thumbnail] Max send retries {VITH_THUMBNAIL_MAX_RETRY} (default 3)
   -thumbnailQueue string
         [thumbnail] Queue name {VITH_THUMBNAIL_QUEUE} (default "thumbnail")
-  -thumbnailRetryInterval string
-        [thumbnail] Interval duration when send fails {VITH_THUMBNAIL_RETRY_INTERVAL} (default "1h")
+  -thumbnailRetryInterval duration
+        [thumbnail] Interval duration when send fails {VITH_THUMBNAIL_RETRY_INTERVAL} (default 1h0m0s)
   -thumbnailRoutingKey string
         [thumbnail] RoutingKey name {VITH_THUMBNAIL_ROUTING_KEY} (default "thumbnail")
   -tmpFolder string
@@ -147,6 +147,6 @@ Usage of vith:
         [alcotest] URL to check {VITH_URL}
   -userAgent string
         [alcotest] User-Agent for check {VITH_USER_AGENT} (default "Alcotest")
-  -writeTimeout string
-        [server] Write Timeout {VITH_WRITE_TIMEOUT} (default "2m")
+  -writeTimeout duration
+        [server] Write Timeout {VITH_WRITE_TIMEOUT} (default 2m0s)
 ```
