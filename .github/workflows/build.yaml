@@ -83,7 +83,7 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
       - name: Cache LFS
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ffmpeg/
