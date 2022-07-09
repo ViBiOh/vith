@@ -13,6 +13,8 @@ VOLUME /tmp
 ARG TARGETOS
 ARG TARGETARCH
 
+USER 65534
+
 COPY ffmpeg/${TARGETOS}/${TARGETARCH}/ffmpeg /usr/bin/ffmpeg
 COPY ffmpeg/${TARGETOS}/${TARGETARCH}/ffprobe /usr/bin/ffprobe
 
