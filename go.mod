@@ -3,7 +3,7 @@ module github.com/ViBiOh/vith
 go 1.18
 
 require (
-	github.com/ViBiOh/absto v0.5.13
+	github.com/ViBiOh/absto v0.5.14
 	github.com/ViBiOh/flags v1.1.0
 	github.com/ViBiOh/httputils/v4 v4.43.6
 	github.com/prometheus/client_golang v1.12.2
@@ -21,8 +21,8 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.15.7 // indirect
-	github.com/klauspost/cpuid/v2 v2.0.14 // indirect
+	github.com/klauspost/compress v1.15.8 // indirect
+	github.com/klauspost/cpuid/v2 v2.1.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/minio/minio-go/v7 v7.0.31 // indirect
