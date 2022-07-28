@@ -49,8 +49,7 @@ dev: format style test build
 init:
 	git lfs install
 	@curl --disable --silent --show-error --location --max-time 30 "https://raw.githubusercontent.com/ViBiOh/scripts/main/bootstrap" | bash -s -- "-c" "git_hooks" "coverage" "release"
-	go install "github.com/kisielk/errcheck@latest"
-	go install "golang.org/x/lint/golint@latest"
+	go install "github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
 	go install "golang.org/x/tools/cmd/goimports@latest"
 	go install "mvdan.cc/gofumpt@latest"
 	go mod tidy
@@ -64,9 +63,7 @@ format:
 ## style: Check lint, code styling rules. e.g. pylint, phpcs, eslint, style (java) etc ...
 .PHONY: style
 style:
-	golint $(PACKAGES)
-	errcheck -ignoretests $(PACKAGES)
-	go vet $(PACKAGES)
+	golangci-lint run
 
 ## test: Shortcut to launch all the test tasks (unit, functional and integration).
 .PHONY: test
