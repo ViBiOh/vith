@@ -25,7 +25,7 @@ spec:
     nameOverride: vith
     image:
       name: vibioh/vith
-      tag: "202207301546" # {"$imagepolicy": "default:flux-vith-api:tag"}
+      tag: "202208060909" # {"$imagepolicy": "default:flux-vith-api:tag"}
     volumes:
       - name: data
         persistentVolumeClaim:
