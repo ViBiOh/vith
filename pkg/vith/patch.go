@@ -61,27 +61,27 @@ func (a App) renameStream(ctx context.Context, source, destination string) error
 
 	content, err := a.readFile(ctx, source)
 	if err != nil {
-		return fmt.Errorf("unable to read manifest `%s`: %s", source, err)
+		return fmt.Errorf("read manifest `%s`: %s", source, err)
 	}
 
 	segments, err := a.listFiles(ctx, rawSourceName+`.*\.ts`)
 	if err != nil {
-		return fmt.Errorf("unable to list hls segments for `%s`: %s", rawSourceName, err)
+		return fmt.Errorf("list hls segments for `%s`: %s", rawSourceName, err)
 	}
 
 	if err := a.writeFile(ctx, destination, bytes.ReplaceAll(content, []byte(baseSourceName), []byte(baseDestinationName))); err != nil {
-		return fmt.Errorf("unable to write destination file `%s`: %s", destination, err)
+		return fmt.Errorf("write destination file `%s`: %s", destination, err)
 	}
 
 	for _, file := range segments {
 		newName := rawDestinationName + strings.TrimPrefix(file, rawSourceName)
 		if err := a.storageApp.Rename(ctx, file, newName); err != nil {
-			return fmt.Errorf("unable to rename `%s` to `%s`: %s", file, newName, err)
+			return fmt.Errorf("rename `%s` to `%s`: %s", file, newName, err)
 		}
 	}
 
 	if err := a.storageApp.Remove(ctx, source); err != nil {
-		return fmt.Errorf("unable to delete `%s`: %s", source, err)
+		return fmt.Errorf("delete `%s`: %s", source, err)
 	}
 
 	return nil

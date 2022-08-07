@@ -44,7 +44,7 @@ func (a App) Start(done <-chan struct{}) {
 
 	for req := range a.streamRequestQueue {
 		if err := a.generateStream(context.Background(), req); err != nil {
-			logger.Error("unable to generate stream: %s", err)
+			logger.Error("generate stream: %s", err)
 		}
 	}
 }
@@ -66,17 +66,17 @@ func (a App) generateStream(ctx context.Context, req model.Request) error {
 
 	inputName, finalizeInput, err := a.getInputName(ctx, req.Input)
 	if err != nil {
-		return fmt.Errorf("unable to get input video name: %s", err)
+		return fmt.Errorf("get input video name: %s", err)
 	}
 	defer finalizeInput()
 
 	outputName, finalizeStream, err := a.getOutputStreamName(ctx, req.Output)
 	if err != nil {
-		return fmt.Errorf("unable to get video filename: %s", err)
+		return fmt.Errorf("get video filename: %s", err)
 	}
 	defer func() {
 		if finalizeErr := finalizeStream(); finalizeErr != nil {
-			logger.Error("unable to finalize stream: %s", finalizeErr)
+			logger.Error("finalize stream: %s", finalizeErr)
 		}
 	}()
 
@@ -91,10 +91,10 @@ func (a App) generateStream(ctx context.Context, req model.Request) error {
 
 	err = cmd.Run()
 	if err != nil {
-		err = fmt.Errorf("unable to generate stream video: %s\n%s", err, buffer.Bytes())
+		err = fmt.Errorf("generate stream video: %s\n%s", err, buffer.Bytes())
 
 		if cleanErr := a.cleanLocalStream(ctx, outputName); cleanErr != nil {
-			err = fmt.Errorf("unable to remove generated files: %s: %w", cleanErr, err)
+			err = fmt.Errorf("remove generated files: %s: %w", cleanErr, err)
 		}
 
 		return err
@@ -149,13 +149,13 @@ func (a App) getOutputStreamName(ctx context.Context, name string) (localName st
 func (a App) finalizeStreamForS3(ctx context.Context, localName, destName string) func() error {
 	return func() error {
 		if err := a.copyAndCloseLocalFile(ctx, localName, destName); err != nil {
-			return fmt.Errorf("unable to copy manifest to `%s`: %s", destName, err)
+			return fmt.Errorf("copy manifest to `%s`: %s", destName, err)
 		}
 
 		baseHlsName := strings.TrimSuffix(localName, hlsExtension)
 		segments, err := filepath.Glob(fmt.Sprintf("%s*.ts", baseHlsName))
 		if err != nil {
-			return fmt.Errorf("unable to list hls segments for `%s`: %s", baseHlsName, err)
+			return fmt.Errorf("list hls segments for `%s`: %s", baseHlsName, err)
 		}
 
 		outputDir := path.Dir(destName)
@@ -163,12 +163,12 @@ func (a App) finalizeStreamForS3(ctx context.Context, localName, destName string
 		for _, file := range segments {
 			segmentName := path.Join(outputDir, filepath.Base(file))
 			if err = a.copyAndCloseLocalFile(ctx, file, segmentName); err != nil {
-				return fmt.Errorf("unable to copy segment to `%s`: %s", segmentName, err)
+				return fmt.Errorf("copy segment to `%s`: %s", segmentName, err)
 			}
 		}
 
 		if cleanErr := a.cleanLocalStream(ctx, localName); cleanErr != nil {
-			return fmt.Errorf("unable to clean stream for `%s`: %s", localName, err)
+			return fmt.Errorf("clean stream for `%s`: %s", localName, err)
 		}
 
 		return nil
