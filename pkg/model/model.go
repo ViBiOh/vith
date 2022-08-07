@@ -49,12 +49,12 @@ func (it ItemType) MarshalJSON() ([]byte, error) {
 func (it *ItemType) UnmarshalJSON(b []byte) error {
 	var strValue string
 	if err := json.Unmarshal(b, &strValue); err != nil {
-		return fmt.Errorf("unable to unmarshal event type: %s", err)
+		return fmt.Errorf("unmarshal event type: %s", err)
 	}
 
 	value, err := ParseItemType(strValue)
 	if err != nil {
-		return fmt.Errorf("unable to parse event type: %s", err)
+		return fmt.Errorf("parse event type: %s", err)
 	}
 
 	*it = value

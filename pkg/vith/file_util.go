@@ -15,13 +15,13 @@ import (
 func (a App) readFile(ctx context.Context, name string) ([]byte, error) {
 	reader, err := a.storageApp.ReadFrom(ctx, name)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read file: %s", err)
+		return nil, fmt.Errorf("read file: %s", err)
 	}
 	defer closeWithLog(reader, "readFile", name)
 
 	content, err := io.ReadAll(reader)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read content: %s", err)
+		return nil, fmt.Errorf("read content: %s", err)
 	}
 
 	return content, nil
@@ -29,7 +29,7 @@ func (a App) readFile(ctx context.Context, name string) ([]byte, error) {
 
 func (a App) writeFile(ctx context.Context, name string, content []byte) error {
 	if err := a.storageApp.WriteSizedTo(ctx, name, int64(len(content)), bytes.NewBuffer(content)); err != nil {
-		return fmt.Errorf("unable to write content: %s", err)
+		return fmt.Errorf("write content: %s", err)
 	}
 
 	return nil
@@ -40,7 +40,7 @@ func (a App) listFiles(ctx context.Context, pattern string) ([]string, error) {
 
 	re, err := regexp.Compile(pattern)
 	if err != nil {
-		return nil, fmt.Errorf("unable to compile regular expression: %s", err)
+		return nil, fmt.Errorf("compile regular expression: %s", err)
 	}
 
 	return items, a.storageApp.Walk(ctx, path.Dir(pattern), func(item absto.Item) error {
@@ -54,19 +54,19 @@ func (a App) listFiles(ctx context.Context, pattern string) ([]string, error) {
 
 func (a App) cleanStream(ctx context.Context, name string, remove func(context.Context, string) error, list func(context.Context, string) ([]string, error), suffix string) error {
 	if err := remove(ctx, name); err != nil {
-		return fmt.Errorf("unable to remove `%s`: %s", name, err)
+		return fmt.Errorf("remove `%s`: %s", name, err)
 	}
 
 	rawName := strings.TrimSuffix(name, hlsExtension)
 
 	segments, err := list(ctx, rawName+suffix)
 	if err != nil {
-		return fmt.Errorf("unable to list hls segments for `%s`: %s", rawName, err)
+		return fmt.Errorf("list hls segments for `%s`: %s", rawName, err)
 	}
 
 	for _, file := range segments {
 		if err := remove(ctx, file); err != nil {
-			return fmt.Errorf("unable to remove `%s`: %s", file, err)
+			return fmt.Errorf("remove `%s`: %s", file, err)
 		}
 	}
 

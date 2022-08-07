@@ -45,13 +45,13 @@ func (a App) getInputName(ctx context.Context, name string) (string, func(), err
 		var reader io.ReadCloser
 		reader, err := a.storageApp.ReadFrom(ctx, name)
 		if err != nil {
-			return "", noopFunc, fmt.Errorf("unable to read from storage: %s", err)
+			return "", noopFunc, fmt.Errorf("read from storage: %s", err)
 		}
 
 		localName, err := a.saveFileLocally(reader, fmt.Sprintf("input_%s", name))
 		if err != nil {
 			cleanLocalFile(localName)
-			return "", noopFunc, fmt.Errorf("unable to save file locally: %s", err)
+			return "", noopFunc, fmt.Errorf("save file locally: %s", err)
 		}
 
 		return localName, func() { cleanLocalFile(localName) }, nil
@@ -90,7 +90,7 @@ func (a App) saveFileLocally(input io.ReadCloser, name string) (string, error) {
 
 	writer, err := os.OpenFile(outputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
-		return "", fmt.Errorf("unable to open file: %s", err)
+		return "", fmt.Errorf("open file: %s", err)
 	}
 	defer closeWithLog(writer, "saveFileLocally", outputName)
 
@@ -101,17 +101,17 @@ func (a App) saveFileLocally(input io.ReadCloser, name string) (string, error) {
 func (a App) copyAndCloseLocalFile(ctx context.Context, src, target string) error {
 	info, err := os.Stat(src)
 	if err != nil {
-		return fmt.Errorf("unable to stat local file `%s`: %s", src, err)
+		return fmt.Errorf("stat local file `%s`: %s", src, err)
 	}
 
 	input, err := os.OpenFile(src, os.O_RDONLY, 0o600)
 	if err != nil {
-		return fmt.Errorf("unable to open local file `%s`: %s", src, err)
+		return fmt.Errorf("open local file `%s`: %s", src, err)
 	}
 	defer closeWithLog(input, "copyLocalFile", "input")
 
 	if err := a.storageApp.WriteSizedTo(ctx, target, info.Size(), input); err != nil {
-		return fmt.Errorf("unable to write to storage: %s", err)
+		return fmt.Errorf("write to storage: %s", err)
 	}
 
 	return nil
@@ -120,13 +120,13 @@ func (a App) copyAndCloseLocalFile(ctx context.Context, src, target string) erro
 func copyLocalFile(name string, output io.Writer) error {
 	input, err := os.OpenFile(name, os.O_RDONLY, 0o600)
 	if err != nil {
-		return fmt.Errorf("unable to open local file: %s", err)
+		return fmt.Errorf("open local file: %s", err)
 	}
 	defer closeWithLog(input, "copyLocalFile", "input")
 
 	_, err = io.Copy(output, input)
 	if err != nil {
-		return fmt.Errorf("unable to copy local file: %s", err)
+		return fmt.Errorf("copy local file: %s", err)
 	}
 
 	return nil
@@ -138,12 +138,12 @@ func cleanLocalFile(name string) {
 	}
 
 	if removeErr := os.Remove(name); removeErr != nil {
-		logger.Warn("unable to remove file `%s`: %s", name, removeErr)
+		logger.Warn("remove file `%s`: %s", name, removeErr)
 	}
 }
 
 func closeWithLog(closer io.Closer, fn, item string) {
 	if err := closer.Close(); err != nil {
-		logger.WithField("fn", fn).WithField("item", item).Error("unable to close: %s", err)
+		logger.WithField("fn", fn).WithField("item", item).Error("close: %s", err)
 	}
 }
