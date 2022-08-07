@@ -34,7 +34,7 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 	if rawScale := r.URL.Query().Get("scale"); len(rawScale) > 0 {
 		scale, err = strconv.ParseUint(r.URL.Query().Get("scale"), 10, 64)
 		if err != nil {
-			httperror.BadRequest(w, fmt.Errorf("unable to parse scale: %s", err))
+			httperror.BadRequest(w, fmt.Errorf("parse scale: %s", err))
 			a.increaseMetric("http", "thumbnail", "", "invalid")
 			return
 		}
