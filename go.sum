@@ -33,8 +33,8 @@ cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/ViBiOh/absto v0.6.2 h1:KRNEufp/jT5Onvn//wR3OiOQnGRQ8TztCztAskJBk1E=
-github.com/ViBiOh/absto v0.6.2/go.mod h1:ZoXcCx5C+xU9R6SBP4HPXSjf3WZcaVIfFCciiViZfCs=
+github.com/ViBiOh/absto v1.0.0 h1:xhmGyH6emqoBrkbCkTnvN25bvttKgWAyPwhu1v4VAG8=
+github.com/ViBiOh/absto v1.0.0/go.mod h1:ZoXcCx5C+xU9R6SBP4HPXSjf3WZcaVIfFCciiViZfCs=
 github.com/ViBiOh/flags v1.2.0 h1:DaujjNXzD29KxKyp4eZdn7c9+uBN5DokWgDAe7DcUmc=
 github.com/ViBiOh/flags v1.2.0/go.mod h1:UyMB5zeD/aId7Xw3x7577ZNU298JmukzOcV8p/H2W1s=
 github.com/ViBiOh/httputils/v4 v4.46.1 h1:TWSfDGZe8biy5LOSDmyvKdoEfMNS/LZ2y3Ksh7lvbGk=
