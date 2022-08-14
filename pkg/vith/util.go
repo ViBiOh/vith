@@ -15,11 +15,11 @@ import (
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
-var noopFunc func() = func() {
+var noopFunc = func() {
 	// nothing to do
 }
 
-var noErrFunc func() error = func() error {
+var noErrFunc = func() error {
 	return nil
 }
 
