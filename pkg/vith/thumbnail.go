@@ -27,7 +27,7 @@ func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, inpu
 	}
 
 	if itemType == model.TypePDF {
-		err = a.streamPdf(ctx, input, output, itemType, scale)
+		err = a.streamPdf(ctx, input, output, scale)
 		return
 	}
 
@@ -46,7 +46,7 @@ func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, inpu
 	return err
 }
 
-func (a App) streamPdf(ctx context.Context, name, output string, itemType model.ItemType, scale uint64) error {
+func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) error {
 	reader, err := a.storageApp.ReadFrom(ctx, name)
 	if err != nil {
 		return fmt.Errorf("open input file: %s", err)
