@@ -35,12 +35,12 @@ func (a App) handlePatch(w http.ResponseWriter, r *http.Request) {
 	destinationName := r.URL.Query().Get("to")
 
 	if err := a.isValidStreamName(ctx, r.URL.Path, true); err != nil {
-		httperror.BadRequest(w, fmt.Errorf("invalid source name: %s", err))
+		httperror.BadRequest(w, fmt.Errorf("invalid source name: %w", err))
 		return
 	}
 
 	if err := a.isValidStreamName(ctx, destinationName, false); err != nil {
-		httperror.BadRequest(w, fmt.Errorf("invalid destination name: %s", err))
+		httperror.BadRequest(w, fmt.Errorf("invalid destination name: %w", err))
 		return
 	}
 
@@ -61,27 +61,27 @@ func (a App) renameStream(ctx context.Context, source, destination string) error
 
 	content, err := a.readFile(ctx, source)
 	if err != nil {
-		return fmt.Errorf("read manifest `%s`: %s", source, err)
+		return fmt.Errorf("read manifest `%s`: %w", source, err)
 	}
 
 	segments, err := a.listFiles(ctx, rawSourceName+`.*\.ts`)
 	if err != nil {
-		return fmt.Errorf("list hls segments for `%s`: %s", rawSourceName, err)
+		return fmt.Errorf("list hls segments for `%s`: %w", rawSourceName, err)
 	}
 
 	if err := a.writeFile(ctx, destination, bytes.ReplaceAll(content, []byte(baseSourceName), []byte(baseDestinationName))); err != nil {
-		return fmt.Errorf("write destination file `%s`: %s", destination, err)
+		return fmt.Errorf("write destination file `%s`: %w", destination, err)
 	}
 
 	for _, file := range segments {
 		newName := rawDestinationName + strings.TrimPrefix(file, rawSourceName)
 		if err := a.storageApp.Rename(ctx, file, newName); err != nil {
-			return fmt.Errorf("rename `%s` to `%s`: %s", file, newName, err)
+			return fmt.Errorf("rename `%s` to `%s`: %w", file, newName, err)
 		}
 	}
 
 	if err := a.storageApp.Remove(ctx, source); err != nil {
-		return fmt.Errorf("delete `%s`: %s", source, err)
+		return fmt.Errorf("delete `%s`: %w", source, err)
 	}
 
 	return nil

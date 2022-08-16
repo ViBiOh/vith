@@ -36,7 +36,7 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 
 	inputName, finalizeInput, err := a.getInputName(ctx, r.URL.Path)
 	if err != nil {
-		httperror.InternalServerError(w, fmt.Errorf("get input name: %s", err))
+		httperror.InternalServerError(w, fmt.Errorf("get input name: %w", err))
 		return
 	}
 
@@ -44,7 +44,7 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 
 	bitrate, duration, err := a.getVideoDetails(ctx, inputName)
 	if err != nil {
-		httperror.InternalServerError(w, fmt.Errorf("get bitrate: %s", err))
+		httperror.InternalServerError(w, fmt.Errorf("get bitrate: %w", err))
 		return
 	}
 
@@ -80,7 +80,7 @@ func parseFfprobeOutput(raw string) (bitrate int64, duration float64, err error)
 			bitrate, err = strconv.ParseInt(output, 10, 64)
 			if err != nil {
 				if duration != 0 {
-					err = fmt.Errorf("parse bitrate `%s`: %s", output, err)
+					err = fmt.Errorf("parse bitrate `%s`: %w", output, err)
 					return
 				}
 			} else {
@@ -91,7 +91,7 @@ func parseFfprobeOutput(raw string) (bitrate int64, duration float64, err error)
 		if duration == 0 {
 			duration, err = strconv.ParseFloat(output, 64)
 			if err != nil && bitrate != 0 {
-				err = fmt.Errorf("parse duration `%s`: %s", output, err)
+				err = fmt.Errorf("parse duration `%s`: %w", output, err)
 				return
 			}
 		}
