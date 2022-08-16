@@ -22,7 +22,7 @@ const thumbnailDuration = 5
 
 func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, input, output string, scale uint64) (err error) {
 	if err = a.storageApp.CreateDir(ctx, path.Dir(output)); err != nil {
-		err = fmt.Errorf("create directory for output: %s", err)
+		err = fmt.Errorf("create directory for output: %w", err)
 		return
 	}
 
@@ -36,7 +36,7 @@ func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, inpu
 
 	inputName, finalizeInput, err = a.getInputName(ctx, input)
 	if err != nil {
-		err = fmt.Errorf("get input name: %s", err)
+		err = fmt.Errorf("get input name: %w", err)
 	} else {
 		outputName, finalizeOutput := a.getOutputName(ctx, output)
 		err = httpModel.WrapError(a.getThumbnailGenerator(itemType)(ctx, inputName, outputName, scale), finalizeOutput())
@@ -49,7 +49,7 @@ func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, inpu
 func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) error {
 	reader, err := a.storageApp.ReadFrom(ctx, name)
 	if err != nil {
-		return fmt.Errorf("open input file: %s", err)
+		return fmt.Errorf("open input file: %w", err)
 	}
 
 	done := make(chan error)
@@ -63,7 +63,7 @@ func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) e
 		var item absto.Item
 		item, err = a.storageApp.Info(ctx, name)
 		if err != nil {
-			err = fmt.Errorf("stat input file: %s", err)
+			err = fmt.Errorf("stat input file: %w", err)
 		} else {
 			err = a.pdfThumbnail(ctx, reader, outputWriter, item.Size, scale)
 		}
@@ -86,7 +86,7 @@ func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) e
 
 	if err != nil {
 		if removeErr := a.storageApp.Remove(ctx, output); removeErr != nil {
-			err = httpModel.WrapError(err, fmt.Errorf("remove: %s", removeErr))
+			err = httpModel.WrapError(err, fmt.Errorf("remove: %w", removeErr))
 		}
 	}
 
@@ -97,21 +97,21 @@ func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Wr
 	r, err := a.imaginaryReq.Path(fmt.Sprintf("/crop?width=%d&height=%d&stripmeta=true&noprofile=true&quality=80&type=webp", scale, scale)).Build(ctx, input)
 	if err != nil {
 		defer closeWithLog(input, "pdfThumbnail", "")
-		return fmt.Errorf("build request: %s", err)
+		return fmt.Errorf("build request: %w", err)
 	}
 
 	r.ContentLength = contentLength
 
 	resp, err := request.DoWithClient(slowClient, r)
 	if err != nil {
-		return fmt.Errorf("request imaginary: %s", err)
+		return fmt.Errorf("request imaginary: %w", err)
 	}
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
 
 	if _, err = io.CopyBuffer(output, resp.Body, buffer.Bytes()); err != nil {
-		return fmt.Errorf("copy imaginary response: %s", err)
+		return fmt.Errorf("copy imaginary response: %w", err)
 	}
 
 	return nil
@@ -132,7 +132,7 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, s
 
 	if err := cmd.Run(); err != nil {
 		cleanLocalFile(outputName)
-		return fmt.Errorf("%s: %s", buffer.String(), err)
+		return fmt.Errorf("%s: %w", buffer.String(), err)
 	}
 
 	return nil
@@ -180,7 +180,7 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 
 	if err := cmd.Run(); err != nil {
 		cleanLocalFile(outputName)
-		return fmt.Errorf("%s: %s", buffer.String(), err)
+		return fmt.Errorf("%s: %w", buffer.String(), err)
 	}
 
 	return nil
@@ -189,7 +189,7 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 func (a App) getVideoDetailsFromLocal(ctx context.Context, name string) (int64, float64, error) {
 	reader, err := os.OpenFile(name, os.O_RDONLY, 0o600)
 	if err != nil {
-		return 0, 0, fmt.Errorf("open file: %s", err)
+		return 0, 0, fmt.Errorf("open file: %w", err)
 	}
 	defer closeWithLog(reader, "getVideoBitrate", name)
 
