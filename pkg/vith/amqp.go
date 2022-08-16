@@ -26,7 +26,7 @@ func (a App) AmqpStreamHandler(message amqp.Delivery) error {
 	var req model.Request
 	if err := json.Unmarshal(message.Body, &req); err != nil {
 		a.increaseMetric("amqp", "stream", "", "invalid")
-		return fmt.Errorf("parse payload: %s", err)
+		return fmt.Errorf("parse payload: %w", err)
 	}
 
 	if req.ItemType != model.TypeVideo {
@@ -46,12 +46,12 @@ func (a App) AmqpStreamHandler(message amqp.Delivery) error {
 
 	if err := a.storageApp.CreateDir(ctx, path.Dir(req.Output)); err != nil {
 		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
-		return fmt.Errorf("create directory for output: %s", err)
+		return fmt.Errorf("create directory for output: %w", err)
 	}
 
 	if err := a.generateStream(ctx, req); err != nil {
 		a.increaseMetric("amqp", "stream", req.ItemType.String(), "error")
-		return fmt.Errorf("generate stream: %s", err)
+		return fmt.Errorf("generate stream: %w", err)
 	}
 
 	a.increaseMetric("amqp", "stream", req.ItemType.String(), "success")
@@ -73,7 +73,7 @@ func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
 	var req model.Request
 	if err := json.Unmarshal(message.Body, &req); err != nil {
 		a.increaseMetric("amqp", "thumbnail", "", "invalid")
-		return fmt.Errorf("parse payload: %s", err)
+		return fmt.Errorf("parse payload: %w", err)
 	}
 
 	if err := a.storageThumbnail(ctx, req.ItemType, req.Input, req.Output, req.Scale); err != nil {
