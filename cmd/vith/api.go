@@ -75,7 +75,7 @@ func main() {
 		defer amqpClient.Close()
 	}
 
-	vithApp := vith.New(vithConfig, prometheusApp.Registerer(), storageProvider, tracerApp)
+	vithApp := vith.New(vithConfig, prometheusApp.Registerer(), storageProvider, tracerApp.GetTracer("vith"))
 
 	streamHandlerApp, err := amqphandler.New(streamHandlerConfig, amqpClient, vithApp.AmqpStreamHandler)
 	logger.Fatal(err)

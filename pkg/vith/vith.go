@@ -12,7 +12,6 @@ import (
 	"github.com/ViBiOh/flags"
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/vith/pkg/model"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/trace"
@@ -68,7 +67,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, prometheusRegisterer prometheus.Registerer, storageApp absto.Storage, tracerApp tracer.App) App {
+func New(config Config, prometheusRegisterer prometheus.Registerer, storageApp absto.Storage, tracer trace.Tracer) App {
 	imaginaryReq := request.Post(*config.imaginaryURL).WithClient(slowClient).BasicAuth(strings.TrimSpace(*config.imaginaryUser), *config.imaginaryPass)
 
 	return App{
@@ -79,7 +78,7 @@ func New(config Config, prometheusRegisterer prometheus.Registerer, storageApp a
 		done:               make(chan struct{}),
 		metric:             prom.CounterVec(prometheusRegisterer, "vith", "", "item", "source", "kind", "type", "state"),
 		imaginaryReq:       imaginaryReq,
-		tracer:             tracerApp.GetTracer("vith"),
+		tracer:             tracer,
 	}
 }
 
