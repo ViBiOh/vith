@@ -1,6 +1,5 @@
 ---
 name: Build
-
 permissions: {}
 on:
   push:
@@ -25,7 +24,6 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: "^1.19"
-
       - name: Build
         run: |
           make
@@ -76,7 +74,7 @@ jobs:
         with:
           path: |
             ffmpeg/
-          key: lfs-1652547132
+          key: lfs-1661193516
       - name: Docker
         if: env.DOCKER_USER && env.DOCKER_PASS
         env:

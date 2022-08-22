@@ -132,7 +132,7 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, s
 
 	if err := cmd.Run(); err != nil {
 		cleanLocalFile(outputName)
-		return fmt.Errorf("%s: %w", buffer.String(), err)
+		return fmt.Errorf("ffmpeg image: %s: %w", buffer.String(), err)
 	}
 
 	return nil
@@ -180,7 +180,7 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 
 	if err := cmd.Run(); err != nil {
 		cleanLocalFile(outputName)
-		return fmt.Errorf("%s: %w", buffer.String(), err)
+		return fmt.Errorf("ffmpeg video: %s: %w", buffer.String(), err)
 	}
 
 	return nil
