@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/ViBiOh/absto/pkg/filesystem"
+	absto_model "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/absto/pkg/s3"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
@@ -110,7 +111,7 @@ func (a App) copyAndCloseLocalFile(ctx context.Context, src, target string) erro
 	}
 	defer closeWithLog(input, "copyLocalFile", "input")
 
-	if err := a.storageApp.WriteSizedTo(ctx, target, info.Size(), input); err != nil {
+	if err := a.storageApp.WriteTo(ctx, target, input, absto_model.WriteOpts{Size: info.Size()}); err != nil {
 		return fmt.Errorf("write to storage: %w", err)
 	}
 
