@@ -28,7 +28,7 @@ func (a App) readFile(ctx context.Context, name string) ([]byte, error) {
 }
 
 func (a App) writeFile(ctx context.Context, name string, content []byte) error {
-	if err := a.storageApp.WriteSizedTo(ctx, name, int64(len(content)), bytes.NewBuffer(content)); err != nil {
+	if err := a.storageApp.WriteTo(ctx, name, bytes.NewBuffer(content), absto.WriteOpts{Size: int64(len(content))}); err != nil {
 		return fmt.Errorf("write content: %w", err)
 	}
 
