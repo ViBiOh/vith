@@ -75,7 +75,7 @@ func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) e
 		done <- err
 	}()
 
-	err = a.storageApp.WriteTo(ctx, output, outputReader)
+	err = a.storageApp.WriteTo(ctx, output, outputReader, absto.WriteOpts{})
 	if thumbnailErr := <-done; thumbnailErr != nil {
 		err = httpModel.WrapError(err, thumbnailErr)
 	}

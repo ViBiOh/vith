@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -68,7 +69,7 @@ func main() {
 	storageProvider, err := absto.New(abstoConfig, tracerApp.GetTracer("storage"))
 	logger.Fatal(err)
 
-	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer())
+	amqpClient, err := amqp.New(amqpConfig, prometheusApp.Registerer(), tracerApp.GetTracer("amqp"))
 	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
 		logger.Fatal(err)
 	} else if amqpClient != nil {
@@ -77,14 +78,14 @@ func main() {
 
 	vithApp := vith.New(vithConfig, prometheusApp.Registerer(), storageProvider, tracerApp.GetTracer("vith"))
 
-	streamHandlerApp, err := amqphandler.New(streamHandlerConfig, amqpClient, vithApp.AmqpStreamHandler)
+	streamHandlerApp, err := amqphandler.New(streamHandlerConfig, amqpClient, tracerApp.GetTracer("amqp_handler"), vithApp.AmqpStreamHandler)
 	logger.Fatal(err)
 
-	thumbnailHandlerApp, err := amqphandler.New(thumbnailHandlerConfig, amqpClient, vithApp.AmqpThumbnailHandler)
+	thumbnailHandlerApp, err := amqphandler.New(thumbnailHandlerConfig, amqpClient, tracerApp.GetTracer("amqp_handler"), vithApp.AmqpThumbnailHandler)
 	logger.Fatal(err)
 
-	go streamHandlerApp.Start(healthApp.Done())
-	go thumbnailHandlerApp.Start(healthApp.Done())
+	go streamHandlerApp.Start(context.Background(), healthApp.Done())
+	go thumbnailHandlerApp.Start(context.Background(), healthApp.Done())
 	go vithApp.Start(healthApp.Done())
 
 	go promServer.Start("prometheus", healthApp.End(), prometheusApp.Handler())

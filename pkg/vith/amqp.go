@@ -13,12 +13,10 @@ import (
 )
 
 // AmqpStreamHandler for amqp stream request
-func (a App) AmqpStreamHandler(message amqp.Delivery) error {
+func (a App) AmqpStreamHandler(ctx context.Context, message amqp.Delivery) error {
 	if !a.storageApp.Enabled() {
 		return errors.New("vith has no direct access to filesystem")
 	}
-
-	ctx := context.Background()
 
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "amqp")
 	defer end()
@@ -60,12 +58,10 @@ func (a App) AmqpStreamHandler(message amqp.Delivery) error {
 }
 
 // AmqpThumbnailHandler for amqp thumbnail request
-func (a App) AmqpThumbnailHandler(message amqp.Delivery) error {
+func (a App) AmqpThumbnailHandler(ctx context.Context, message amqp.Delivery) error {
 	if !a.storageApp.Enabled() {
 		return errors.New("vith has no direct access to filesystem")
 	}
-
-	ctx := context.Background()
 
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "amqp")
 	defer end()
