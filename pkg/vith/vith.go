@@ -10,6 +10,7 @@ import (
 
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/flags"
+	"github.com/ViBiOh/httputils/v4/pkg/amqp"
 	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/vith/pkg/model"
@@ -41,8 +42,11 @@ type App struct {
 	streamRequestQueue chan model.Request
 	storageApp         absto.Storage
 	tracer             trace.Tracer
+	amqpClient         *amqp.Client
 	metric             *prometheus.CounterVec
 	tmpFolder          string
+	amqpExchange       string
+	amqpRoutingKey     string
 	imaginaryReq       request.Request
 }
 
@@ -53,6 +57,9 @@ type Config struct {
 	imaginaryURL  *string
 	imaginaryUser *string
 	imaginaryPass *string
+
+	amqpExchange   *string
+	amqpRoutingKey *string
 }
 
 // Flags adds flags for configuring package
@@ -63,16 +70,24 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 		imaginaryURL:  flags.String(fs, prefix, "thumbnail", "ImaginaryURL", "Imaginary URL", "http://image:9000", nil),
 		imaginaryUser: flags.String(fs, prefix, "thumbnail", "ImaginaryUser", "Imaginary Basic Auth User", "", nil),
 		imaginaryPass: flags.String(fs, prefix, "thumbnail", "ImaginaryPassword", "Imaginary Basic Auth Password", "", nil),
+
+		amqpExchange:   flags.String(fs, prefix, "thumbnail", "Exchange", "AMQP Exchange Name", "fibr", overrides),
+		amqpRoutingKey: flags.String(fs, prefix, "thumbnail", "RoutingKey", "AMQP Routing Key to fibr", "thumbnail_output", overrides),
 	}
 }
 
 // New creates new App from Config
-func New(config Config, prometheusRegisterer prometheus.Registerer, storageApp absto.Storage, tracer trace.Tracer) App {
+func New(config Config, prometheusRegisterer prometheus.Registerer, amqpClient *amqp.Client, storageApp absto.Storage, tracer trace.Tracer) App {
 	imaginaryReq := request.Post(*config.imaginaryURL).WithClient(slowClient).BasicAuth(strings.TrimSpace(*config.imaginaryUser), *config.imaginaryPass)
 
 	return App{
-		tmpFolder:          *config.tmpFolder,
-		storageApp:         storageApp,
+		tmpFolder:  *config.tmpFolder,
+		storageApp: storageApp,
+
+		amqpClient:     amqpClient,
+		amqpExchange:   strings.TrimSpace(*config.amqpExchange),
+		amqpRoutingKey: strings.TrimSpace(*config.amqpRoutingKey),
+
 		streamRequestQueue: make(chan model.Request, 4),
 		stop:               make(chan struct{}),
 		done:               make(chan struct{}),
