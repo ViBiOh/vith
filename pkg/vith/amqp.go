@@ -77,6 +77,10 @@ func (a App) AmqpThumbnailHandler(ctx context.Context, message amqp.Delivery) er
 		return err
 	}
 
+	if err := a.amqpClient.PublishJSON(req, a.amqpExchange, a.amqpRoutingKey); err != nil {
+		return fmt.Errorf("publish amqp message: %w", err)
+	}
+
 	a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "success")
 	return nil
 }
