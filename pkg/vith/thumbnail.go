@@ -94,7 +94,7 @@ func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) e
 }
 
 func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Writer, contentLength int64, scale uint64) error {
-	r, err := a.imaginaryReq.Path(fmt.Sprintf("/crop?width=%d&height=%d&stripmeta=true&noprofile=true&quality=80&type=webp", scale, scale)).Build(ctx, input)
+	r, err := a.imaginaryReq.Path("/crop?width=%d&height=%d&stripmeta=true&noprofile=true&quality=80&type=webp", scale, scale).Build(ctx, input)
 	if err != nil {
 		defer closeWithLog(input, "pdfThumbnail", "")
 		return fmt.Errorf("build request: %w", err)
