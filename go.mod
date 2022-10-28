@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/ViBiOh/absto v1.0.11
 	github.com/ViBiOh/flags v1.2.0
-	github.com/ViBiOh/httputils/v4 v4.49.5
+	github.com/ViBiOh/httputils/v4 v4.49.6
 	github.com/prometheus/client_golang v1.13.0
 	github.com/streadway/amqp v1.0.0
 	go.opentelemetry.io/otel/trace v1.11.1
