@@ -118,7 +118,7 @@ func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Wr
 }
 
 func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg")
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg_thumbnail")
 	defer end()
 
 	cmd := exec.CommandContext(ctx, "ffmpeg", "-i", inputName, "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
@@ -139,7 +139,7 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, s
 }
 
 func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg")
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg_video_thumbnail")
 	defer end()
 
 	var ffmpegOpts []string

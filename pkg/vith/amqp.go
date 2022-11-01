@@ -12,7 +12,6 @@ import (
 	"github.com/streadway/amqp"
 )
 
-// AmqpStreamHandler for amqp stream request
 func (a App) AmqpStreamHandler(ctx context.Context, message amqp.Delivery) error {
 	if !a.storageApp.Enabled() {
 		return errors.New("vith has no direct access to filesystem")
@@ -57,7 +56,6 @@ func (a App) AmqpStreamHandler(ctx context.Context, message amqp.Delivery) error
 	return nil
 }
 
-// AmqpThumbnailHandler for amqp thumbnail request
 func (a App) AmqpThumbnailHandler(ctx context.Context, message amqp.Delivery) error {
 	if !a.storageApp.Enabled() {
 		return errors.New("vith has no direct access to filesystem")
