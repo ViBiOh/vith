@@ -121,7 +121,7 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, s
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg_thumbnail")
 	defer end()
 
-	cmd := exec.CommandContext(ctx, "ffmpeg", "-i", inputName, "-map_metadata", "-1", "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "75", "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
+	cmd := exec.CommandContext(ctx, "ffmpeg", "-i", inputName, "-map_metadata", "-1", "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", qualityForScale(scale), "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
@@ -165,7 +165,7 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 		customOpts = []string{"-frames:v", "1"}
 	}
 
-	ffmpegOpts = append(ffmpegOpts, "-i", inputName, "-map_metadata", "-1", "-vf", format, "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "75", "-an", "-preset", "picture", "-y", "-f", "webp")
+	ffmpegOpts = append(ffmpegOpts, "-i", inputName, "-map_metadata", "-1", "-vf", format, "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", qualityForScale(scale), "-an", "-preset", "picture", "-y", "-f", "webp")
 	ffmpegOpts = append(ffmpegOpts, customOpts...)
 	ffmpegOpts = append(ffmpegOpts, outputName)
 	cmd := exec.Command("ffmpeg", ffmpegOpts...)
@@ -193,4 +193,11 @@ func (a App) getVideoDetailsFromLocal(ctx context.Context, name string) (int64, 
 	defer closeWithLog(reader, "getVideoBitrate", name)
 
 	return a.getVideoDetails(ctx, name)
+}
+
+func qualityForScale(scale uint64) string {
+	if scale == SmallSize {
+		return "66"
+	}
+	return "80"
 }
