@@ -121,7 +121,7 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, s
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg_thumbnail")
 	defer end()
 
-	cmd := exec.CommandContext(ctx, "ffmpeg", "-i", inputName, "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
+	cmd := exec.CommandContext(ctx, "ffmpeg", "-i", inputName, "-map_metadata", "-1", "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "75", "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
@@ -159,14 +159,13 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 
 	format := fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale)
 	if scale == SmallSize {
-		format += ",fps=10"
 		ffmpegOpts = append(ffmpegOpts, "-t", strconv.Itoa(thumbnailDuration))
-		customOpts = []string{"-vsync", "0", "-loop", "0"}
+		customOpts = []string{"-r", "8", "-loop", "0"}
 	} else {
 		customOpts = []string{"-frames:v", "1"}
 	}
 
-	ffmpegOpts = append(ffmpegOpts, "-i", inputName, "-vf", format, "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "80", "-an", "-preset", "picture", "-y", "-f", "webp")
+	ffmpegOpts = append(ffmpegOpts, "-i", inputName, "-map_metadata", "-1", "-vf", format, "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", "75", "-an", "-preset", "picture", "-y", "-f", "webp")
 	ffmpegOpts = append(ffmpegOpts, customOpts...)
 	ffmpegOpts = append(ffmpegOpts, outputName)
 	cmd := exec.Command("ffmpeg", ffmpegOpts...)
