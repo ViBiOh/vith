@@ -121,7 +121,7 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, s
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg_thumbnail")
 	defer end()
 
-	cmd := exec.CommandContext(ctx, "ffmpeg", "-i", inputName, "-map_metadata", "-1", "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", qualityForScale(scale), "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
+	cmd := exec.CommandContext(ctx, "ffmpeg", "-hwaccel", "auto", "-i", inputName, "-map_metadata", "-1", "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", qualityForScale(scale), "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
 
 	buffer := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buffer)
@@ -142,7 +142,7 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg_video_thumbnail")
 	defer end()
 
-	var ffmpegOpts []string
+	ffmpegOpts := []string{"-hwaccel", "auto"}
 	var customOpts []string
 
 	if _, duration, err := a.getVideoDetailsFromLocal(ctx, inputName); err != nil {

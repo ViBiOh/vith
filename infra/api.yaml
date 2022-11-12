@@ -30,9 +30,14 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: vith
+      - name: dri
+        hostPath:
+          path: /dev/dri
     volumeMounts:
       - name: data
         mountPath: /data
+      - name: dri
+        mountPath: /dev/dri
     config:
       OTEL_SERVICE_NAME: vith
       VITH_LOGGER_JSON: "true"
@@ -53,6 +58,9 @@ spec:
     securityContext:
       runAsGroup: 1000
       runAsUser: 1000
+      capabilities:
+        add:
+          - SYS_ADMIN
     autoscaling:
       enabled: false
     pprof:
