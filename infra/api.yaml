@@ -56,8 +56,9 @@ spec:
       requests:
         memory: "1Gi"
     securityContext:
-      runAsGroup: 1000
-      runAsUser: 1000
+      runAsNonRoot: false
+      runAsGroup: 0
+      runAsUser: 0
       capabilities:
         add:
           - SYS_ADMIN
