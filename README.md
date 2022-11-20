@@ -49,6 +49,8 @@ Usage of vith:
         [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> {VITH_AMQP_URI}
   -cert string
         [server] Certificate file {VITH_CERT}
+  -exchange string
+        [thumbnail] AMQP Exchange Name {VITH_EXCHANGE} (default "fibr")
   -graceDuration duration
         [http] Grace duration when SIGTERM received {VITH_GRACE_DURATION} (default 30s)
   -idleTimeout duration
@@ -97,6 +99,8 @@ Usage of vith:
         [prometheus] Write Timeout {VITH_PROMETHEUS_WRITE_TIMEOUT} (default 10s)
   -readTimeout duration
         [server] Read Timeout {VITH_READ_TIMEOUT} (default 2m0s)
+  -routingKey string
+        [thumbnail] AMQP Routing Key to fibr {VITH_ROUTING_KEY} (default "thumbnail_output")
   -shutdownTimeout duration
         [server] Shutdown Timeout {VITH_SHUTDOWN_TIMEOUT} (default 10s)
   -storageFileSystemDirectory /data
@@ -105,8 +109,12 @@ Usage of vith:
         [storage] Storage Object Access Key {VITH_STORAGE_OBJECT_ACCESS_KEY}
   -storageObjectBucket string
         [storage] Storage Object Bucket {VITH_STORAGE_OBJECT_BUCKET}
+  -storageObjectClass string
+        [storage] Storage Object Class {VITH_STORAGE_OBJECT_CLASS}
   -storageObjectEndpoint string
         [storage] Storage Object endpoint {VITH_STORAGE_OBJECT_ENDPOINT}
+  -storageObjectRegion string
+        [storage] Storage Object Region {VITH_STORAGE_OBJECT_REGION}
   -storageObjectSSL
         [storage] Use SSL {VITH_STORAGE_OBJECT_SSL} (default true)
   -storageObjectSecretAccess string
