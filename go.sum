@@ -33,8 +33,8 @@ cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/ViBiOh/absto v1.1.0 h1:WTRLpA+Q8pde9jl/Pnn9m/ZlZmoRexrg6pXMfuRPcG8=
-github.com/ViBiOh/absto v1.1.0/go.mod h1:5Jvj4IVpKTg4aDC5wGyTJtyZf3W1HyrfG13GlavKfLc=
+github.com/ViBiOh/absto v1.1.1 h1:GzbhBs7bXOx/p30LNe9MydYWyhPNtOAlZuGaf5AG2Eg=
+github.com/ViBiOh/absto v1.1.1/go.mod h1:zEIRHKFkwxCNfa4ZLLLgGnPtfBkF5uLWXUt7iKk9iME=
 github.com/ViBiOh/flags v1.2.0 h1:DaujjNXzD29KxKyp4eZdn7c9+uBN5DokWgDAe7DcUmc=
 github.com/ViBiOh/flags v1.2.0/go.mod h1:UyMB5zeD/aId7Xw3x7577ZNU298JmukzOcV8p/H2W1s=
 github.com/ViBiOh/httputils/v4 v4.50.4 h1:hrwFSAyB7c8Sufdre5SyXpcBxMM7anBYeruhVomjjXk=
@@ -180,8 +180,8 @@ github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0j
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/minio/md5-simd v1.1.2 h1:Gdi1DZK69+ZVMoNHRXJyNcxrMA4dSxoYHZSQbirFg34=
 github.com/minio/md5-simd v1.1.2/go.mod h1:MzdKDxYpY2BT9XQFocsiZf/NKVtR7nkE4RoEpN+20RM=
-github.com/minio/minio-go/v7 v7.0.43 h1:14Q4lwblqTdlAmba05oq5xL0VBLHi06zS4yLnIkz6hI=
-github.com/minio/minio-go/v7 v7.0.43/go.mod h1:nCrRzjoSUQh8hgKKtu3Y708OLvRLtuASMg2/nvmbarw=
+github.com/minio/minio-go/v7 v7.0.44 h1:9zUJ7iU7ax2P1jOvTp6nVrgzlZq3AZlFm0XfRFDKstM=
+github.com/minio/minio-go/v7 v7.0.44/go.mod h1:nCrRzjoSUQh8hgKKtu3Y708OLvRLtuASMg2/nvmbarw=
 github.com/minio/sha256-simd v1.0.0 h1:v1ta+49hkWZyvaKwrQB8elexRqm6Y0aMLjCNsrYxo6g=
 github.com/minio/sha256-simd v1.0.0/go.mod h1:OuYzVNI5vcoYIAmbIvHPl3N3jUzVedXbKy5RFepssQM=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
