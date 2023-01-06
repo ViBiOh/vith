@@ -52,9 +52,11 @@ func main() {
 	logger.Global(logger.New(loggerConfig))
 	defer logger.Close()
 
-	tracerApp, err := tracer.New(tracerConfig)
+	ctx := context.Background()
+
+	tracerApp, err := tracer.New(ctx, tracerConfig)
 	logger.Fatal(err)
-	defer tracerApp.Close()
+	defer tracerApp.Close(ctx)
 	request.AddTracerToDefaultClient(tracerApp.GetProvider())
 
 	go func() {
@@ -84,12 +86,12 @@ func main() {
 	thumbnailHandlerApp, err := amqphandler.New(thumbnailHandlerConfig, amqpClient, tracerApp.GetTracer("amqp_handler"), vithApp.AmqpThumbnailHandler)
 	logger.Fatal(err)
 
-	go streamHandlerApp.Start(context.Background(), healthApp.Done())
-	go thumbnailHandlerApp.Start(context.Background(), healthApp.Done())
+	go streamHandlerApp.Start(healthApp.ContextDone())
+	go thumbnailHandlerApp.Start(healthApp.ContextDone())
 	go vithApp.Start(healthApp.Done())
 
-	go promServer.Start("prometheus", healthApp.End(), prometheusApp.Handler())
-	go appServer.Start("http", healthApp.End(), httputils.Handler(vithApp.Handler(), healthApp, recoverer.Middleware, prometheusApp.Middleware, tracerApp.Middleware))
+	go promServer.Start(healthApp.ContextEnd(), "prometheus", prometheusApp.Handler())
+	go appServer.Start(healthApp.ContextEnd(), "http", httputils.Handler(vithApp.Handler(), healthApp, recoverer.Middleware, prometheusApp.Middleware, tracerApp.Middleware))
 
 	healthApp.WaitForTermination(appServer.Done())
 	server.GracefulWait(appServer.Done(), promServer.Done(), vithApp.Done(), streamHandlerApp.Done(), thumbnailHandlerApp.Done())
