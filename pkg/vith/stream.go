@@ -24,7 +24,7 @@ func (a App) Done() <-chan struct{} {
 }
 
 // Start worker
-func (a App) Start(done <-chan struct{}) {
+func (a App) Start(ctx context.Context) {
 	defer close(a.done)
 	defer close(a.streamRequestQueue)
 	defer a.stopOnce()
@@ -32,6 +32,8 @@ func (a App) Start(done <-chan struct{}) {
 	if !a.storageApp.Enabled() {
 		return
 	}
+
+	done := ctx.Done()
 
 	go func() {
 		defer a.stopOnce()
