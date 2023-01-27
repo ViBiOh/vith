@@ -26,6 +26,8 @@ spec:
     image:
       name: vibioh/vith
       tag: "202301271511" # {"$imagepolicy": "default:flux-vith-api:tag"}
+    strategy:
+      type: Recreate
     volumes:
       - name: data
         persistentVolumeClaim:
