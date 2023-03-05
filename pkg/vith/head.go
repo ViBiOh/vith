@@ -54,9 +54,9 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (a App) getVideoDetails(ctx context.Context, inputName string) (int64, float64, error) {
+func (a App) getVideoDetails(ctx context.Context, inputName string) (bireate int64, duration float64, err error) {
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffprobe")
-	defer end()
+	defer end(&err)
 
 	cmd := exec.CommandContext(ctx, "ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=bit_rate:format=duration", "-of", "default=noprint_wrappers=1:nokey=1", inputName)
 
@@ -67,7 +67,7 @@ func (a App) getVideoDetails(ctx context.Context, inputName string) (int64, floa
 	cmd.Stdout = buffer
 	cmd.Stderr = buffer
 
-	if err := cmd.Run(); err != nil {
+	if err = cmd.Run(); err != nil {
 		return 0, 0.0, fmt.Errorf("ffprobe error `%s`: %s", err, buffer.String())
 	}
 

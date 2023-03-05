@@ -148,9 +148,9 @@ Usage of vith:
   -tmpFolder string
         [vith] Folder used for temporary files storage {VITH_TMP_FOLDER} (default "/tmp")
   -tracerRate string
-        [tracer] Jaeger sample rate, 'always', 'never' or a float value {VITH_TRACER_RATE} (default "always")
+        [tracer] OpenTracing sample rate, 'always', 'never' or a float value {VITH_TRACER_RATE} (default "always")
   -tracerURL string
-        [tracer] Jaeger endpoint URL (e.g. http://jaeger:14268/api/traces) {VITH_TRACER_URL}
+        [tracer] OpenTracing gRPC endpoint (e.g. otel-exporter:4317) {VITH_TRACER_URL}
   -url string
         [alcotest] URL to check {VITH_URL}
   -userAgent string

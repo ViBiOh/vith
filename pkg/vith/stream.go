@@ -60,8 +60,10 @@ func (a App) stopOnce() {
 }
 
 func (a App) generateStream(ctx context.Context, req model.Request) error {
+	var err error
+
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "stream")
-	defer end()
+	defer end(&err)
 
 	log := logger.WithField("input", req.Input).WithField("output", req.Output)
 	log.Info("Generating stream...")

@@ -3,6 +3,7 @@ package vith
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -12,7 +13,6 @@ import (
 
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
-	httpModel "github.com/ViBiOh/httputils/v4/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/vith/pkg/model"
@@ -39,7 +39,7 @@ func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, inpu
 		err = fmt.Errorf("get input name: %w", err)
 	} else {
 		outputName, finalizeOutput := a.getOutputName(ctx, output)
-		err = httpModel.WrapError(a.getThumbnailGenerator(itemType)(ctx, inputName, outputName, scale), finalizeOutput())
+		err = errors.Join(a.getThumbnailGenerator(itemType)(ctx, inputName, outputName, scale), finalizeOutput())
 		finalizeInput()
 	}
 
@@ -69,7 +69,7 @@ func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) e
 		}
 
 		if closeErr := outputWriter.Close(); closeErr != nil {
-			err = httpModel.WrapError(err, closeErr)
+			err = errors.Join(err, closeErr)
 		}
 
 		done <- err
@@ -77,16 +77,16 @@ func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) e
 
 	err = a.storageApp.WriteTo(ctx, output, outputReader, absto.WriteOpts{})
 	if thumbnailErr := <-done; thumbnailErr != nil {
-		err = httpModel.WrapError(err, thumbnailErr)
+		err = errors.Join(err, thumbnailErr)
 	}
 
 	if closeErr := outputReader.Close(); closeErr != nil {
-		err = httpModel.WrapError(err, closeErr)
+		err = errors.Join(err, closeErr)
 	}
 
 	if err != nil {
 		if removeErr := a.storageApp.Remove(ctx, output); removeErr != nil {
-			err = httpModel.WrapError(err, fmt.Errorf("remove: %w", removeErr))
+			err = errors.Join(err, fmt.Errorf("remove: %w", removeErr))
 		}
 	}
 
@@ -118,8 +118,10 @@ func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Wr
 }
 
 func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
+	var err error
+
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg_thumbnail")
-	defer end()
+	defer end(&err)
 
 	cmd := exec.CommandContext(ctx, "ffmpeg", "-hwaccel", "auto", "-i", inputName, "-map_metadata", "-1", "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", qualityForScale(scale), "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
 
@@ -130,7 +132,7 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, s
 	cmd.Stdout = buffer
 	cmd.Stderr = buffer
 
-	if err := cmd.Run(); err != nil {
+	if err = cmd.Run(); err != nil {
 		cleanLocalFile(outputName)
 		return fmt.Errorf("ffmpeg image: %s: %w", buffer.String(), err)
 	}
@@ -139,8 +141,10 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, s
 }
 
 func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
+	var err error
+
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg_video_thumbnail")
-	defer end()
+	defer end(&err)
 
 	ffmpegOpts := []string{"-hwaccel", "auto"}
 	var customOpts []string
@@ -177,7 +181,7 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 	cmd.Stdout = buffer
 	cmd.Stderr = buffer
 
-	if err := cmd.Run(); err != nil {
+	if err = cmd.Run(); err != nil {
 		cleanLocalFile(outputName)
 		return fmt.Errorf("ffmpeg video: %s: %w", buffer.String(), err)
 	}
