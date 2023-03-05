@@ -17,11 +17,13 @@ func (a App) AmqpStreamHandler(ctx context.Context, message amqp.Delivery) error
 		return errors.New("vith has no direct access to filesystem")
 	}
 
+	var err error
+
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "amqp")
-	defer end()
+	defer end(&err)
 
 	var req model.Request
-	if err := json.Unmarshal(message.Body, &req); err != nil {
+	if err = json.Unmarshal(message.Body, &req); err != nil {
 		a.increaseMetric("amqp", "stream", "", "invalid")
 		return fmt.Errorf("parse payload: %w", err)
 	}
@@ -41,12 +43,12 @@ func (a App) AmqpStreamHandler(ctx context.Context, message amqp.Delivery) error
 		return errors.New("output is mandatory")
 	}
 
-	if err := a.storageApp.CreateDir(ctx, path.Dir(req.Output)); err != nil {
+	if err = a.storageApp.CreateDir(ctx, path.Dir(req.Output)); err != nil {
 		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
 		return fmt.Errorf("create directory for output: %w", err)
 	}
 
-	if err := a.generateStream(ctx, req); err != nil {
+	if err = a.generateStream(ctx, req); err != nil {
 		a.increaseMetric("amqp", "stream", req.ItemType.String(), "error")
 		return fmt.Errorf("generate stream: %w", err)
 	}
@@ -61,21 +63,23 @@ func (a App) AmqpThumbnailHandler(ctx context.Context, message amqp.Delivery) er
 		return errors.New("vith has no direct access to filesystem")
 	}
 
+	var err error
+
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "amqp")
-	defer end()
+	defer end(&err)
 
 	var req model.Request
-	if err := json.Unmarshal(message.Body, &req); err != nil {
+	if err = json.Unmarshal(message.Body, &req); err != nil {
 		a.increaseMetric("amqp", "thumbnail", "", "invalid")
 		return fmt.Errorf("parse payload: %w", err)
 	}
 
-	if err := a.storageThumbnail(ctx, req.ItemType, req.Input, req.Output, req.Scale); err != nil {
+	if err = a.storageThumbnail(ctx, req.ItemType, req.Input, req.Output, req.Scale); err != nil {
 		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
 		return err
 	}
 
-	if err := a.amqpClient.PublishJSON(ctx, req, a.amqpExchange, a.amqpRoutingKey); err != nil {
+	if err = a.amqpClient.PublishJSON(ctx, req, a.amqpExchange, a.amqpRoutingKey); err != nil {
 		return fmt.Errorf("publish amqp message: %w", err)
 	}
 
