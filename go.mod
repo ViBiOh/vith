@@ -3,7 +3,7 @@ module github.com/ViBiOh/vith
 go 1.20
 
 require (
-	github.com/ViBiOh/absto v1.2.9
+	github.com/ViBiOh/absto v1.3.2
 	github.com/ViBiOh/flags v1.2.0
 	github.com/ViBiOh/httputils/v4 v4.54.2
 	github.com/prometheus/client_golang v1.14.0
