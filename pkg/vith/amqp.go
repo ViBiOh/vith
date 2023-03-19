@@ -9,7 +9,7 @@ import (
 
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/vith/pkg/model"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func (a App) AmqpStreamHandler(ctx context.Context, message amqp.Delivery) error {
