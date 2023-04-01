@@ -36,6 +36,7 @@ spec:
       - name: data
         mountPath: /data
     config:
+      GOMAXPROCS: "1"
       OTEL_SERVICE_NAME: vith
       VITH_LOGGER_JSON: "true"
       VITH_STORAGE_FILE_SYSTEM_DIRECTORY: "/data"
