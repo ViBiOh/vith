@@ -47,8 +47,6 @@ Usage of vith:
         [amqp] Prefetch count for QoS {VITH_AMQP_PREFETCH} (default 1)
   -amqpURI string
         [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> {VITH_AMQP_URI}
-  -amqpWaitTimeout duration
-        [amqp] Wait duration for AMQP to be ready {VITH_AMQP_WAIT_TIMEOUT} (default 5s)
   -cert string
         [server] Certificate file {VITH_CERT}
   -exchange string
