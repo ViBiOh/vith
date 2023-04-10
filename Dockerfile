@@ -18,5 +18,7 @@ USER 65534
 COPY ffmpeg/${TARGETOS}/${TARGETARCH}/ffmpeg /usr/bin/ffmpeg
 COPY ffmpeg/${TARGETOS}/${TARGETARCH}/ffprobe /usr/bin/ffprobe
 
+COPY wait_${TARGETOS}_${TARGETARCH} /wait
+
 COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY release/vith_${TARGETOS}_${TARGETARCH} /vith
