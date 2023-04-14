@@ -6,7 +6,7 @@ require (
 	github.com/ViBiOh/absto v1.4.4
 	github.com/ViBiOh/flags v1.3.0
 	github.com/ViBiOh/httputils/v4 v4.56.1
-	github.com/prometheus/client_golang v1.14.0
+	github.com/prometheus/client_golang v1.15.0
 	github.com/rabbitmq/amqp091-go v1.8.0
 	go.opentelemetry.io/otel/trace v1.14.0
 )
@@ -33,7 +33,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
-	github.com/prometheus/procfs v0.8.0 // indirect
+	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
