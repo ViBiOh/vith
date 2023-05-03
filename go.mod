@@ -3,9 +3,9 @@ module github.com/ViBiOh/vith
 go 1.20
 
 require (
-	github.com/ViBiOh/absto v1.4.6
-	github.com/ViBiOh/flags v1.3.0
-	github.com/ViBiOh/httputils/v4 v4.57.0
+	github.com/ViBiOh/absto v1.4.7
+	github.com/ViBiOh/flags v1.3.1
+	github.com/ViBiOh/httputils/v4 v4.57.1
 	github.com/prometheus/client_golang v1.15.0
 	github.com/rabbitmq/amqp091-go v1.8.0
 	go.opentelemetry.io/otel/trace v1.15.1
