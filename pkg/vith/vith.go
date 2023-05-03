@@ -65,14 +65,14 @@ type Config struct {
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		tmpFolder: flags.String(fs, prefix, "vith", "TmpFolder", "Folder used for temporary files storage", "/tmp", overrides),
+		tmpFolder: flags.New("TmpFolder", "Folder used for temporary files storage").Prefix(prefix).DocPrefix("vith").String(fs, "/tmp", overrides),
 
-		imaginaryURL:  flags.String(fs, prefix, "thumbnail", "ImaginaryURL", "Imaginary URL", "http://image:9000", nil),
-		imaginaryUser: flags.String(fs, prefix, "thumbnail", "ImaginaryUser", "Imaginary Basic Auth User", "", nil),
-		imaginaryPass: flags.String(fs, prefix, "thumbnail", "ImaginaryPassword", "Imaginary Basic Auth Password", "", nil),
+		imaginaryURL:  flags.New("ImaginaryURL", "Imaginary URL").Prefix(prefix).DocPrefix("thumbnail").String(fs, "http://image:9000", nil),
+		imaginaryUser: flags.New("ImaginaryUser", "Imaginary Basic Auth User").Prefix(prefix).DocPrefix("thumbnail").String(fs, "", nil),
+		imaginaryPass: flags.New("ImaginaryPassword", "Imaginary Basic Auth Password").Prefix(prefix).DocPrefix("thumbnail").String(fs, "", nil),
 
-		amqpExchange:   flags.String(fs, prefix, "thumbnail", "Exchange", "AMQP Exchange Name", "fibr", overrides),
-		amqpRoutingKey: flags.String(fs, prefix, "thumbnail", "RoutingKey", "AMQP Routing Key to fibr", "thumbnail_output", overrides),
+		amqpExchange:   flags.New("Exchange", "AMQP Exchange Name").Prefix(prefix).DocPrefix("thumbnail").String(fs, "fibr", overrides),
+		amqpRoutingKey: flags.New("RoutingKey", "AMQP Routing Key to fibr").Prefix(prefix).DocPrefix("thumbnail").String(fs, "thumbnail_output", overrides),
 	}
 }
 
