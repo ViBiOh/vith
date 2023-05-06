@@ -71,12 +71,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
-      - name: Cache LFS
+      - name: Cache ffmpeg
         uses: actions/cache@v3
         with:
           path: |
             ffmpeg/
-          key: lfs-1667725763
+          key: lfs-1683387429
       - name: Docker
         if: env.DOCKER_USER && env.DOCKER_PASS
         env:
@@ -84,9 +84,10 @@ jobs:
           DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
         run: |
           if [[ $(file "./ffmpeg/linux/amd64/ffmpeg" | grep -c ELF) -ne 1 ]]; then
-            git lfs pull
+            ./download_ffmpeg
           fi
           RELEASE_NEED_WAIT=true DOCKER_IMAGE="${{ secrets.DOCKER_USER }}/$(make name)" IMAGE_VERSION="$(make version)" ./scripts/release docker
+
   publish:
     name: Publish
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
