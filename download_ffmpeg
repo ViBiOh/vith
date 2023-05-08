@@ -18,9 +18,6 @@ main() {
   local SCRIPT_DIR
   SCRIPT_DIR="$(script_dir)"
 
-  source "${SCRIPT_DIR}/scripts/meta" && meta_init "var"
-  var_color
-
   local DESTINATION_FOLDER="${SCRIPT_DIR}/ffmpeg"
 
   for arch in amd64 arm64 armhf; do
@@ -34,11 +31,11 @@ main() {
     local TARGET_NAME="${DESTINATION_FOLDER}/linux/${DESTINATION_ARCH}"
 
     if [[ -e "${TARGET_NAME}/ffmpeg" ]]; then
-      var_info "File already present for linux/${arch}, skipping download."
+      printf "File already present for linux/%s, skipping download." "${arch}"
       continue
     fi
 
-    var_info "Downloading static ffmpeg for linux/${arch}"
+    printf "Downloading static ffmpeg for linux/%s" "${arch}"
 
     curl --disable --silent --show-error --location --max-time 600 --remote-name "https://johnvansickle.com/ffmpeg/releases/${ARCHIVE_NAME}"
     mkdir -p "${TARGET_NAME}"
