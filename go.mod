@@ -3,7 +3,7 @@ module github.com/ViBiOh/vith
 go 1.20
 
 require (
-	github.com/ViBiOh/absto v1.4.8
+	github.com/ViBiOh/absto v1.5.0
 	github.com/ViBiOh/flags v1.3.1
 	github.com/ViBiOh/httputils/v4 v4.57.2
 	github.com/prometheus/client_golang v1.15.1
@@ -35,7 +35,7 @@ require (
 	github.com/prometheus/common v0.43.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rs/xid v1.5.0 // indirect
-	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/sirupsen/logrus v1.9.2 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.41.1 // indirect
 	go.opentelemetry.io/otel v1.15.1 // indirect
