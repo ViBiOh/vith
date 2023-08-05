@@ -32,7 +32,7 @@ func (a App) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.cleanStream(ctx, r.URL.Path, a.storageApp.Remove, a.listFiles, `.*\.ts`); err != nil {
+	if err := a.cleanStream(ctx, r.URL.Path, a.storageApp.RemoveAll, a.listFiles, `.*\.ts`); err != nil {
 		httperror.InternalServerError(w, err)
 	}
 
