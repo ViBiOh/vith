@@ -117,9 +117,9 @@ func (a App) isValidStreamName(ctx context.Context, streamName string, shouldExi
 		return fmt.Errorf("only `%s` files are allowed", hlsExtension)
 	}
 
-	info, err := a.storageApp.Info(ctx, streamName)
+	info, err := a.storageApp.Stat(ctx, streamName)
 	if shouldExist {
-		if err != nil || info.IsDir {
+		if err != nil || info.IsDir() {
 			return fmt.Errorf("input `%s` doesn't exist or is a directory", streamName)
 		}
 	} else if err == nil {

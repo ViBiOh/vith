@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path"
 
+	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"github.com/ViBiOh/vith/pkg/model"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -43,7 +44,7 @@ func (a App) AmqpStreamHandler(ctx context.Context, message amqp.Delivery) error
 		return errors.New("output is mandatory")
 	}
 
-	if err = a.storageApp.CreateDir(ctx, path.Dir(req.Output)); err != nil {
+	if err = a.storageApp.Mkdir(ctx, path.Dir(req.Output), absto.DirectoryPerm); err != nil {
 		a.increaseMetric("amqp", "thumbnail", req.ItemType.String(), "error")
 		return fmt.Errorf("create directory for output: %w", err)
 	}

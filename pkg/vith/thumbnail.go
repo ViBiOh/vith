@@ -21,7 +21,7 @@ import (
 const thumbnailDuration = 5
 
 func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, input, output string, scale uint64) (err error) {
-	if err = a.storageApp.CreateDir(ctx, path.Dir(output)); err != nil {
+	if err = a.storageApp.Mkdir(ctx, path.Dir(output), absto.DirectoryPerm); err != nil {
 		err = fmt.Errorf("create directory for output: %w", err)
 		return
 	}
@@ -61,11 +61,11 @@ func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) e
 		var err error
 
 		var item absto.Item
-		item, err = a.storageApp.Info(ctx, name)
+		item, err = a.storageApp.Stat(ctx, name)
 		if err != nil {
 			err = fmt.Errorf("stat input file: %w", err)
 		} else {
-			err = a.pdfThumbnail(ctx, reader, outputWriter, item.Size, scale)
+			err = a.pdfThumbnail(ctx, reader, outputWriter, item.Size(), scale)
 		}
 
 		if closeErr := outputWriter.Close(); closeErr != nil {
@@ -85,7 +85,7 @@ func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) e
 	}
 
 	if err != nil {
-		if removeErr := a.storageApp.Remove(ctx, output); removeErr != nil {
+		if removeErr := a.storageApp.RemoveAll(ctx, output); removeErr != nil {
 			err = errors.Join(err, fmt.Errorf("remove: %w", removeErr))
 		}
 	}
@@ -190,7 +190,7 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 }
 
 func (a App) getVideoDetailsFromLocal(ctx context.Context, name string) (int64, float64, error) {
-	reader, err := os.OpenFile(name, os.O_RDONLY, 0o600)
+	reader, err := os.OpenFile(name, os.O_RDONLY, absto.RegularFilePerm)
 	if err != nil {
 		return 0, 0, fmt.Errorf("open file: %w", err)
 	}

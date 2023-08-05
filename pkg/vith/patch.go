@@ -80,7 +80,7 @@ func (a App) renameStream(ctx context.Context, source, destination string) error
 		}
 	}
 
-	if err := a.storageApp.Remove(ctx, source); err != nil {
+	if err := a.storageApp.RemoveAll(ctx, source); err != nil {
 		return fmt.Errorf("delete `%s`: %w", source, err)
 	}
 

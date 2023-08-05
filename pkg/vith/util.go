@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/ViBiOh/absto/pkg/filesystem"
-	absto_model "github.com/ViBiOh/absto/pkg/model"
+	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/absto/pkg/s3"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
@@ -89,7 +89,7 @@ func (a App) saveFileLocally(input io.ReadCloser, name string) (string, error) {
 
 	outputName := a.getLocalFilename(name)
 
-	writer, err := os.OpenFile(outputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
+	writer, err := os.OpenFile(outputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, absto.RegularFilePerm)
 	if err != nil {
 		return "", fmt.Errorf("open file: %w", err)
 	}
@@ -105,13 +105,13 @@ func (a App) copyAndCloseLocalFile(ctx context.Context, src, target string) erro
 		return fmt.Errorf("stat local file `%s`: %w", src, err)
 	}
 
-	input, err := os.OpenFile(src, os.O_RDONLY, 0o600)
+	input, err := os.OpenFile(src, os.O_RDONLY, absto.RegularFilePerm)
 	if err != nil {
 		return fmt.Errorf("open local file `%s`: %w", src, err)
 	}
 	defer closeWithLog(input, "copyLocalFile", "input")
 
-	if err := a.storageApp.WriteTo(ctx, target, input, absto_model.WriteOpts{Size: info.Size()}); err != nil {
+	if err := a.storageApp.WriteTo(ctx, target, input, absto.WriteOpts{Size: info.Size()}); err != nil {
 		return fmt.Errorf("write to storage: %w", err)
 	}
 
@@ -119,7 +119,7 @@ func (a App) copyAndCloseLocalFile(ctx context.Context, src, target string) erro
 }
 
 func copyLocalFile(name string, output io.Writer) error {
-	input, err := os.OpenFile(name, os.O_RDONLY, 0o600)
+	input, err := os.OpenFile(name, os.O_RDONLY, absto.RegularFilePerm)
 	if err != nil {
 		return fmt.Errorf("open local file: %w", err)
 	}
