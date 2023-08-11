@@ -11,8 +11,8 @@ import (
 	"github.com/ViBiOh/absto/pkg/filesystem"
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/absto/pkg/s3"
+	"github.com/ViBiOh/httputils/v4/pkg/hash"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
-	"github.com/ViBiOh/httputils/v4/pkg/sha"
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
@@ -81,7 +81,7 @@ func (a App) getOutputName(ctx context.Context, name string) (string, func() err
 }
 
 func (a App) getLocalFilename(name string) string {
-	return filepath.Join(a.tmpFolder, sha.New(name))
+	return filepath.Join(a.tmpFolder, hash.String(name))
 }
 
 func (a App) saveFileLocally(input io.ReadCloser, name string) (string, error) {
