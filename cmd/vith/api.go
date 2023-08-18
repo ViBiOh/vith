@@ -77,7 +77,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	meter := telemetryApp.GetMeter("vith")
+	meter := telemetryApp.GetMeter("github.com/ViBiOh/vith/cmd/vith")
 
 	amqpClient, err := amqp.New(amqpConfig, meter, telemetryApp.GetTracer("amqp"))
 	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
