@@ -3,6 +3,7 @@ package vith
 import (
 	"bytes"
 	"flag"
+	"log/slog"
 	"net/http"
 	"strings"
 	"sync"
@@ -11,10 +12,9 @@ import (
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/amqp"
-	prom "github.com/ViBiOh/httputils/v4/pkg/prometheus"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/vith/pkg/model"
-	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -43,7 +43,7 @@ type App struct {
 	storageApp         absto.Storage
 	tracer             trace.Tracer
 	amqpClient         *amqp.Client
-	metric             *prometheus.CounterVec
+	metric             metric.Int64Counter
 	tmpFolder          string
 	amqpExchange       string
 	amqpRoutingKey     string
@@ -77,8 +77,18 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, prometheusRegisterer prometheus.Registerer, amqpClient *amqp.Client, storageApp absto.Storage, tracer trace.Tracer) App {
+func New(config Config, amqpClient *amqp.Client, storageApp absto.Storage, meter metric.Meter, tracer trace.Tracer) App {
 	imaginaryReq := request.Post(*config.imaginaryURL).WithClient(slowClient).BasicAuth(strings.TrimSpace(*config.imaginaryUser), *config.imaginaryPass)
+
+	var counter metric.Int64Counter
+	if meter != nil {
+		var err error
+
+		counter, err = meter.Int64Counter("vith_item")
+		if err != nil {
+			slog.Error("create counter", "err", err)
+		}
+	}
 
 	return App{
 		tmpFolder:  *config.tmpFolder,
@@ -91,7 +101,7 @@ func New(config Config, prometheusRegisterer prometheus.Registerer, amqpClient *
 		streamRequestQueue: make(chan model.Request, 4),
 		stop:               make(chan struct{}),
 		done:               make(chan struct{}),
-		metric:             prom.CounterVec(prometheusRegisterer, "vith", "", "item", "source", "kind", "type", "state"),
+		metric:             counter,
 		imaginaryReq:       imaginaryReq,
 		tracer:             tracer,
 	}

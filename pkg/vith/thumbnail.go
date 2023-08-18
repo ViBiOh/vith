@@ -6,15 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path"
 	"strconv"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
@@ -120,7 +120,7 @@ func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Wr
 func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
 	var err error
 
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg_thumbnail")
+	ctx, end := telemetry.StartSpan(ctx, a.tracer, "ffmpeg_thumbnail")
 	defer end(&err)
 
 	cmd := exec.CommandContext(ctx, "ffmpeg", "-hwaccel", "auto", "-i", inputName, "-map_metadata", "-1", "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", qualityForScale(scale), "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
@@ -143,14 +143,14 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, s
 func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
 	var err error
 
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffmpeg_video_thumbnail")
+	ctx, end := telemetry.StartSpan(ctx, a.tracer, "ffmpeg_video_thumbnail")
 	defer end(&err)
 
 	ffmpegOpts := []string{"-hwaccel", "auto"}
 	var customOpts []string
 
 	if _, duration, err := a.getVideoDetailsFromLocal(ctx, inputName); err != nil {
-		logger.Error("get container duration for `%s`: %s", inputName, err)
+		slog.Error("get container duration", "err", err, "input", inputName)
 		ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
 	} else {
 		startPoint := duration / 2

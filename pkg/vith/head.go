@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
@@ -55,7 +55,7 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a App) getVideoDetails(ctx context.Context, inputName string) (bireate int64, duration float64, err error) {
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "ffprobe")
+	ctx, end := telemetry.StartSpan(ctx, a.tracer, "ffprobe")
 	defer end(&err)
 
 	cmd := exec.CommandContext(ctx, "ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=bit_rate:format=duration", "-of", "default=noprint_wrappers=1:nokey=1", inputName)

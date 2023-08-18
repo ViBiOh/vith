@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path"
@@ -13,8 +14,7 @@ import (
 
 	"github.com/ViBiOh/absto/pkg/filesystem"
 	"github.com/ViBiOh/absto/pkg/s3"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
@@ -46,7 +46,7 @@ func (a App) Start(ctx context.Context) {
 
 	for req := range a.streamRequestQueue {
 		if err := a.generateStream(context.Background(), req); err != nil {
-			logger.Error("generate stream: %s", err)
+			slog.Error("generate stream", "err", err)
 		}
 	}
 }
@@ -62,10 +62,10 @@ func (a App) stopOnce() {
 func (a App) generateStream(ctx context.Context, req model.Request) error {
 	var err error
 
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "stream")
+	ctx, end := telemetry.StartSpan(ctx, a.tracer, "stream")
 	defer end(&err)
 
-	log := logger.WithField("input", req.Input).WithField("output", req.Output)
+	log := slog.With("input", req.Input).With("output", req.Output)
 	log.Info("Generating stream...")
 
 	inputName, finalizeInput, err := a.getInputName(ctx, req.Input)
@@ -80,7 +80,7 @@ func (a App) generateStream(ctx context.Context, req model.Request) error {
 	}
 	defer func() {
 		if finalizeErr := finalizeStream(); finalizeErr != nil {
-			logger.Error("finalize stream: %s", finalizeErr)
+			slog.Error("finalize stream", "err", finalizeErr)
 		}
 	}()
 
