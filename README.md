@@ -11,7 +11,6 @@ The HTTP API is pretty simple :
 - `GET /health`: healthcheck of server, always respond [`okStatus (default 204)`](#usage)
 - `GET /ready`: checks external dependencies availability and then respond [`okStatus (default 204)`](#usage) or `503` during [`graceDuration`](#usage) when `SIGTERM` is received
 - `GET /version`: value of `VERSION` environment variable
-- `GET /metrics`: Prometheus metrics, on a dedicated port [`prometheusPort (default 9090)`](#usage)
 - `POST /`: generate thumbnail of the video passed in payload in binary
 
 ### Installation
