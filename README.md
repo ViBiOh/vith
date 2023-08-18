@@ -41,120 +41,52 @@ Be careful when using the CLI values, if someone list the processes on the syste
 
 ```bash
 Usage of vith:
-  -address string
-        [server] Listen address {VITH_ADDRESS}
-  -amqpPrefetch int
-        [amqp] Prefetch count for QoS {VITH_AMQP_PREFETCH} (default 1)
-  -amqpURI string
-        [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> {VITH_AMQP_URI}
-  -cert string
-        [server] Certificate file {VITH_CERT}
-  -exchange string
-        [thumbnail] AMQP Exchange Name {VITH_EXCHANGE} (default "fibr")
-  -graceDuration duration
-        [http] Grace duration when SIGTERM received {VITH_GRACE_DURATION} (default 30s)
-  -idleTimeout duration
-        [server] Idle Timeout {VITH_IDLE_TIMEOUT} (default 2m0s)
-  -imaginaryPassword string
-        [thumbnail] Imaginary Basic Auth Password {VITH_IMAGINARY_PASSWORD}
-  -imaginaryURL string
-        [thumbnail] Imaginary URL {VITH_IMAGINARY_URL} (default "http://image:9000")
-  -imaginaryUser string
-        [thumbnail] Imaginary Basic Auth User {VITH_IMAGINARY_USER}
-  -key string
-        [server] Key file {VITH_KEY}
-  -loggerJson
-        [logger] Log format as JSON {VITH_LOGGER_JSON}
-  -loggerLevel string
-        [logger] Logger level {VITH_LOGGER_LEVEL} (default "INFO")
-  -loggerLevelKey string
-        [logger] Key for level in JSON {VITH_LOGGER_LEVEL_KEY} (default "level")
-  -loggerMessageKey string
-        [logger] Key for message in JSON {VITH_LOGGER_MESSAGE_KEY} (default "message")
-  -loggerTimeKey string
-        [logger] Key for timestamp in JSON {VITH_LOGGER_TIME_KEY} (default "time")
-  -okStatus int
-        [http] Healthy HTTP Status code {VITH_OK_STATUS} (default 204)
-  -port uint
-        [server] Listen port (0 to disable) {VITH_PORT} (default 1080)
-  -prometheusAddress string
-        [prometheus] Listen address {VITH_PROMETHEUS_ADDRESS}
-  -prometheusCert string
-        [prometheus] Certificate file {VITH_PROMETHEUS_CERT}
-  -prometheusGzip
-        [prometheus] Enable gzip compression of metrics output {VITH_PROMETHEUS_GZIP}
-  -prometheusIdleTimeout duration
-        [prometheus] Idle Timeout {VITH_PROMETHEUS_IDLE_TIMEOUT} (default 10s)
-  -prometheusIgnore string
-        [prometheus] Ignored path prefixes for metrics, comma separated {VITH_PROMETHEUS_IGNORE}
-  -prometheusKey string
-        [prometheus] Key file {VITH_PROMETHEUS_KEY}
-  -prometheusPort uint
-        [prometheus] Listen port (0 to disable) {VITH_PROMETHEUS_PORT} (default 9090)
-  -prometheusReadTimeout duration
-        [prometheus] Read Timeout {VITH_PROMETHEUS_READ_TIMEOUT} (default 5s)
-  -prometheusShutdownTimeout duration
-        [prometheus] Shutdown Timeout {VITH_PROMETHEUS_SHUTDOWN_TIMEOUT} (default 5s)
-  -prometheusWriteTimeout duration
-        [prometheus] Write Timeout {VITH_PROMETHEUS_WRITE_TIMEOUT} (default 10s)
-  -readTimeout duration
-        [server] Read Timeout {VITH_READ_TIMEOUT} (default 2m0s)
-  -routingKey string
-        [thumbnail] AMQP Routing Key to fibr {VITH_ROUTING_KEY} (default "thumbnail_output")
-  -shutdownTimeout duration
-        [server] Shutdown Timeout {VITH_SHUTDOWN_TIMEOUT} (default 10s)
-  -storageFileSystemDirectory /data
-        [storage] Path to directory. Default is dynamic. /data on a server and Current Working Directory in a terminal. {VITH_STORAGE_FILE_SYSTEM_DIRECTORY}
-  -storageObjectAccessKey string
-        [storage] Storage Object Access Key {VITH_STORAGE_OBJECT_ACCESS_KEY}
-  -storageObjectBucket string
-        [storage] Storage Object Bucket {VITH_STORAGE_OBJECT_BUCKET}
-  -storageObjectClass string
-        [storage] Storage Object Class {VITH_STORAGE_OBJECT_CLASS}
-  -storageObjectEndpoint string
-        [storage] Storage Object endpoint {VITH_STORAGE_OBJECT_ENDPOINT}
-  -storageObjectRegion string
-        [storage] Storage Object Region {VITH_STORAGE_OBJECT_REGION}
-  -storageObjectSSL
-        [storage] Use SSL {VITH_STORAGE_OBJECT_SSL} (default true)
-  -storageObjectSecretAccess string
-        [storage] Storage Object Secret Access {VITH_STORAGE_OBJECT_SECRET_ACCESS}
-  -storagePartSize uint
-        [storage] PartSize configuration {VITH_STORAGE_PART_SIZE} (default 5242880)
-  -streamExchange string
-        [stream] Exchange name {VITH_STREAM_EXCHANGE} (default "fibr")
-  -streamExclusive
-        [stream] Queue exclusive mode (for fanout exchange) {VITH_STREAM_EXCLUSIVE}
-  -streamMaxRetry uint
-        [stream] Max send retries {VITH_STREAM_MAX_RETRY} (default 3)
-  -streamQueue string
-        [stream] Queue name {VITH_STREAM_QUEUE} (default "stream")
-  -streamRetryInterval duration
-        [stream] Interval duration when send fails {VITH_STREAM_RETRY_INTERVAL} (default 1h0m0s)
-  -streamRoutingKey string
-        [stream] RoutingKey name {VITH_STREAM_ROUTING_KEY} (default "stream")
-  -thumbnailExchange string
-        [thumbnail] Exchange name {VITH_THUMBNAIL_EXCHANGE} (default "fibr")
-  -thumbnailExclusive
-        [thumbnail] Queue exclusive mode (for fanout exchange) {VITH_THUMBNAIL_EXCLUSIVE}
-  -thumbnailMaxRetry uint
-        [thumbnail] Max send retries {VITH_THUMBNAIL_MAX_RETRY} (default 3)
-  -thumbnailQueue string
-        [thumbnail] Queue name {VITH_THUMBNAIL_QUEUE} (default "thumbnail")
-  -thumbnailRetryInterval duration
-        [thumbnail] Interval duration when send fails {VITH_THUMBNAIL_RETRY_INTERVAL} (default 1h0m0s)
-  -thumbnailRoutingKey string
-        [thumbnail] RoutingKey name {VITH_THUMBNAIL_ROUTING_KEY} (default "thumbnail")
-  -tmpFolder string
-        [vith] Folder used for temporary files storage {VITH_TMP_FOLDER} (default "/tmp")
-  -tracerRate string
-        [tracer] OpenTracing sample rate, 'always', 'never' or a float value {VITH_TRACER_RATE} (default "always")
-  -tracerURL string
-        [tracer] OpenTracing gRPC endpoint (e.g. otel-exporter:4317) {VITH_TRACER_URL}
-  -url string
-        [alcotest] URL to check {VITH_URL}
-  -userAgent string
-        [alcotest] User-Agent for check {VITH_USER_AGENT} (default "Alcotest")
-  -writeTimeout duration
-        [server] Write Timeout {VITH_WRITE_TIMEOUT} (default 2m0s)
+  --address                     string    [server] Listen address ${VITH_ADDRESS}
+  --amqpPrefetch                int       [amqp] Prefetch count for QoS ${VITH_AMQP_PREFETCH} (default 1)
+  --amqpURI                     string    [amqp] Address in the form amqps?://<user>:<password>@<address>:<port>/<vhost> ${VITH_AMQP_URI}
+  --cert                        string    [server] Certificate file ${VITH_CERT}
+  --exchange                    string    [thumbnail] AMQP Exchange Name ${VITH_EXCHANGE} (default "fibr")
+  --graceDuration               duration  [http] Grace duration when SIGTERM received ${VITH_GRACE_DURATION} (default 30s)
+  --idleTimeout                 duration  [server] Idle Timeout ${VITH_IDLE_TIMEOUT} (default 2m0s)
+  --imaginaryPassword           string    [thumbnail] Imaginary Basic Auth Password ${VITH_IMAGINARY_PASSWORD}
+  --imaginaryURL                string    [thumbnail] Imaginary URL ${VITH_IMAGINARY_URL} (default "http://image:9000")
+  --imaginaryUser               string    [thumbnail] Imaginary Basic Auth User ${VITH_IMAGINARY_USER}
+  --key                         string    [server] Key file ${VITH_KEY}
+  --loggerJson                            [logger] Log format as JSON ${VITH_LOGGER_JSON} (default false)
+  --loggerLevel                 string    [logger] Logger level ${VITH_LOGGER_LEVEL} (default "INFO")
+  --loggerLevelKey              string    [logger] Key for level in JSON ${VITH_LOGGER_LEVEL_KEY} (default "level")
+  --loggerMessageKey            string    [logger] Key for message in JSON ${VITH_LOGGER_MESSAGE_KEY} (default "msg")
+  --loggerTimeKey               string    [logger] Key for timestamp in JSON ${VITH_LOGGER_TIME_KEY} (default "time")
+  --okStatus                    int       [http] Healthy HTTP Status code ${VITH_OK_STATUS} (default 204)
+  --port                        uint      [server] Listen port (0 to disable) ${VITH_PORT} (default 1080)
+  --readTimeout                 duration  [server] Read Timeout ${VITH_READ_TIMEOUT} (default 2m0s)
+  --routingKey                  string    [thumbnail] AMQP Routing Key to fibr ${VITH_ROUTING_KEY} (default "thumbnail_output")
+  --shutdownTimeout             duration  [server] Shutdown Timeout ${VITH_SHUTDOWN_TIMEOUT} (default 10s)
+  --storageFileSystemDirectory  /data     [storage] Path to directory. Default is dynamic. /data on a server and Current Working Directory in a terminal. ${VITH_STORAGE_FILE_SYSTEM_DIRECTORY}
+  --storageObjectAccessKey      string    [storage] Storage Object Access Key ${VITH_STORAGE_OBJECT_ACCESS_KEY}
+  --storageObjectBucket         string    [storage] Storage Object Bucket ${VITH_STORAGE_OBJECT_BUCKET}
+  --storageObjectClass          string    [storage] Storage Object Class ${VITH_STORAGE_OBJECT_CLASS}
+  --storageObjectEndpoint       string    [storage] Storage Object endpoint ${VITH_STORAGE_OBJECT_ENDPOINT}
+  --storageObjectRegion         string    [storage] Storage Object Region ${VITH_STORAGE_OBJECT_REGION}
+  --storageObjectSSL                      [storage] Use SSL ${VITH_STORAGE_OBJECT_SSL} (default true)
+  --storageObjectSecretAccess   string    [storage] Storage Object Secret Access ${VITH_STORAGE_OBJECT_SECRET_ACCESS}
+  --storagePartSize             uint      [storage] PartSize configuration ${VITH_STORAGE_PART_SIZE} (default 5242880)
+  --streamExchange              string    [stream] Exchange name ${VITH_STREAM_EXCHANGE} (default "fibr")
+  --streamExclusive                       [stream] Queue exclusive mode (for fanout exchange) ${VITH_STREAM_EXCLUSIVE} (default false)
+  --streamMaxRetry              uint      [stream] Max send retries ${VITH_STREAM_MAX_RETRY} (default 3)
+  --streamQueue                 string    [stream] Queue name ${VITH_STREAM_QUEUE} (default "stream")
+  --streamRetryInterval         duration  [stream] Interval duration when send fails ${VITH_STREAM_RETRY_INTERVAL} (default 1h0m0s)
+  --streamRoutingKey            string    [stream] RoutingKey name ${VITH_STREAM_ROUTING_KEY} (default "stream")
+  --telemetryRate               string    [telemetry] OpenTelemetry sample rate, 'always', 'never' or a float value ${VITH_TELEMETRY_RATE} (default "always")
+  --telemetryURL                string    [telemetry] OpenTelemetry gRPC endpoint (e.g. otel-exporter:4317) ${VITH_TELEMETRY_URL}
+  --thumbnailExchange           string    [thumbnail] Exchange name ${VITH_THUMBNAIL_EXCHANGE} (default "fibr")
+  --thumbnailExclusive                    [thumbnail] Queue exclusive mode (for fanout exchange) ${VITH_THUMBNAIL_EXCLUSIVE} (default false)
+  --thumbnailMaxRetry           uint      [thumbnail] Max send retries ${VITH_THUMBNAIL_MAX_RETRY} (default 3)
+  --thumbnailQueue              string    [thumbnail] Queue name ${VITH_THUMBNAIL_QUEUE} (default "thumbnail")
+  --thumbnailRetryInterval      duration  [thumbnail] Interval duration when send fails ${VITH_THUMBNAIL_RETRY_INTERVAL} (default 1h0m0s)
+  --thumbnailRoutingKey         string    [thumbnail] RoutingKey name ${VITH_THUMBNAIL_ROUTING_KEY} (default "thumbnail")
+  --tmpFolder                   string    [vith] Folder used for temporary files storage ${VITH_TMP_FOLDER} (default "/tmp")
+  --url                         string    [alcotest] URL to check ${VITH_URL}
+  --userAgent                   string    [alcotest] User-Agent for check ${VITH_USER_AGENT} (default "Alcotest")
+  --writeTimeout                duration  [server] Write Timeout ${VITH_WRITE_TIMEOUT} (default 2m0s)
 ```

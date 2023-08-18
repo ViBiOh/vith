@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -12,7 +13,6 @@ import (
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/absto/pkg/s3"
 	"github.com/ViBiOh/httputils/v4/pkg/hash"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
@@ -139,12 +139,12 @@ func cleanLocalFile(name string) {
 	}
 
 	if removeErr := os.Remove(name); removeErr != nil {
-		logger.Warn("remove file `%s`: %s", name, removeErr)
+		slog.Warn("remove file", "err", removeErr, "name", name)
 	}
 }
 
 func closeWithLog(closer io.Closer, fn, item string) {
 	if err := closer.Close(); err != nil {
-		logger.WithField("fn", fn).WithField("item", item).Error("close: %s", err)
+		slog.Error("close", "err", err, "fn", fn, "item", item)
 	}
 }
