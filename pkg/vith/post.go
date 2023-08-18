@@ -17,7 +17,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 	itemType, err := model.ParseItemType(r.URL.Query().Get("type"))
 	if err != nil {
 		httperror.BadRequest(w, err)
-		a.increaseMetric("http", "thumbnail", "", "invalid")
+		a.increaseMetric(r.Context(), "http", "thumbnail", "", "invalid")
 		return
 	}
 
@@ -26,7 +26,7 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 		scale, err = strconv.ParseUint(r.URL.Query().Get("scale"), 10, 64)
 		if err != nil {
 			httperror.BadRequest(w, fmt.Errorf("parse scale: %w", err))
-			a.increaseMetric("http", "thumbnail", "", "invalid")
+			a.increaseMetric(r.Context(), "http", "thumbnail", "", "invalid")
 			return
 		}
 	}
@@ -56,9 +56,9 @@ func (a App) handlePost(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		httperror.InternalServerError(w, err)
-		a.increaseMetric("http", "thumbnail", itemType.String(), "error")
+		a.increaseMetric(r.Context(), "http", "thumbnail", itemType.String(), "error")
 		return
 	}
 
-	a.increaseMetric("http", "thumbnail", itemType.String(), "success")
+	a.increaseMetric(r.Context(), "http", "thumbnail", itemType.String(), "success")
 }

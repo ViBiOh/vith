@@ -2,10 +2,10 @@ package vith
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
@@ -32,7 +32,7 @@ func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.WithField("input", r.URL.Path).Info("Adding stream generation in the work queue")
+	slog.Info("Adding stream generation in the work queue", "input", r.URL.Path)
 
 	select {
 	case a.streamRequestQueue <- model.NewRequest(r.URL.Path, output, itemType, defaultScale):
