@@ -77,20 +77,10 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, amqpClient *amqp.Client, storageApp absto.Storage, meter metric.Meter, tracer trace.Tracer) App {
+func New(config Config, amqpClient *amqp.Client, storageApp absto.Storage, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider) App {
 	imaginaryReq := request.Post(*config.imaginaryURL).WithClient(slowClient).BasicAuth(strings.TrimSpace(*config.imaginaryUser), *config.imaginaryPass)
 
-	var counter metric.Int64Counter
-	if meter != nil {
-		var err error
-
-		counter, err = meter.Int64Counter("vith_item")
-		if err != nil {
-			slog.Error("create counter", "err", err)
-		}
-	}
-
-	return App{
+	app := App{
 		tmpFolder:  *config.tmpFolder,
 		storageApp: storageApp,
 
@@ -101,10 +91,25 @@ func New(config Config, amqpClient *amqp.Client, storageApp absto.Storage, meter
 		streamRequestQueue: make(chan model.Request, 4),
 		stop:               make(chan struct{}),
 		done:               make(chan struct{}),
-		metric:             counter,
 		imaginaryReq:       imaginaryReq,
-		tracer:             tracer,
 	}
+
+	if meterProvider != nil {
+		meter := meterProvider.Meter("github.com/ViBiOh/vith/pkg/vith")
+
+		var err error
+
+		app.metric, err = meter.Int64Counter("vith.item")
+		if err != nil {
+			slog.Error("create vith counter", "err", err)
+		}
+	}
+
+	if tracerProvider != nil {
+		app.tracer = tracerProvider.Tracer("vith")
+	}
+
+	return app
 }
 
 // Handler for request. Should be use with net/http
