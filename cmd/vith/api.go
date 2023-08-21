@@ -62,7 +62,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	request.AddOpenTelemetryToDefaultClient(telemetryApp.GetMeterProvider(), telemetryApp.GetTraceProvider())
+	request.AddOpenTelemetryToDefaultClient(telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
 
 	go func() {
 		fmt.Println(http.ListenAndServe("localhost:9999", http.DefaultServeMux))
@@ -71,15 +71,13 @@ func main() {
 	appServer := server.New(appServerConfig)
 	healthApp := health.New(healthConfig)
 
-	storageProvider, err := absto.New(abstoConfig, telemetryApp.GetTracer("storage"))
+	storageProvider, err := absto.New(abstoConfig, telemetryApp.TracerProvider().Tracer("absto"))
 	if err != nil {
 		slog.Error("create storage", "err", err)
 		os.Exit(1)
 	}
 
-	meter := telemetryApp.GetMeter("github.com/ViBiOh/vith/cmd/vith")
-
-	amqpClient, err := amqp.New(amqpConfig, meter, telemetryApp.GetTracer("amqp"))
+	amqpClient, err := amqp.New(amqpConfig, telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
 	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
 		slog.Error("create amqp", "err", err)
 		os.Exit(1)
@@ -87,15 +85,15 @@ func main() {
 		defer amqpClient.Close()
 	}
 
-	vithApp := vith.New(vithConfig, amqpClient, storageProvider, meter, telemetryApp.GetTracer("vith"))
+	vithApp := vith.New(vithConfig, amqpClient, storageProvider, telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
 
-	streamHandlerApp, err := amqphandler.New(streamHandlerConfig, amqpClient, telemetryApp.GetTracer("amqp_handler"), vithApp.AmqpStreamHandler)
+	streamHandlerApp, err := amqphandler.New(streamHandlerConfig, amqpClient, telemetryApp.MeterProvider(), telemetryApp.TracerProvider(), vithApp.AmqpStreamHandler)
 	if err != nil {
 		slog.Error("create amqp handler stream", "err", err)
 		os.Exit(1)
 	}
 
-	thumbnailHandlerApp, err := amqphandler.New(thumbnailHandlerConfig, amqpClient, telemetryApp.GetTracer("amqp_handler"), vithApp.AmqpThumbnailHandler)
+	thumbnailHandlerApp, err := amqphandler.New(thumbnailHandlerConfig, amqpClient, telemetryApp.MeterProvider(), telemetryApp.TracerProvider(), vithApp.AmqpThumbnailHandler)
 	if err != nil {
 		slog.Error("create amqp handler", "err", err)
 		os.Exit(1)
