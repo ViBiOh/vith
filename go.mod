@@ -3,7 +3,7 @@ module github.com/ViBiOh/vith
 go 1.21
 
 require (
-	github.com/ViBiOh/absto v1.6.1
+	github.com/ViBiOh/absto v1.7.0
 	github.com/ViBiOh/flags v1.3.1
 	github.com/ViBiOh/httputils/v4 v4.63.4
 	github.com/rabbitmq/amqp091-go v1.8.1
@@ -25,7 +25,7 @@ require (
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
-	github.com/minio/minio-go/v7 v7.0.61 // indirect
+	github.com/minio/minio-go/v7 v7.0.62 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect

@@ -71,7 +71,7 @@ func main() {
 	appServer := server.New(appServerConfig)
 	healthApp := health.New(healthConfig)
 
-	storageProvider, err := absto.New(abstoConfig, telemetryApp.TracerProvider().Tracer("absto"))
+	storageProvider, err := absto.New(abstoConfig, telemetryApp.TracerProvider())
 	if err != nil {
 		slog.Error("create storage", "err", err)
 		os.Exit(1)
