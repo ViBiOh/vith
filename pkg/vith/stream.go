@@ -18,63 +18,61 @@ import (
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
-// Done close when work is over
-func (a App) Done() <-chan struct{} {
-	return a.done
+func (s Service) Done() <-chan struct{} {
+	return s.done
 }
 
-// Start worker
-func (a App) Start(ctx context.Context) {
-	defer close(a.done)
-	defer close(a.streamRequestQueue)
-	defer a.stopOnce()
+func (s Service) Start(ctx context.Context) {
+	defer close(s.done)
+	defer close(s.streamRequestQueue)
+	defer s.stopOnce()
 
-	if !a.storageApp.Enabled() {
+	if !s.storage.Enabled() {
 		return
 	}
 
 	done := ctx.Done()
 
 	go func() {
-		defer a.stopOnce()
+		defer s.stopOnce()
 
 		select {
 		case <-done:
-		case <-a.done:
+		case <-s.done:
 		}
 	}()
 
-	for req := range a.streamRequestQueue {
-		if err := a.generateStream(context.Background(), req); err != nil {
+	for req := range s.streamRequestQueue {
+		if err := s.generateStream(context.Background(), req); err != nil {
 			slog.Error("generate stream", "err", err)
 		}
 	}
 }
 
-func (a App) stopOnce() {
+func (s Service) stopOnce() {
 	select {
-	case <-a.stop:
+	case <-s.stop:
 	default:
-		close(a.stop)
+		close(s.stop)
 	}
 }
 
-func (a App) generateStream(ctx context.Context, req model.Request) error {
+func (s Service) generateStream(ctx context.Context, req model.Request) error {
 	var err error
 
-	ctx, end := telemetry.StartSpan(ctx, a.tracer, "stream")
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "stream")
 	defer end(&err)
 
 	log := slog.With("input", req.Input).With("output", req.Output)
 	log.Info("Generating stream...")
 
-	inputName, finalizeInput, err := a.getInputName(ctx, req.Input)
+	inputName, finalizeInput, err := s.getInputName(ctx, req.Input)
 	if err != nil {
 		return fmt.Errorf("get input video name: %w", err)
 	}
 	defer finalizeInput()
 
-	outputName, finalizeStream, err := a.getOutputStreamName(ctx, req.Output)
+	outputName, finalizeStream, err := s.getOutputStreamName(ctx, req.Output)
 	if err != nil {
 		return fmt.Errorf("get video filename: %w", err)
 	}
@@ -97,7 +95,7 @@ func (a App) generateStream(ctx context.Context, req model.Request) error {
 	if err != nil {
 		err = fmt.Errorf("generate stream video: %s\n%s", err, buffer.Bytes())
 
-		if cleanErr := a.cleanLocalStream(ctx, outputName); cleanErr != nil {
+		if cleanErr := s.cleanLocalStream(ctx, outputName); cleanErr != nil {
 			err = fmt.Errorf("remove generated files: %s: %w", cleanErr, err)
 		}
 
@@ -108,7 +106,7 @@ func (a App) generateStream(ctx context.Context, req model.Request) error {
 	return nil
 }
 
-func (a App) isValidStreamName(ctx context.Context, streamName string, shouldExist bool) error {
+func (s Service) isValidStreamName(ctx context.Context, streamName string, shouldExist bool) error {
 	if len(streamName) == 0 {
 		return errors.New("name is required")
 	}
@@ -117,7 +115,7 @@ func (a App) isValidStreamName(ctx context.Context, streamName string, shouldExi
 		return fmt.Errorf("only `%s` files are allowed", hlsExtension)
 	}
 
-	info, err := a.storageApp.Stat(ctx, streamName)
+	info, err := s.storage.Stat(ctx, streamName)
 	if shouldExist {
 		if err != nil || info.IsDir() {
 			return fmt.Errorf("input `%s` doesn't exist or is a directory", streamName)
@@ -129,19 +127,19 @@ func (a App) isValidStreamName(ctx context.Context, streamName string, shouldExi
 	return nil
 }
 
-func (a App) getOutputStreamName(ctx context.Context, name string) (localName string, onEnd func() error, err error) {
+func (s Service) getOutputStreamName(ctx context.Context, name string) (localName string, onEnd func() error, err error) {
 	onEnd = func() error {
 		return nil
 	}
 
-	switch a.storageApp.Name() {
+	switch s.storage.Name() {
 	case filesystem.Name:
-		localName = a.storageApp.Path(name)
+		localName = s.storage.Path(name)
 		return
 
 	case s3.Name:
-		localName = filepath.Join(a.tmpFolder, path.Base(name))
-		onEnd = a.finalizeStreamForS3(ctx, localName, name)
+		localName = filepath.Join(s.tmpFolder, path.Base(name))
+		onEnd = s.finalizeStreamForS3(ctx, localName, name)
 		return
 
 	default:
@@ -150,9 +148,9 @@ func (a App) getOutputStreamName(ctx context.Context, name string) (localName st
 	}
 }
 
-func (a App) finalizeStreamForS3(ctx context.Context, localName, destName string) func() error {
+func (s Service) finalizeStreamForS3(ctx context.Context, localName, destName string) func() error {
 	return func() error {
-		if err := a.copyAndCloseLocalFile(ctx, localName, destName); err != nil {
+		if err := s.copyAndCloseLocalFile(ctx, localName, destName); err != nil {
 			return fmt.Errorf("copy manifest to `%s`: %w", destName, err)
 		}
 
@@ -166,12 +164,12 @@ func (a App) finalizeStreamForS3(ctx context.Context, localName, destName string
 
 		for _, file := range segments {
 			segmentName := path.Join(outputDir, filepath.Base(file))
-			if err = a.copyAndCloseLocalFile(ctx, file, segmentName); err != nil {
+			if err = s.copyAndCloseLocalFile(ctx, file, segmentName); err != nil {
 				return fmt.Errorf("copy segment to `%s`: %w", segmentName, err)
 			}
 		}
 
-		if cleanErr := a.cleanLocalStream(ctx, localName); cleanErr != nil {
+		if cleanErr := s.cleanLocalStream(ctx, localName); cleanErr != nil {
 			return fmt.Errorf("clean stream for `%s`: %w", localName, err)
 		}
 
@@ -179,8 +177,8 @@ func (a App) finalizeStreamForS3(ctx context.Context, localName, destName string
 	}
 }
 
-func (a App) cleanLocalStream(ctx context.Context, name string) error {
-	return a.cleanStream(ctx, name, func(_ context.Context, name string) error {
+func (s Service) cleanLocalStream(ctx context.Context, name string) error {
+	return s.cleanStream(ctx, name, func(_ context.Context, name string) error {
 		return os.Remove(name)
 	}, func(_ context.Context, name string) ([]string, error) {
 		return filepath.Glob(name)

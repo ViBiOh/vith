@@ -8,8 +8,8 @@ import (
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
-func (a App) handleDelete(w http.ResponseWriter, r *http.Request) {
-	if !a.storageApp.Enabled() {
+func (s Service) handleDelete(w http.ResponseWriter, r *http.Request) {
+	if !s.storage.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -27,12 +27,12 @@ func (a App) handleDelete(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	if err := a.isValidStreamName(ctx, r.URL.Path, true); err != nil {
+	if err := s.isValidStreamName(ctx, r.URL.Path, true); err != nil {
 		httperror.BadRequest(w, err)
 		return
 	}
 
-	if err := a.cleanStream(ctx, r.URL.Path, a.storageApp.RemoveAll, a.listFiles, `.*\.ts`); err != nil {
+	if err := s.cleanStream(ctx, r.URL.Path, s.storage.RemoveAll, s.listFiles, `.*\.ts`); err != nil {
 		httperror.InternalServerError(w, err)
 	}
 

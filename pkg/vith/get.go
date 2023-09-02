@@ -10,8 +10,8 @@ import (
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
-func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
-	if !a.storageApp.Enabled() {
+func (s Service) handleGet(w http.ResponseWriter, r *http.Request) {
+	if !s.storage.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -19,14 +19,14 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 	itemType, err := model.ParseItemType(r.URL.Query().Get("type"))
 	if err != nil {
 		httperror.BadRequest(w, err)
-		a.increaseMetric(r.Context(), "http", "thumbnail", "", "invalid")
+		s.increaseMetric(r.Context(), "http", "thumbnail", "", "invalid")
 		return
 	}
 
 	output := r.URL.Query().Get("output")
 	if len(output) == 0 {
 		httperror.BadRequest(w, errors.New("output query param is mandatory"))
-		a.increaseMetric(r.Context(), "http", "thumbnail", itemType.String(), "invalid")
+		s.increaseMetric(r.Context(), "http", "thumbnail", itemType.String(), "invalid")
 		return
 	}
 
@@ -35,17 +35,17 @@ func (a App) handleGet(w http.ResponseWriter, r *http.Request) {
 		scale, err = strconv.ParseUint(r.URL.Query().Get("scale"), 10, 64)
 		if err != nil {
 			httperror.BadRequest(w, fmt.Errorf("parse scale: %w", err))
-			a.increaseMetric(r.Context(), "http", "thumbnail", "", "invalid")
+			s.increaseMetric(r.Context(), "http", "thumbnail", "", "invalid")
 			return
 		}
 	}
 
-	if err := a.storageThumbnail(r.Context(), itemType, r.URL.Path, output, scale); err != nil {
+	if err := s.storageThumbnail(r.Context(), itemType, r.URL.Path, output, scale); err != nil {
 		httperror.InternalServerError(w, err)
-		a.increaseMetric(r.Context(), "http", "thumbnail", itemType.String(), "error")
+		s.increaseMetric(r.Context(), "http", "thumbnail", itemType.String(), "error")
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-	a.increaseMetric(r.Context(), "http", "thumbnail", itemType.String(), "success")
+	s.increaseMetric(r.Context(), "http", "thumbnail", itemType.String(), "success")
 }

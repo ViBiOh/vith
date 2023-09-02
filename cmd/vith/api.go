@@ -56,28 +56,28 @@ func main() {
 
 	ctx := context.Background()
 
-	telemetryApp, err := telemetry.New(ctx, telemetryConfig)
+	telemetryService, err := telemetry.New(ctx, telemetryConfig)
 	if err != nil {
 		slog.Error("create telemetry", "err", err)
 		os.Exit(1)
 	}
 
-	request.AddOpenTelemetryToDefaultClient(telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
+	request.AddOpenTelemetryToDefaultClient(telemetryService.MeterProvider(), telemetryService.TracerProvider())
 
 	go func() {
 		fmt.Println(http.ListenAndServe("localhost:9999", http.DefaultServeMux))
 	}()
 
 	appServer := server.New(appServerConfig)
-	healthApp := health.New(healthConfig)
+	healthService := health.New(healthConfig)
 
-	storageProvider, err := absto.New(abstoConfig, telemetryApp.TracerProvider())
+	storageProvider, err := absto.New(abstoConfig, telemetryService.TracerProvider())
 	if err != nil {
 		slog.Error("create storage", "err", err)
 		os.Exit(1)
 	}
 
-	amqpClient, err := amqp.New(amqpConfig, telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
+	amqpClient, err := amqp.New(amqpConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
 		slog.Error("create amqp", "err", err)
 		os.Exit(1)
@@ -85,29 +85,29 @@ func main() {
 		defer amqpClient.Close()
 	}
 
-	vithApp := vith.New(vithConfig, amqpClient, storageProvider, telemetryApp.MeterProvider(), telemetryApp.TracerProvider())
+	vithService := vith.New(vithConfig, amqpClient, storageProvider, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 
-	streamHandlerApp, err := amqphandler.New(streamHandlerConfig, amqpClient, telemetryApp.MeterProvider(), telemetryApp.TracerProvider(), vithApp.AmqpStreamHandler)
+	streamHandlerService, err := amqphandler.New(streamHandlerConfig, amqpClient, telemetryService.MeterProvider(), telemetryService.TracerProvider(), vithService.AmqpStreamHandler)
 	if err != nil {
 		slog.Error("create amqp handler stream", "err", err)
 		os.Exit(1)
 	}
 
-	thumbnailHandlerApp, err := amqphandler.New(thumbnailHandlerConfig, amqpClient, telemetryApp.MeterProvider(), telemetryApp.TracerProvider(), vithApp.AmqpThumbnailHandler)
+	thumbnailHandlerService, err := amqphandler.New(thumbnailHandlerConfig, amqpClient, telemetryService.MeterProvider(), telemetryService.TracerProvider(), vithService.AmqpThumbnailHandler)
 	if err != nil {
 		slog.Error("create amqp handler", "err", err)
 		os.Exit(1)
 	}
 
-	doneCtx := healthApp.Done(ctx)
-	endCtx := healthApp.End(ctx)
+	doneCtx := healthService.Done(ctx)
+	endCtx := healthService.End(ctx)
 
-	go streamHandlerApp.Start(doneCtx)
-	go thumbnailHandlerApp.Start(doneCtx)
-	go vithApp.Start(doneCtx)
+	go streamHandlerService.Start(doneCtx)
+	go thumbnailHandlerService.Start(doneCtx)
+	go vithService.Start(doneCtx)
 
-	go appServer.Start(endCtx, "http", httputils.Handler(vithApp.Handler(), healthApp, recoverer.Middleware, telemetryApp.Middleware("http")))
+	go appServer.Start(endCtx, "http", httputils.Handler(vithService.Handler(), healthService, recoverer.Middleware, telemetryService.Middleware("http")))
 
-	healthApp.WaitForTermination(appServer.Done())
-	server.GracefulWait(appServer.Done(), vithApp.Done(), streamHandlerApp.Done(), thumbnailHandlerApp.Done())
+	healthService.WaitForTermination(appServer.Done())
+	server.GracefulWait(appServer.Done(), vithService.Done(), streamHandlerService.Done(), thumbnailHandlerService.Done())
 }
