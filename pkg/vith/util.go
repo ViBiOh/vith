@@ -24,12 +24,12 @@ var noErrFunc = func() error {
 	return nil
 }
 
-func (a App) getThumbnailGenerator(itemType model.ItemType) func(context.Context, string, string, uint64) error {
+func (s Service) getThumbnailGenerator(itemType model.ItemType) func(context.Context, string, string, uint64) error {
 	switch itemType {
 	case model.TypeVideo:
-		return a.videoThumbnail
+		return s.videoThumbnail
 	case model.TypeImage:
-		return a.imageThumbnail
+		return s.imageThumbnail
 	default:
 		return func(_ context.Context, _, _ string, _ uint64) error {
 			return fmt.Errorf("unknown generator for `%s`", itemType)
@@ -37,19 +37,19 @@ func (a App) getThumbnailGenerator(itemType model.ItemType) func(context.Context
 	}
 }
 
-func (a App) getInputName(ctx context.Context, name string) (string, func(), error) {
-	switch a.storageApp.Name() {
+func (s Service) getInputName(ctx context.Context, name string) (string, func(), error) {
+	switch s.storage.Name() {
 	case filesystem.Name:
-		return a.storageApp.Path(name), noopFunc, nil
+		return s.storage.Path(name), noopFunc, nil
 
 	case s3.Name:
 		var reader io.ReadCloser
-		reader, err := a.storageApp.ReadFrom(ctx, name)
+		reader, err := s.storage.ReadFrom(ctx, name)
 		if err != nil {
 			return "", noopFunc, fmt.Errorf("read from storage: %w", err)
 		}
 
-		localName, err := a.saveFileLocally(reader, fmt.Sprintf("input_%s", name))
+		localName, err := s.saveFileLocally(reader, fmt.Sprintf("input_%s", name))
 		if err != nil {
 			cleanLocalFile(localName)
 			return "", noopFunc, fmt.Errorf("save file locally: %w", err)
@@ -62,17 +62,17 @@ func (a App) getInputName(ctx context.Context, name string) (string, func(), err
 	}
 }
 
-func (a App) getOutputName(ctx context.Context, name string) (string, func() error) {
-	switch a.storageApp.Name() {
+func (s Service) getOutputName(ctx context.Context, name string) (string, func() error) {
+	switch s.storage.Name() {
 	case filesystem.Name:
-		return a.storageApp.Path(name), noErrFunc
+		return s.storage.Path(name), noErrFunc
 
 	case s3.Name:
-		localName := a.getLocalFilename(fmt.Sprintf("output_%s", name))
+		localName := s.getLocalFilename(fmt.Sprintf("output_%s", name))
 
 		return localName, func() error {
 			defer cleanLocalFile(localName)
-			return a.copyAndCloseLocalFile(ctx, localName, name)
+			return s.copyAndCloseLocalFile(ctx, localName, name)
 		}
 
 	default:
@@ -80,14 +80,14 @@ func (a App) getOutputName(ctx context.Context, name string) (string, func() err
 	}
 }
 
-func (a App) getLocalFilename(name string) string {
-	return filepath.Join(a.tmpFolder, hash.String(name))
+func (s Service) getLocalFilename(name string) string {
+	return filepath.Join(s.tmpFolder, hash.String(name))
 }
 
-func (a App) saveFileLocally(input io.ReadCloser, name string) (string, error) {
+func (s Service) saveFileLocally(input io.ReadCloser, name string) (string, error) {
 	defer closeWithLog(input, "saveFileLocally", "input")
 
-	outputName := a.getLocalFilename(name)
+	outputName := s.getLocalFilename(name)
 
 	writer, err := os.OpenFile(outputName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, absto.RegularFilePerm)
 	if err != nil {
@@ -99,7 +99,7 @@ func (a App) saveFileLocally(input io.ReadCloser, name string) (string, error) {
 	return outputName, err
 }
 
-func (a App) copyAndCloseLocalFile(ctx context.Context, src, target string) error {
+func (s Service) copyAndCloseLocalFile(ctx context.Context, src, target string) error {
 	info, err := os.Stat(src)
 	if err != nil {
 		return fmt.Errorf("stat local file `%s`: %w", src, err)
@@ -111,7 +111,7 @@ func (a App) copyAndCloseLocalFile(ctx context.Context, src, target string) erro
 	}
 	defer closeWithLog(input, "copyLocalFile", "input")
 
-	if err := a.storageApp.WriteTo(ctx, target, input, absto.WriteOpts{Size: info.Size()}); err != nil {
+	if err := s.storage.WriteTo(ctx, target, input, absto.WriteOpts{Size: info.Size()}); err != nil {
 		return fmt.Errorf("write to storage: %w", err)
 	}
 

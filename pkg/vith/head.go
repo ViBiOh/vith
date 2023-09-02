@@ -15,8 +15,8 @@ import (
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
-func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
-	if !a.storageApp.Enabled() {
+func (s Service) handleHead(w http.ResponseWriter, r *http.Request) {
+	if !s.storage.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -34,7 +34,7 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	inputName, finalizeInput, err := a.getInputName(ctx, r.URL.Path)
+	inputName, finalizeInput, err := s.getInputName(ctx, r.URL.Path)
 	if err != nil {
 		httperror.InternalServerError(w, fmt.Errorf("get input name: %w", err))
 		return
@@ -42,7 +42,7 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 
 	defer finalizeInput()
 
-	bitrate, duration, err := a.getVideoDetails(ctx, inputName)
+	bitrate, duration, err := s.getVideoDetails(ctx, inputName)
 	if err != nil {
 		httperror.InternalServerError(w, fmt.Errorf("get bitrate: %w", err))
 		return
@@ -54,8 +54,8 @@ func (a App) handleHead(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (a App) getVideoDetails(ctx context.Context, inputName string) (bireate int64, duration float64, err error) {
-	ctx, end := telemetry.StartSpan(ctx, a.tracer, "ffprobe")
+func (s Service) getVideoDetails(ctx context.Context, inputName string) (bireate int64, duration float64, err error) {
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "ffprobe")
 	defer end(&err)
 
 	cmd := exec.CommandContext(ctx, "ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=bit_rate:format=duration", "-of", "default=noprint_wrappers=1:nokey=1", inputName)

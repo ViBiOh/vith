@@ -5,7 +5,6 @@ import (
 	"flag"
 	"log/slog"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 
@@ -19,7 +18,6 @@ import (
 )
 
 const (
-	// SmallSize is the size of each thumbnail generated
 	SmallSize = 150
 
 	hlsExtension = ".m3u8"
@@ -35,12 +33,35 @@ var (
 	slowClient = request.CreateClient(time.Minute, request.NoRedirection)
 )
 
-// App of package
-type App struct {
+type Config struct {
+	TmpFolder string
+
+	ImaginaryURL  string
+	ImaginaryUser string
+	ImaginaryPass string
+
+	AmqpExchange   string
+	AmqpRoutingKey string
+}
+
+func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
+	var config Config
+
+	flags.New("TmpFolder", "Folder used for temporary files storage").Prefix(prefix).DocPrefix("vith").StringVar(fs, &config.TmpFolder, "/tmp", overrides)
+	flags.New("ImaginaryURL", "Imaginary URL").Prefix(prefix).DocPrefix("thumbnail").StringVar(fs, &config.ImaginaryURL, "http://image:9000", nil)
+	flags.New("ImaginaryUser", "Imaginary Basic Auth User").Prefix(prefix).DocPrefix("thumbnail").StringVar(fs, &config.ImaginaryUser, "", nil)
+	flags.New("ImaginaryPassword", "Imaginary Basic Auth Password").Prefix(prefix).DocPrefix("thumbnail").StringVar(fs, &config.ImaginaryPass, "", nil)
+	flags.New("Exchange", "AMQP Exchange Name").Prefix(prefix).DocPrefix("thumbnail").StringVar(fs, &config.AmqpExchange, "fibr", overrides)
+	flags.New("RoutingKey", "AMQP Routing Key to fibr").Prefix(prefix).DocPrefix("thumbnail").StringVar(fs, &config.AmqpRoutingKey, "thumbnail_output", overrides)
+
+	return &config
+}
+
+type Service struct {
 	done               chan struct{}
 	stop               chan struct{}
 	streamRequestQueue chan model.Request
-	storageApp         absto.Storage
+	storage            absto.Storage
 	tracer             trace.Tracer
 	amqpClient         *amqp.Client
 	metric             metric.Int64Counter
@@ -50,43 +71,16 @@ type App struct {
 	imaginaryReq       request.Request
 }
 
-// Config of package
-type Config struct {
-	tmpFolder *string
+func New(config *Config, amqpClient *amqp.Client, storageService absto.Storage, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider) Service {
+	imaginaryReq := request.Post(config.ImaginaryURL).WithClient(slowClient).BasicAuth(config.ImaginaryUser, config.ImaginaryPass)
 
-	imaginaryURL  *string
-	imaginaryUser *string
-	imaginaryPass *string
-
-	amqpExchange   *string
-	amqpRoutingKey *string
-}
-
-// Flags adds flags for configuring package
-func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
-	return Config{
-		tmpFolder: flags.New("TmpFolder", "Folder used for temporary files storage").Prefix(prefix).DocPrefix("vith").String(fs, "/tmp", overrides),
-
-		imaginaryURL:  flags.New("ImaginaryURL", "Imaginary URL").Prefix(prefix).DocPrefix("thumbnail").String(fs, "http://image:9000", nil),
-		imaginaryUser: flags.New("ImaginaryUser", "Imaginary Basic Auth User").Prefix(prefix).DocPrefix("thumbnail").String(fs, "", nil),
-		imaginaryPass: flags.New("ImaginaryPassword", "Imaginary Basic Auth Password").Prefix(prefix).DocPrefix("thumbnail").String(fs, "", nil),
-
-		amqpExchange:   flags.New("Exchange", "AMQP Exchange Name").Prefix(prefix).DocPrefix("thumbnail").String(fs, "fibr", overrides),
-		amqpRoutingKey: flags.New("RoutingKey", "AMQP Routing Key to fibr").Prefix(prefix).DocPrefix("thumbnail").String(fs, "thumbnail_output", overrides),
-	}
-}
-
-// New creates new App from Config
-func New(config Config, amqpClient *amqp.Client, storageApp absto.Storage, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider) App {
-	imaginaryReq := request.Post(*config.imaginaryURL).WithClient(slowClient).BasicAuth(strings.TrimSpace(*config.imaginaryUser), *config.imaginaryPass)
-
-	app := App{
-		tmpFolder:  *config.tmpFolder,
-		storageApp: storageApp,
+	service := Service{
+		tmpFolder: config.TmpFolder,
+		storage:   storageService,
 
 		amqpClient:     amqpClient,
-		amqpExchange:   strings.TrimSpace(*config.amqpExchange),
-		amqpRoutingKey: strings.TrimSpace(*config.amqpRoutingKey),
+		amqpExchange:   config.AmqpExchange,
+		amqpRoutingKey: config.AmqpRoutingKey,
 
 		streamRequestQueue: make(chan model.Request, 4),
 		stop:               make(chan struct{}),
@@ -99,35 +93,34 @@ func New(config Config, amqpClient *amqp.Client, storageApp absto.Storage, meter
 
 		var err error
 
-		app.metric, err = meter.Int64Counter("vith.item")
+		service.metric, err = meter.Int64Counter("vith.item")
 		if err != nil {
 			slog.Error("create vith counter", "err", err)
 		}
 	}
 
 	if tracerProvider != nil {
-		app.tracer = tracerProvider.Tracer("vith")
+		service.tracer = tracerProvider.Tracer("vith")
 	}
 
-	return app
+	return service
 }
 
-// Handler for request. Should be use with net/http
-func (a App) Handler() http.Handler {
+func (s Service) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodHead:
-			a.handleHead(w, r)
+			s.handleHead(w, r)
 		case http.MethodGet:
-			a.handleGet(w, r)
+			s.handleGet(w, r)
 		case http.MethodPost:
-			a.handlePost(w, r)
+			s.handlePost(w, r)
 		case http.MethodPut:
-			a.handlePut(w, r)
+			s.handlePut(w, r)
 		case http.MethodPatch:
-			a.handlePatch(w, r)
+			s.handlePatch(w, r)
 		case http.MethodDelete:
-			a.handleDelete(w, r)
+			s.handleDelete(w, r)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}

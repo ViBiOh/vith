@@ -20,34 +20,34 @@ import (
 
 const thumbnailDuration = 5
 
-func (a App) storageThumbnail(ctx context.Context, itemType model.ItemType, input, output string, scale uint64) (err error) {
-	if err = a.storageApp.Mkdir(ctx, path.Dir(output), absto.DirectoryPerm); err != nil {
+func (s Service) storageThumbnail(ctx context.Context, itemType model.ItemType, input, output string, scale uint64) (err error) {
+	if err = s.storage.Mkdir(ctx, path.Dir(output), absto.DirectoryPerm); err != nil {
 		err = fmt.Errorf("create directory for output: %w", err)
 		return
 	}
 
 	if itemType == model.TypePDF {
-		err = a.streamPdf(ctx, input, output, scale)
+		err = s.streamPdf(ctx, input, output, scale)
 		return
 	}
 
 	var inputName string
 	var finalizeInput func()
 
-	inputName, finalizeInput, err = a.getInputName(ctx, input)
+	inputName, finalizeInput, err = s.getInputName(ctx, input)
 	if err != nil {
 		err = fmt.Errorf("get input name: %w", err)
 	} else {
-		outputName, finalizeOutput := a.getOutputName(ctx, output)
-		err = errors.Join(a.getThumbnailGenerator(itemType)(ctx, inputName, outputName, scale), finalizeOutput())
+		outputName, finalizeOutput := s.getOutputName(ctx, output)
+		err = errors.Join(s.getThumbnailGenerator(itemType)(ctx, inputName, outputName, scale), finalizeOutput())
 		finalizeInput()
 	}
 
 	return err
 }
 
-func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) error {
-	reader, err := a.storageApp.ReadFrom(ctx, name)
+func (s Service) streamPdf(ctx context.Context, name, output string, scale uint64) error {
+	reader, err := s.storage.ReadFrom(ctx, name)
 	if err != nil {
 		return fmt.Errorf("open input file: %w", err)
 	}
@@ -61,11 +61,11 @@ func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) e
 		var err error
 
 		var item absto.Item
-		item, err = a.storageApp.Stat(ctx, name)
+		item, err = s.storage.Stat(ctx, name)
 		if err != nil {
 			err = fmt.Errorf("stat input file: %w", err)
 		} else {
-			err = a.pdfThumbnail(ctx, reader, outputWriter, item.Size(), scale)
+			err = s.pdfThumbnail(ctx, reader, outputWriter, item.Size(), scale)
 		}
 
 		if closeErr := outputWriter.Close(); closeErr != nil {
@@ -75,7 +75,7 @@ func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) e
 		done <- err
 	}()
 
-	err = a.storageApp.WriteTo(ctx, output, outputReader, absto.WriteOpts{})
+	err = s.storage.WriteTo(ctx, output, outputReader, absto.WriteOpts{})
 	if thumbnailErr := <-done; thumbnailErr != nil {
 		err = errors.Join(err, thumbnailErr)
 	}
@@ -85,7 +85,7 @@ func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) e
 	}
 
 	if err != nil {
-		if removeErr := a.storageApp.RemoveAll(ctx, output); removeErr != nil {
+		if removeErr := s.storage.RemoveAll(ctx, output); removeErr != nil {
 			err = errors.Join(err, fmt.Errorf("remove: %w", removeErr))
 		}
 	}
@@ -93,8 +93,8 @@ func (a App) streamPdf(ctx context.Context, name, output string, scale uint64) e
 	return err
 }
 
-func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Writer, contentLength int64, scale uint64) error {
-	r, err := a.imaginaryReq.Path("/crop?width=%d&height=%d&stripmeta=true&noprofile=true&quality=80&type=webp", scale, scale).Build(ctx, input)
+func (s Service) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Writer, contentLength int64, scale uint64) error {
+	r, err := s.imaginaryReq.Path("/crop?width=%d&height=%d&stripmeta=true&noprofile=true&quality=80&type=webp", scale, scale).Build(ctx, input)
 	if err != nil {
 		defer closeWithLog(input, "pdfThumbnail", "")
 		return fmt.Errorf("build request: %w", err)
@@ -117,10 +117,10 @@ func (a App) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Wr
 	return nil
 }
 
-func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
+func (s Service) imageThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
 	var err error
 
-	ctx, end := telemetry.StartSpan(ctx, a.tracer, "ffmpeg_thumbnail")
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "ffmpeg_thumbnail")
 	defer end(&err)
 
 	cmd := exec.CommandContext(ctx, "ffmpeg", "-hwaccel", "auto", "-i", inputName, "-map_metadata", "-1", "-vf", fmt.Sprintf("crop='min(iw,ih)':'min(iw,ih)',scale=%d:%d", scale, scale), "-vcodec", "libwebp", "-lossless", "0", "-compression_level", "6", "-q:v", qualityForScale(scale), "-an", "-preset", "picture", "-y", "-f", "webp", "-frames:v", "1", outputName)
@@ -140,16 +140,16 @@ func (a App) imageThumbnail(ctx context.Context, inputName, outputName string, s
 	return nil
 }
 
-func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
+func (s Service) videoThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {
 	var err error
 
-	ctx, end := telemetry.StartSpan(ctx, a.tracer, "ffmpeg_video_thumbnail")
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "ffmpeg_video_thumbnail")
 	defer end(&err)
 
 	ffmpegOpts := []string{"-hwaccel", "auto"}
 	var customOpts []string
 
-	if _, duration, err := a.getVideoDetailsFromLocal(ctx, inputName); err != nil {
+	if _, duration, err := s.getVideoDetailsFromLocal(ctx, inputName); err != nil {
 		slog.Error("get container duration", "err", err, "input", inputName)
 		ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
 	} else {
@@ -189,14 +189,14 @@ func (a App) videoThumbnail(ctx context.Context, inputName, outputName string, s
 	return nil
 }
 
-func (a App) getVideoDetailsFromLocal(ctx context.Context, name string) (int64, float64, error) {
+func (s Service) getVideoDetailsFromLocal(ctx context.Context, name string) (int64, float64, error) {
 	reader, err := os.OpenFile(name, os.O_RDONLY, absto.RegularFilePerm)
 	if err != nil {
 		return 0, 0, fmt.Errorf("open file: %w", err)
 	}
 	defer closeWithLog(reader, "getVideoBitrate", name)
 
-	return a.getVideoDetails(ctx, name)
+	return s.getVideoDetails(ctx, name)
 }
 
 func qualityForScale(scale uint64) string {

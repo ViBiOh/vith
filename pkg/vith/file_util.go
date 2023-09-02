@@ -12,8 +12,8 @@ import (
 	absto "github.com/ViBiOh/absto/pkg/model"
 )
 
-func (a App) readFile(ctx context.Context, name string) ([]byte, error) {
-	reader, err := a.storageApp.ReadFrom(ctx, name)
+func (s Service) readFile(ctx context.Context, name string) ([]byte, error) {
+	reader, err := s.storage.ReadFrom(ctx, name)
 	if err != nil {
 		return nil, fmt.Errorf("read file: %w", err)
 	}
@@ -27,15 +27,15 @@ func (a App) readFile(ctx context.Context, name string) ([]byte, error) {
 	return content, nil
 }
 
-func (a App) writeFile(ctx context.Context, name string, content []byte) error {
-	if err := a.storageApp.WriteTo(ctx, name, bytes.NewBuffer(content), absto.WriteOpts{Size: int64(len(content))}); err != nil {
+func (s Service) writeFile(ctx context.Context, name string, content []byte) error {
+	if err := s.storage.WriteTo(ctx, name, bytes.NewBuffer(content), absto.WriteOpts{Size: int64(len(content))}); err != nil {
 		return fmt.Errorf("write content: %w", err)
 	}
 
 	return nil
 }
 
-func (a App) listFiles(ctx context.Context, pattern string) ([]string, error) {
+func (s Service) listFiles(ctx context.Context, pattern string) ([]string, error) {
 	var items []string
 
 	re, err := regexp.Compile(pattern)
@@ -43,7 +43,7 @@ func (a App) listFiles(ctx context.Context, pattern string) ([]string, error) {
 		return nil, fmt.Errorf("compile regular expression: %w", err)
 	}
 
-	return items, a.storageApp.Walk(ctx, path.Dir(pattern), func(item absto.Item) error {
+	return items, s.storage.Walk(ctx, path.Dir(pattern), func(item absto.Item) error {
 		if re.MatchString(item.Pathname) {
 			items = append(items, item.Pathname)
 		}
@@ -52,7 +52,7 @@ func (a App) listFiles(ctx context.Context, pattern string) ([]string, error) {
 	})
 }
 
-func (a App) cleanStream(ctx context.Context, name string, remove func(context.Context, string) error, list func(context.Context, string) ([]string, error), suffix string) error {
+func (s Service) cleanStream(ctx context.Context, name string, remove func(context.Context, string) error, list func(context.Context, string) ([]string, error), suffix string) error {
 	if err := remove(ctx, name); err != nil {
 		return fmt.Errorf("remove `%s`: %w", name, err)
 	}

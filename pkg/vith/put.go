@@ -9,8 +9,8 @@ import (
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
-func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
-	if !a.storageApp.Enabled() {
+func (s Service) handlePut(w http.ResponseWriter, r *http.Request) {
+	if !s.storage.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -35,9 +35,9 @@ func (a App) handlePut(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Adding stream generation in the work queue", "input", r.URL.Path)
 
 	select {
-	case a.streamRequestQueue <- model.NewRequest(r.URL.Path, output, itemType, defaultScale):
+	case s.streamRequestQueue <- model.NewRequest(r.URL.Path, output, itemType, defaultScale):
 		w.WriteHeader(http.StatusAccepted)
-	case <-a.stop:
+	case <-s.stop:
 		w.WriteHeader(http.StatusServiceUnavailable)
 	}
 }
