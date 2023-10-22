@@ -106,11 +106,9 @@ func main() {
 	go thumbnailHandlerService.Start(doneCtx)
 	go vithService.Start(doneCtx)
 
-	go appServer.Start(endCtx, "http", httputils.Handler(vithService.Handler(), healthService, recoverer.Middleware, telemetryService.Middleware("http")))
+	go appServer.Start(endCtx, httputils.Handler(vithService.Handler(), healthService, recoverer.Middleware, telemetryService.Middleware("http")))
 
 	healthService.WaitForTermination(appServer.Done())
 
-	appServer.Stop(ctx)
-
-	server.GracefulWait(vithService.Done(), streamHandlerService.Done(), thumbnailHandlerService.Done())
+	server.GracefulWait(appServer.Done(), vithService.Done(), streamHandlerService.Done(), thumbnailHandlerService.Done())
 }
