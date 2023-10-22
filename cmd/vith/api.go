@@ -69,7 +69,7 @@ func main() {
 	}()
 
 	appServer := server.New(appServerConfig)
-	healthService := health.New(healthConfig)
+	healthService := health.New(ctx, healthConfig)
 
 	storageProvider, err := absto.New(abstoConfig, telemetryService.TracerProvider())
 	if err != nil {
@@ -99,8 +99,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	doneCtx := healthService.Done(ctx)
-	endCtx := healthService.End(ctx)
+	doneCtx := healthService.DoneCtx()
+	endCtx := healthService.EndCtx()
 
 	go streamHandlerService.Start(doneCtx)
 	go thumbnailHandlerService.Start(doneCtx)
@@ -109,5 +109,8 @@ func main() {
 	go appServer.Start(endCtx, "http", httputils.Handler(vithService.Handler(), healthService, recoverer.Middleware, telemetryService.Middleware("http")))
 
 	healthService.WaitForTermination(appServer.Done())
-	server.GracefulWait(appServer.Done(), vithService.Done(), streamHandlerService.Done(), thumbnailHandlerService.Done())
+
+	appServer.Stop(ctx)
+
+	server.GracefulWait(vithService.Done(), streamHandlerService.Done(), thumbnailHandlerService.Done())
 }
