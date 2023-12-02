@@ -17,7 +17,7 @@ func (s Service) readFile(ctx context.Context, name string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read file: %w", err)
 	}
-	defer closeWithLog(reader, "readFile", name)
+	defer closeWithLog(ctx, reader, "readFile", name)
 
 	content, err := io.ReadAll(reader)
 	if err != nil {

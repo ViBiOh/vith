@@ -49,13 +49,13 @@ func (s Service) getInputName(ctx context.Context, name string) (string, func(),
 			return "", noopFunc, fmt.Errorf("read from storage: %w", err)
 		}
 
-		localName, err := s.saveFileLocally(reader, fmt.Sprintf("input_%s", name))
+		localName, err := s.saveFileLocally(ctx, reader, fmt.Sprintf("input_%s", name))
 		if err != nil {
-			cleanLocalFile(localName)
+			cleanLocalFile(ctx, localName)
 			return "", noopFunc, fmt.Errorf("save file locally: %w", err)
 		}
 
-		return localName, func() { cleanLocalFile(localName) }, nil
+		return localName, func() { cleanLocalFile(ctx, localName) }, nil
 
 	default:
 		return "", noopFunc, errors.New("unknown storage provider")
@@ -71,7 +71,7 @@ func (s Service) getOutputName(ctx context.Context, name string) (string, func()
 		localName := s.getLocalFilename(fmt.Sprintf("output_%s", name))
 
 		return localName, func() error {
-			defer cleanLocalFile(localName)
+			defer cleanLocalFile(ctx, localName)
 			return s.copyAndCloseLocalFile(ctx, localName, name)
 		}
 
@@ -84,8 +84,8 @@ func (s Service) getLocalFilename(name string) string {
 	return filepath.Join(s.tmpFolder, hash.String(name))
 }
 
-func (s Service) saveFileLocally(input io.ReadCloser, name string) (string, error) {
-	defer closeWithLog(input, "saveFileLocally", "input")
+func (s Service) saveFileLocally(ctx context.Context, input io.ReadCloser, name string) (string, error) {
+	defer closeWithLog(ctx, input, "saveFileLocally", "input")
 
 	outputName := s.getLocalFilename(name)
 
@@ -93,7 +93,7 @@ func (s Service) saveFileLocally(input io.ReadCloser, name string) (string, erro
 	if err != nil {
 		return "", fmt.Errorf("open file: %w", err)
 	}
-	defer closeWithLog(writer, "saveFileLocally", outputName)
+	defer closeWithLog(ctx, writer, "saveFileLocally", outputName)
 
 	_, err = io.Copy(writer, input)
 	return outputName, err
@@ -109,7 +109,7 @@ func (s Service) copyAndCloseLocalFile(ctx context.Context, src, target string) 
 	if err != nil {
 		return fmt.Errorf("open local file `%s`: %w", src, err)
 	}
-	defer closeWithLog(input, "copyLocalFile", "input")
+	defer closeWithLog(ctx, input, "copyLocalFile", "input")
 
 	if err := s.storage.WriteTo(ctx, target, input, absto.WriteOpts{Size: info.Size()}); err != nil {
 		return fmt.Errorf("write to storage: %w", err)
@@ -118,12 +118,12 @@ func (s Service) copyAndCloseLocalFile(ctx context.Context, src, target string) 
 	return nil
 }
 
-func copyLocalFile(name string, output io.Writer) error {
+func copyLocalFile(ctx context.Context, name string, output io.Writer) error {
 	input, err := os.OpenFile(name, os.O_RDONLY, absto.RegularFilePerm)
 	if err != nil {
 		return fmt.Errorf("open local file: %w", err)
 	}
-	defer closeWithLog(input, "copyLocalFile", "input")
+	defer closeWithLog(ctx, input, "copyLocalFile", "input")
 
 	_, err = io.Copy(output, input)
 	if err != nil {
@@ -133,18 +133,18 @@ func copyLocalFile(name string, output io.Writer) error {
 	return nil
 }
 
-func cleanLocalFile(name string) {
+func cleanLocalFile(ctx context.Context, name string) {
 	if len(name) == 0 {
 		return
 	}
 
 	if removeErr := os.Remove(name); removeErr != nil {
-		slog.Warn("remove file", "err", removeErr, "name", name)
+		slog.WarnContext(ctx, "remove file", "err", removeErr, "name", name)
 	}
 }
 
-func closeWithLog(closer io.Closer, fn, item string) {
+func closeWithLog(ctx context.Context, closer io.Closer, fn, item string) {
 	if err := closer.Close(); err != nil {
-		slog.Error("close", "err", err, "fn", fn, "item", item)
+		slog.ErrorContext(ctx, "close", "err", err, "fn", fn, "item", item)
 	}
 }
