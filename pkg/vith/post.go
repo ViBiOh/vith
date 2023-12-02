@@ -14,9 +14,11 @@ import (
 const defaultScale uint64 = 150
 
 func (s Service) handlePost(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	itemType, err := model.ParseItemType(r.URL.Query().Get("type"))
 	if err != nil {
-		httperror.BadRequest(w, err)
+		httperror.BadRequest(ctx, w, err)
 		s.increaseMetric(r.Context(), "http", "thumbnail", "", "invalid")
 		return
 	}
@@ -25,7 +27,7 @@ func (s Service) handlePost(w http.ResponseWriter, r *http.Request) {
 	if rawScale := r.URL.Query().Get("scale"); len(rawScale) > 0 {
 		scale, err = strconv.ParseUint(r.URL.Query().Get("scale"), 10, 64)
 		if err != nil {
-			httperror.BadRequest(w, fmt.Errorf("parse scale: %w", err))
+			httperror.BadRequest(ctx, w, fmt.Errorf("parse scale: %w", err))
 			s.increaseMetric(r.Context(), "http", "thumbnail", "", "invalid")
 			return
 		}
@@ -37,25 +39,25 @@ func (s Service) handlePost(w http.ResponseWriter, r *http.Request) {
 
 	case model.TypeImage, model.TypeVideo:
 		var inputName string
-		inputName, err = s.saveFileLocally(r.Body, time.Now().String())
-		defer cleanLocalFile(inputName)
+		inputName, err = s.saveFileLocally(ctx, r.Body, time.Now().String())
+		defer cleanLocalFile(ctx, inputName)
 
 		if err == nil {
 			outputName := s.getLocalFilename(fmt.Sprintf("output_%s", inputName))
-			defer cleanLocalFile(outputName)
+			defer cleanLocalFile(ctx, outputName)
 
 			if err = s.getThumbnailGenerator(itemType)(r.Context(), inputName, outputName, scale); err == nil {
-				err = copyLocalFile(outputName, w)
+				err = copyLocalFile(ctx, outputName, w)
 			}
 		}
 
 	default:
-		httperror.BadRequest(w, errors.New("unhandled item type"))
+		httperror.BadRequest(ctx, w, errors.New("unhandled item type"))
 		return
 	}
 
 	if err != nil {
-		httperror.InternalServerError(w, err)
+		httperror.InternalServerError(ctx, w, err)
 		s.increaseMetric(r.Context(), "http", "thumbnail", itemType.String(), "error")
 		return
 	}

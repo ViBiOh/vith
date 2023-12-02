@@ -44,7 +44,7 @@ func (s Service) Start(ctx context.Context) {
 
 	for req := range s.streamRequestQueue {
 		if err := s.generateStream(context.Background(), req); err != nil {
-			slog.Error("generate stream", "err", err)
+			slog.ErrorContext(ctx, "generate stream", "err", err)
 		}
 	}
 }
@@ -64,7 +64,7 @@ func (s Service) generateStream(ctx context.Context, req model.Request) error {
 	defer end(&err)
 
 	log := slog.With("input", req.Input).With("output", req.Output)
-	log.Info("Generating stream...")
+	log.InfoContext(ctx, "Generating stream...")
 
 	inputName, finalizeInput, err := s.getInputName(ctx, req.Input)
 	if err != nil {
@@ -78,7 +78,7 @@ func (s Service) generateStream(ctx context.Context, req model.Request) error {
 	}
 	defer func() {
 		if finalizeErr := finalizeStream(); finalizeErr != nil {
-			slog.Error("finalize stream", "err", finalizeErr)
+			slog.ErrorContext(ctx, "finalize stream", "err", finalizeErr)
 		}
 	}()
 
@@ -102,7 +102,8 @@ func (s Service) generateStream(ctx context.Context, req model.Request) error {
 		return err
 	}
 
-	log.Info("Generation succeeded!")
+	log.InfoContext(ctx, "Generation succeeded!")
+
 	return nil
 }
 

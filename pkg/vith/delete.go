@@ -14,26 +14,26 @@ func (s Service) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
+
 	itemType, err := model.ParseItemType(r.URL.Query().Get("type"))
 	if err != nil {
-		httperror.BadRequest(w, err)
+		httperror.BadRequest(ctx, w, err)
 		return
 	}
 
 	if itemType != model.TypeVideo {
-		httperror.BadRequest(w, errors.New("deletion is possible for video type only"))
+		httperror.BadRequest(ctx, w, errors.New("deletion is possible for video type only"))
 		return
 	}
 
-	ctx := r.Context()
-
 	if err := s.isValidStreamName(ctx, r.URL.Path, true); err != nil {
-		httperror.BadRequest(w, err)
+		httperror.BadRequest(ctx, w, err)
 		return
 	}
 
 	if err := s.cleanStream(ctx, r.URL.Path, s.storage.RemoveAll, s.listFiles, `.*\.ts`); err != nil {
-		httperror.InternalServerError(w, err)
+		httperror.InternalServerError(ctx, w, err)
 	}
 
 	w.WriteHeader(http.StatusNoContent)

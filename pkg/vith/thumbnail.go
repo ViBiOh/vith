@@ -96,7 +96,7 @@ func (s Service) streamPdf(ctx context.Context, name, output string, scale uint6
 func (s Service) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Writer, contentLength int64, scale uint64) error {
 	r, err := s.imaginaryReq.Path("/crop?width=%d&height=%d&stripmeta=true&noprofile=true&quality=80&type=webp", scale, scale).Build(ctx, input)
 	if err != nil {
-		defer closeWithLog(input, "pdfThumbnail", "")
+		defer closeWithLog(ctx, input, "pdfThumbnail", "")
 		return fmt.Errorf("build request: %w", err)
 	}
 
@@ -133,7 +133,7 @@ func (s Service) imageThumbnail(ctx context.Context, inputName, outputName strin
 	cmd.Stderr = buffer
 
 	if err = cmd.Run(); err != nil {
-		cleanLocalFile(outputName)
+		cleanLocalFile(ctx, outputName)
 		return fmt.Errorf("ffmpeg image: %s: %w", buffer.String(), err)
 	}
 
@@ -150,7 +150,7 @@ func (s Service) videoThumbnail(ctx context.Context, inputName, outputName strin
 	var customOpts []string
 
 	if _, duration, err := s.getVideoDetailsFromLocal(ctx, inputName); err != nil {
-		slog.Error("get container duration", "err", err, "input", inputName)
+		slog.ErrorContext(ctx, "get container duration", "err", err, "input", inputName)
 		ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
 	} else {
 		startPoint := duration / 2
@@ -182,7 +182,7 @@ func (s Service) videoThumbnail(ctx context.Context, inputName, outputName strin
 	cmd.Stderr = buffer
 
 	if err = cmd.Run(); err != nil {
-		cleanLocalFile(outputName)
+		cleanLocalFile(ctx, outputName)
 		return fmt.Errorf("ffmpeg video: %s: %w", buffer.String(), err)
 	}
 
@@ -194,7 +194,7 @@ func (s Service) getVideoDetailsFromLocal(ctx context.Context, name string) (int
 	if err != nil {
 		return 0, 0, fmt.Errorf("open file: %w", err)
 	}
-	defer closeWithLog(reader, "getVideoBitrate", name)
+	defer closeWithLog(ctx, reader, "getVideoBitrate", name)
 
 	return s.getVideoDetails(ctx, name)
 }

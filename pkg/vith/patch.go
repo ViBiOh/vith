@@ -19,33 +19,33 @@ func (s Service) handlePatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
+
 	itemType, err := model.ParseItemType(r.URL.Query().Get("type"))
 	if err != nil {
-		httperror.BadRequest(w, err)
+		httperror.BadRequest(ctx, w, err)
 		return
 	}
 
-	ctx := r.Context()
-
 	if itemType != model.TypeVideo {
-		httperror.BadRequest(w, errors.New("rename is possible for video type only"))
+		httperror.BadRequest(ctx, w, errors.New("rename is possible for video type only"))
 		return
 	}
 
 	destinationName := r.URL.Query().Get("to")
 
 	if err := s.isValidStreamName(ctx, r.URL.Path, true); err != nil {
-		httperror.BadRequest(w, fmt.Errorf("invalid source name: %w", err))
+		httperror.BadRequest(ctx, w, fmt.Errorf("invalid source name: %w", err))
 		return
 	}
 
 	if err := s.isValidStreamName(ctx, destinationName, false); err != nil {
-		httperror.BadRequest(w, fmt.Errorf("invalid destination name: %w", err))
+		httperror.BadRequest(ctx, w, fmt.Errorf("invalid destination name: %w", err))
 		return
 	}
 
 	if err := s.renameStream(ctx, r.URL.Path, destinationName); err != nil {
-		httperror.InternalServerError(w, err)
+		httperror.InternalServerError(ctx, w, err)
 		return
 	}
 

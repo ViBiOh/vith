@@ -21,22 +21,22 @@ func (s Service) handleHead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
+
 	itemType, err := model.ParseItemType(r.URL.Query().Get("type"))
 	if err != nil {
-		httperror.BadRequest(w, err)
+		httperror.BadRequest(ctx, w, err)
 		return
 	}
 
 	if itemType != model.TypeVideo {
-		httperror.BadRequest(w, errors.New("bitrate is possible for video type only"))
+		httperror.BadRequest(ctx, w, errors.New("bitrate is possible for video type only"))
 		return
 	}
 
-	ctx := r.Context()
-
 	inputName, finalizeInput, err := s.getInputName(ctx, r.URL.Path)
 	if err != nil {
-		httperror.InternalServerError(w, fmt.Errorf("get input name: %w", err))
+		httperror.InternalServerError(ctx, w, fmt.Errorf("get input name: %w", err))
 		return
 	}
 
@@ -44,7 +44,7 @@ func (s Service) handleHead(w http.ResponseWriter, r *http.Request) {
 
 	bitrate, duration, err := s.getVideoDetails(ctx, inputName)
 	if err != nil {
-		httperror.InternalServerError(w, fmt.Errorf("get bitrate: %w", err))
+		httperror.InternalServerError(ctx, w, fmt.Errorf("get bitrate: %w", err))
 		return
 	}
 
