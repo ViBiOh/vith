@@ -62,6 +62,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	defer telemetryService.Close(ctx)
+
 	logger.AddOpenTelemetryToDefaultLogger(telemetryService)
 	request.AddOpenTelemetryToDefaultClient(telemetryService.MeterProvider(), telemetryService.TracerProvider())
 
