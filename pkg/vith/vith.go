@@ -95,7 +95,7 @@ func New(config *Config, amqpClient *amqp.Client, storageService absto.Storage, 
 
 		service.metric, err = meter.Int64Counter("vith.item")
 		if err != nil {
-			slog.Error("create vith counter", "err", err)
+			slog.Error("create vith counter", "error", err)
 		}
 	}
 

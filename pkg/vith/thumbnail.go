@@ -150,7 +150,7 @@ func (s Service) videoThumbnail(ctx context.Context, inputName, outputName strin
 	var customOpts []string
 
 	if _, duration, err := s.getVideoDetailsFromLocal(ctx, inputName); err != nil {
-		slog.ErrorContext(ctx, "get container duration", "err", err, "input", inputName)
+		slog.ErrorContext(ctx, "get container duration", "error", err, "input", inputName)
 		ffmpegOpts = append(ffmpegOpts, "-ss", "1.000")
 	} else {
 		startPoint := duration / 2

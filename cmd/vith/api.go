@@ -58,7 +58,7 @@ func main() {
 
 	telemetryService, err := telemetry.New(ctx, telemetryConfig)
 	if err != nil {
-		slog.ErrorContext(ctx, "create telemetry", "err", err)
+		slog.ErrorContext(ctx, "create telemetry", "error", err)
 		os.Exit(1)
 	}
 
@@ -76,13 +76,13 @@ func main() {
 
 	storageProvider, err := absto.New(abstoConfig, telemetryService.TracerProvider())
 	if err != nil {
-		slog.ErrorContext(ctx, "create storage", "err", err)
+		slog.ErrorContext(ctx, "create storage", "error", err)
 		os.Exit(1)
 	}
 
 	amqpClient, err := amqp.New(amqpConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
-		slog.ErrorContext(ctx, "create amqp", "err", err)
+		slog.ErrorContext(ctx, "create amqp", "error", err)
 		os.Exit(1)
 	} else if amqpClient != nil {
 		defer amqpClient.Close()
@@ -92,13 +92,13 @@ func main() {
 
 	streamHandlerService, err := amqphandler.New(streamHandlerConfig, amqpClient, telemetryService.MeterProvider(), telemetryService.TracerProvider(), vithService.AmqpStreamHandler)
 	if err != nil {
-		slog.ErrorContext(ctx, "create amqp handler stream", "err", err)
+		slog.ErrorContext(ctx, "create amqp handler stream", "error", err)
 		os.Exit(1)
 	}
 
 	thumbnailHandlerService, err := amqphandler.New(thumbnailHandlerConfig, amqpClient, telemetryService.MeterProvider(), telemetryService.TracerProvider(), vithService.AmqpThumbnailHandler)
 	if err != nil {
-		slog.ErrorContext(ctx, "create amqp handler", "err", err)
+		slog.ErrorContext(ctx, "create amqp handler", "error", err)
 		os.Exit(1)
 	}
 
