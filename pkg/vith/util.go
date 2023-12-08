@@ -139,12 +139,12 @@ func cleanLocalFile(ctx context.Context, name string) {
 	}
 
 	if removeErr := os.Remove(name); removeErr != nil {
-		slog.WarnContext(ctx, "remove file", "err", removeErr, "name", name)
+		slog.WarnContext(ctx, "remove file", "error", removeErr, "name", name)
 	}
 }
 
 func closeWithLog(ctx context.Context, closer io.Closer, fn, item string) {
 	if err := closer.Close(); err != nil {
-		slog.ErrorContext(ctx, "close", "err", err, "fn", fn, "item", item)
+		slog.ErrorContext(ctx, "close", "error", err, "fn", fn, "item", item)
 	}
 }
