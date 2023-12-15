@@ -37,7 +37,7 @@ spec:
         mountPath: /data
     config:
       GOMAXPROCS: "1"
-      OTEL_RESOURCE_ATTRIBUTES: env=production
+      OTEL_RESOURCE_ATTRIBUTES: env=production,git.repository_url=github.com/ViBiOh/vith
       OTEL_SERVICE_NAME: vith
       VITH_LOGGER_JSON: "true"
       VITH_STORAGE_FILE_SYSTEM_DIRECTORY: "/data"
