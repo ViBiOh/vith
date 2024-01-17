@@ -25,7 +25,7 @@ spec:
     nameOverride: vith
     image:
       name: vibioh/vith
-      tag: "202401131351" # {"$imagepolicy": "default:flux-vith-api:tag"}
+      tag: "202401172227" # {"$imagepolicy": "default:flux-vith-api:tag"}
     strategy:
       type: Recreate
     volumes:
