@@ -26,6 +26,27 @@ spec:
     image:
       name: vibioh/vith
       tag: "202401180919" # {"$imagepolicy": "default:flux-vith-api:tag"}
+    labels:
+      tags.datadoghq.com/env: "production"
+      tags.datadoghq.com/service: "vith"
+      tags.datadoghq.com/version: "202401180919" # {"$imagepolicy": "default:flux-vith-api:tag"}
+    env:
+      - name: GOMAXPROCS
+        valueFrom:
+          resourceFieldRef:
+            resource: limits.cpu
+      - name: GOMEMLIMIT
+        valueFrom:
+          resourceFieldRef:
+            resource: limits.memory
+      - name: VERSION
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['tags.datadoghq.com/version']
+      - name: OTEL_SERVICE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['tags.datadoghq.com/service']
     strategy:
       type: Recreate
     volumes:
@@ -36,9 +57,7 @@ spec:
       - name: data
         mountPath: /data
     config:
-      GOMAXPROCS: "1"
       OTEL_RESOURCE_ATTRIBUTES: env=production,git.repository_url=github.com/ViBiOh/vith
-      OTEL_SERVICE_NAME: vith
       VITH_LOGGER_JSON: "true"
       VITH_STORAGE_FILE_SYSTEM_DIRECTORY: "/data"
       VITH_TELEMETRY_URL: datadog.observability:4317
