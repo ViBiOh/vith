@@ -34,7 +34,7 @@ func (s Service) handlePut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slog.InfoContext(ctx, "Adding stream generation in the work queue", "input", r.URL.Path)
+	slog.LogAttrs(ctx, slog.LevelInfo, "Adding stream generation in the work queue", slog.String("input", r.URL.Path))
 
 	select {
 	case s.streamRequestQueue <- model.NewRequest(r.URL.Path, output, itemType, defaultScale):

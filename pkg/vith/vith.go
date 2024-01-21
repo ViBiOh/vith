@@ -2,6 +2,7 @@ package vith
 
 import (
 	"bytes"
+	"context"
 	"flag"
 	"log/slog"
 	"net/http"
@@ -95,7 +96,7 @@ func New(config *Config, amqpClient *amqp.Client, storageService absto.Storage, 
 
 		service.metric, err = meter.Int64Counter("vith.item")
 		if err != nil {
-			slog.Error("create vith counter", "error", err)
+			slog.LogAttrs(context.Background(), slog.LevelError, "create vith counter", slog.Any("error", err))
 		}
 	}
 
