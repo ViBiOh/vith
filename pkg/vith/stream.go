@@ -44,7 +44,7 @@ func (s Service) Start(ctx context.Context) {
 
 	for req := range s.streamRequestQueue {
 		if err := s.generateStream(context.Background(), req); err != nil {
-			slog.ErrorContext(ctx, "generate stream", "error", err)
+			slog.LogAttrs(ctx, slog.LevelError, "generate stream", slog.Any("error", err))
 		}
 	}
 }
@@ -78,7 +78,7 @@ func (s Service) generateStream(ctx context.Context, req model.Request) error {
 	}
 	defer func() {
 		if finalizeErr := finalizeStream(); finalizeErr != nil {
-			slog.ErrorContext(ctx, "finalize stream", "error", finalizeErr)
+			slog.LogAttrs(ctx, slog.LevelError, "finalize stream", slog.Any("error", finalizeErr))
 		}
 	}()
 

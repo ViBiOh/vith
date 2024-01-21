@@ -76,7 +76,7 @@ func main() {
 
 	amqpClient, err := amqp.New(amqpConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
-		slog.ErrorContext(ctx, "create amqp", "error", err)
+		slog.LogAttrs(ctx, slog.LevelError, "create amqp", slog.Any("error", err))
 		os.Exit(1)
 	} else if amqpClient != nil {
 		defer amqpClient.Close()
