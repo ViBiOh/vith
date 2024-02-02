@@ -7,7 +7,7 @@ toolchain go1.21.0
 require (
 	github.com/ViBiOh/absto v1.7.5
 	github.com/ViBiOh/flags v1.5.0
-	github.com/ViBiOh/httputils/v4 v4.71.3
+	github.com/ViBiOh/httputils/v4 v4.71.5
 	github.com/rabbitmq/amqp091-go v1.9.0
 	go.opentelemetry.io/otel v1.22.0
 	go.opentelemetry.io/otel/metric v1.22.0
@@ -22,7 +22,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
