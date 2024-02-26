@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/ViBiOh/absto v1.7.5
+	github.com/ViBiOh/absto v1.7.6
 	github.com/ViBiOh/flags v1.5.0
 	github.com/ViBiOh/httputils/v4 v4.71.7
 	github.com/rabbitmq/amqp091-go v1.9.0
@@ -24,10 +24,10 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.4 // indirect
+	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
-	github.com/minio/minio-go/v7 v7.0.66 // indirect
+	github.com/minio/minio-go/v7 v7.0.67 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
