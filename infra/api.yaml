@@ -25,11 +25,11 @@ spec:
     nameOverride: vith
     image:
       name: vibioh/vith
-      tag: "202404050922" # {"$imagepolicy": "default:flux-vith-api:tag"}
+      tag: "202404080917" # {"$imagepolicy": "default:flux-vith-api:tag"}
     labels:
       tags.datadoghq.com/env: "production"
       tags.datadoghq.com/service: "vith"
-      tags.datadoghq.com/version: "202404050922" # {"$imagepolicy": "default:flux-vith-api:tag"}
+      tags.datadoghq.com/version: "202404080917" # {"$imagepolicy": "default:flux-vith-api:tag"}
     env:
       - name: GOMAXPROCS
         valueFrom:
