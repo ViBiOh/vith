@@ -59,6 +59,7 @@ spec:
     config:
       OTEL_RESOURCE_ATTRIBUTES: env=production,git.repository_url=github.com/ViBiOh/vith
       VITH_LOGGER_JSON: "true"
+      VITH_PPROF_AGENT: http://datadog.observability:8126
       VITH_STORAGE_FILE_SYSTEM_DIRECTORY: "/data"
       VITH_TELEMETRY_URL: datadog.observability:4317
     secrets:
