@@ -75,5 +75,3 @@ spec:
       runAsUser: 1000
     autoscaling:
       enabled: false
-    pprof:
-      enabled: true
