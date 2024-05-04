@@ -20,6 +20,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/health"
 	"github.com/ViBiOh/httputils/v4/pkg/httputils"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
+	"github.com/ViBiOh/httputils/v4/pkg/pprof"
 	"github.com/ViBiOh/httputils/v4/pkg/recoverer"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/server"
@@ -37,7 +38,7 @@ func main() {
 	alcotestConfig := alcotest.Flags(fs, "")
 	loggerConfig := logger.Flags(fs, "logger")
 	telemetryConfig := telemetry.Flags(fs, "telemetry")
-
+	pprofConfig := pprof.Flags(fs, "pprof")
 	vithConfig := vith.Flags(fs, "")
 	abstoConfig := absto.Flags(fs, "storage", flags.NewOverride("FileSystemDirectory", ""))
 
@@ -53,6 +54,8 @@ func main() {
 
 	ctx := context.Background()
 
+	healthService := health.New(ctx, healthConfig)
+
 	telemetryService, err := telemetry.New(ctx, telemetryConfig)
 	logger.FatalfOnErr(ctx, err, "create telemetry")
 
@@ -61,12 +64,16 @@ func main() {
 	logger.AddOpenTelemetryToDefaultLogger(telemetryService)
 	request.AddOpenTelemetryToDefaultClient(telemetryService.MeterProvider(), telemetryService.TracerProvider())
 
+	service, version, envName := telemetryService.GetServiceVersionAndEnv()
+	pprofApp := pprof.New(pprofConfig, service, version, envName)
+
 	go func() {
 		fmt.Println(http.ListenAndServe("localhost:9999", http.DefaultServeMux))
 	}()
 
+	go pprofApp.Start(healthService.DoneCtx())
+
 	appServer := server.New(appServerConfig)
-	healthService := health.New(ctx, healthConfig)
 
 	storageProvider, err := absto.New(abstoConfig, telemetryService.TracerProvider())
 	logger.FatalfOnErr(ctx, err, "create storage")
