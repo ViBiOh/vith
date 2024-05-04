@@ -58,6 +58,7 @@ Usage of vith:
   --okStatus                    int       [http] Healthy HTTP Status code ${VITH_OK_STATUS} (default 204)
   --port                        uint      [server] Listen port (0 to disable) ${VITH_PORT} (default 1080)
   --pprofAgent                  string    [pprof] URL of the Datadog Trace Agent (e.g. http://datadog.observability:8126) ${VITH_PPROF_AGENT}
+  --pprofPort                   int       [pprof] Port of the HTTP server (0 to disable) ${VITH_PPROF_PORT} (default 0)
   --readTimeout                 duration  [server] Read Timeout ${VITH_READ_TIMEOUT} (default 2m0s)
   --routingKey                  string    [thumbnail] AMQP Routing Key to fibr ${VITH_ROUTING_KEY} (default "thumbnail_output")
   --shutdownTimeout             duration  [server] Shutdown Timeout ${VITH_SHUTDOWN_TIMEOUT} (default 10s)
