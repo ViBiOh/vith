@@ -52,6 +52,12 @@ jobs:
           go-version: "^1.22"
           cache: true
       - name: Build
+        env:
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_APP_KEY: ${{ secrets.DD_APP_KEY }}
+          DD_ENV: production
+          DD_SERVICE: vith
+          DD_SITE: datadoghq.eu
         run: |
           curl --disable --silent --show-error --location --max-time 30 "https://raw.githubusercontent.com/ViBiOh/scripts/main/bootstrap.sh" | bash -s -- "-c" "release.sh"
           ./scripts/release.sh build
