@@ -17,7 +17,6 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/httputils"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/pprof"
-	"github.com/ViBiOh/httputils/v4/pkg/recoverer"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/server"
 	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
@@ -46,9 +45,9 @@ func main() {
 
 	alcotest.DoAndExit(alcotestConfig)
 
-	logger.Init(loggerConfig)
-
 	ctx := context.Background()
+
+	logger.Init(ctx, loggerConfig)
 
 	healthService := health.New(ctx, healthConfig)
 
@@ -70,12 +69,12 @@ func main() {
 	storageProvider, err := absto.New(abstoConfig, telemetryService.TracerProvider())
 	logger.FatalfOnErr(ctx, err, "create storage")
 
-	amqpClient, err := amqp.New(amqpConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
+	amqpClient, err := amqp.New(ctx, amqpConfig, telemetryService.MeterProvider(), telemetryService.TracerProvider())
 	if err != nil && !errors.Is(err, amqp.ErrNoConfig) {
 		slog.LogAttrs(ctx, slog.LevelError, "create amqp", slog.Any("error", err))
 		os.Exit(1)
 	} else if amqpClient != nil {
-		defer amqpClient.Close()
+		defer amqpClient.Close(ctx)
 	}
 
 	vithService := vith.New(vithConfig, amqpClient, storageProvider, telemetryService.MeterProvider(), telemetryService.TracerProvider())
@@ -93,7 +92,7 @@ func main() {
 	go thumbnailHandlerService.Start(doneCtx)
 	go vithService.Start(doneCtx)
 
-	go appServer.Start(endCtx, httputils.Handler(vithService.Handler(), healthService, recoverer.Middleware, telemetryService.Middleware("http")))
+	go appServer.Start(endCtx, httputils.Handler(vithService.Handler(), healthService, telemetryService.Middleware("http")))
 
 	healthService.WaitForTermination(appServer.Done())
 
