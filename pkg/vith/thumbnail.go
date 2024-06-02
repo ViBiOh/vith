@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -13,7 +12,6 @@ import (
 	"strconv"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
-	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"github.com/ViBiOh/vith/pkg/model"
 )
@@ -23,11 +21,6 @@ const thumbnailDuration = 5
 func (s Service) storageThumbnail(ctx context.Context, itemType model.ItemType, input, output string, scale uint64) (err error) {
 	if err = s.storage.Mkdir(ctx, path.Dir(output), absto.DirectoryPerm); err != nil {
 		err = fmt.Errorf("create directory for output: %w", err)
-		return
-	}
-
-	if itemType == model.TypePDF {
-		err = s.streamPdf(ctx, input, output, scale)
 		return
 	}
 
@@ -44,77 +37,6 @@ func (s Service) storageThumbnail(ctx context.Context, itemType model.ItemType, 
 	}
 
 	return err
-}
-
-func (s Service) streamPdf(ctx context.Context, name, output string, scale uint64) error {
-	reader, err := s.storage.ReadFrom(ctx, name)
-	if err != nil {
-		return fmt.Errorf("open input file: %w", err)
-	}
-
-	done := make(chan error)
-	outputReader, outputWriter := io.Pipe()
-
-	go func() {
-		defer close(done)
-
-		var err error
-
-		var item absto.Item
-		item, err = s.storage.Stat(ctx, name)
-		if err != nil {
-			err = fmt.Errorf("stat input file: %w", err)
-		} else {
-			err = s.pdfThumbnail(ctx, reader, outputWriter, item.Size(), scale)
-		}
-
-		if closeErr := outputWriter.Close(); closeErr != nil {
-			err = errors.Join(err, closeErr)
-		}
-
-		done <- err
-	}()
-
-	err = s.storage.WriteTo(ctx, output, outputReader, absto.WriteOpts{})
-	if thumbnailErr := <-done; thumbnailErr != nil {
-		err = errors.Join(err, thumbnailErr)
-	}
-
-	if closeErr := outputReader.Close(); closeErr != nil {
-		err = errors.Join(err, closeErr)
-	}
-
-	if err != nil {
-		if removeErr := s.storage.RemoveAll(ctx, output); removeErr != nil {
-			err = errors.Join(err, fmt.Errorf("remove: %w", removeErr))
-		}
-	}
-
-	return err
-}
-
-func (s Service) pdfThumbnail(ctx context.Context, input io.ReadCloser, output io.Writer, contentLength int64, scale uint64) error {
-	r, err := s.imaginaryReq.Path("/crop?width=%d&height=%d&stripmeta=true&noprofile=true&quality=80&type=webp", scale, scale).Build(ctx, input)
-	if err != nil {
-		defer closeWithLog(ctx, input, "pdfThumbnail", "")
-		return fmt.Errorf("build request: %w", err)
-	}
-
-	r.ContentLength = contentLength
-
-	resp, err := request.DoWithClient(slowClient, r)
-	if err != nil {
-		return fmt.Errorf("request imaginary: %w", err)
-	}
-
-	buffer := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buffer)
-
-	if _, err = io.CopyBuffer(output, resp.Body, buffer.Bytes()); err != nil {
-		return fmt.Errorf("copy imaginary response: %w", err)
-	}
-
-	return nil
 }
 
 func (s Service) imageThumbnail(ctx context.Context, inputName, outputName string, scale uint64) error {

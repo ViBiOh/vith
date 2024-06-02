@@ -45,9 +45,6 @@ Usage of vith:
   --exchange                    string    [thumbnail] AMQP Exchange Name ${VITH_EXCHANGE} (default "fibr")
   --graceDuration               duration  [http] Grace duration when signal received ${VITH_GRACE_DURATION} (default 30s)
   --idleTimeout                 duration  [server] Idle Timeout ${VITH_IDLE_TIMEOUT} (default 2m0s)
-  --imaginaryPassword           string    [thumbnail] Imaginary Basic Auth Password ${VITH_IMAGINARY_PASSWORD}
-  --imaginaryURL                string    [thumbnail] Imaginary URL ${VITH_IMAGINARY_URL} (default "http://image:9000")
-  --imaginaryUser               string    [thumbnail] Imaginary Basic Auth User ${VITH_IMAGINARY_USER}
   --key                         string    [server] Key file ${VITH_KEY}
   --loggerJson                            [logger] Log format as JSON ${VITH_LOGGER_JSON} (default false)
   --loggerLevel                 string    [logger] Logger level ${VITH_LOGGER_LEVEL} (default "INFO")
