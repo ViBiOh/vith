@@ -15,12 +15,10 @@ const (
 	TypeVideo ItemType = iota
 	// TypeImage image type
 	TypeImage
-	// TypePDF pdf type
-	TypePDF
 )
 
 // ItemTypeValues string values
-var ItemTypeValues = []string{"video", "image", "pdf"}
+var ItemTypeValues = []string{"video", "image"}
 
 // ParseItemType parse raw string into a ItemType
 func ParseItemType(value string) (ItemType, error) {

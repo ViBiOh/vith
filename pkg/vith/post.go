@@ -34,9 +34,6 @@ func (s Service) handlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch itemType {
-	case model.TypePDF:
-		err = s.pdfThumbnail(r.Context(), r.Body, w, r.ContentLength, scale)
-
 	case model.TypeImage, model.TypeVideo:
 		var inputName string
 		inputName, err = s.saveFileLocally(ctx, r.Body, time.Now().String())

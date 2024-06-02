@@ -7,12 +7,10 @@ import (
 	"log/slog"
 	"net/http"
 	"sync"
-	"time"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/amqp"
-	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/vith/pkg/model"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -24,22 +22,14 @@ const (
 	hlsExtension = ".m3u8"
 )
 
-var (
-	bufferPool = sync.Pool{
-		New: func() any {
-			return bytes.NewBuffer(make([]byte, 32*1024))
-		},
-	}
-
-	slowClient = request.CreateClient(time.Minute, request.NoRedirection)
-)
+var bufferPool = sync.Pool{
+	New: func() any {
+		return bytes.NewBuffer(make([]byte, 32*1024))
+	},
+}
 
 type Config struct {
 	TmpFolder string
-
-	ImaginaryURL  string
-	ImaginaryUser string
-	ImaginaryPass string
 
 	AmqpExchange   string
 	AmqpRoutingKey string
@@ -49,9 +39,6 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config
 	var config Config
 
 	flags.New("TmpFolder", "Folder used for temporary files storage").Prefix(prefix).DocPrefix("vith").StringVar(fs, &config.TmpFolder, "/tmp", overrides)
-	flags.New("ImaginaryURL", "Imaginary URL").Prefix(prefix).DocPrefix("thumbnail").StringVar(fs, &config.ImaginaryURL, "http://image:9000", nil)
-	flags.New("ImaginaryUser", "Imaginary Basic Auth User").Prefix(prefix).DocPrefix("thumbnail").StringVar(fs, &config.ImaginaryUser, "", nil)
-	flags.New("ImaginaryPassword", "Imaginary Basic Auth Password").Prefix(prefix).DocPrefix("thumbnail").StringVar(fs, &config.ImaginaryPass, "", nil)
 	flags.New("Exchange", "AMQP Exchange Name").Prefix(prefix).DocPrefix("thumbnail").StringVar(fs, &config.AmqpExchange, "fibr", overrides)
 	flags.New("RoutingKey", "AMQP Routing Key to fibr").Prefix(prefix).DocPrefix("thumbnail").StringVar(fs, &config.AmqpRoutingKey, "thumbnail_output", overrides)
 
@@ -69,12 +56,9 @@ type Service struct {
 	tmpFolder          string
 	amqpExchange       string
 	amqpRoutingKey     string
-	imaginaryReq       request.Request
 }
 
 func New(config *Config, amqpClient *amqp.Client, storageService absto.Storage, meterProvider metric.MeterProvider, tracerProvider trace.TracerProvider) Service {
-	imaginaryReq := request.Post(config.ImaginaryURL).WithClient(slowClient).BasicAuth(config.ImaginaryUser, config.ImaginaryPass)
-
 	service := Service{
 		tmpFolder: config.TmpFolder,
 		storage:   storageService,
@@ -86,7 +70,6 @@ func New(config *Config, amqpClient *amqp.Client, storageService absto.Storage, 
 		streamRequestQueue: make(chan model.Request, 4),
 		stop:               make(chan struct{}),
 		done:               make(chan struct{}),
-		imaginaryReq:       imaginaryReq,
 	}
 
 	if meterProvider != nil {
