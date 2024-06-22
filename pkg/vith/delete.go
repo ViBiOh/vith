@@ -8,7 +8,7 @@ import (
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
-func (s Service) handleDelete(w http.ResponseWriter, r *http.Request) {
+func (s Service) HandleDelete(w http.ResponseWriter, r *http.Request) {
 	if !s.storage.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return

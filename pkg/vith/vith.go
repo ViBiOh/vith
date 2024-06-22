@@ -5,7 +5,6 @@ import (
 	"context"
 	"flag"
 	"log/slog"
-	"net/http"
 	"sync"
 
 	absto "github.com/ViBiOh/absto/pkg/model"
@@ -88,25 +87,4 @@ func New(config *Config, amqpClient *amqp.Client, storageService absto.Storage, 
 	}
 
 	return service
-}
-
-func (s Service) Handler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodHead:
-			s.handleHead(w, r)
-		case http.MethodGet:
-			s.handleGet(w, r)
-		case http.MethodPost:
-			s.handlePost(w, r)
-		case http.MethodPut:
-			s.handlePut(w, r)
-		case http.MethodPatch:
-			s.handlePatch(w, r)
-		case http.MethodDelete:
-			s.handleDelete(w, r)
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
-		}
-	})
 }

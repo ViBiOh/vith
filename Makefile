@@ -8,7 +8,7 @@ endif
 APP_NAME = vith
 PACKAGES ?= ./...
 
-MAIN_SOURCE = cmd/vith/api.go
+MAIN_SOURCE = ./cmd/vith/
 MAIN_RUNNER = go run $(MAIN_SOURCE)
 ifeq ($(DEBUG), true)
 	MAIN_RUNNER = dlv debug $(MAIN_SOURCE) --

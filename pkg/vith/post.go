@@ -13,7 +13,7 @@ import (
 
 const defaultScale uint64 = 150
 
-func (s Service) handlePost(w http.ResponseWriter, r *http.Request) {
+func (s Service) HandlePost(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	itemType, err := model.ParseItemType(r.URL.Query().Get("type"))

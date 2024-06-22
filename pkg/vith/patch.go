@@ -13,7 +13,7 @@ import (
 	"github.com/ViBiOh/vith/pkg/model"
 )
 
-func (s Service) handlePatch(w http.ResponseWriter, r *http.Request) {
+func (s Service) HandlePatch(w http.ResponseWriter, r *http.Request) {
 	if !s.storage.Enabled() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
