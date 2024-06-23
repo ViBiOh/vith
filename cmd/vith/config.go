@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"os"
+	"time"
 
 	"github.com/ViBiOh/absto/pkg/absto"
 	"github.com/ViBiOh/flags"
@@ -33,16 +34,17 @@ type configuration struct {
 }
 
 func newConfig() configuration {
-	fs := flag.NewFlagSet("api", flag.ExitOnError)
+	fs := flag.NewFlagSet("vith", flag.ExitOnError)
 	fs.Usage = flags.Usage(fs)
 
 	config := configuration{
-		server:    server.Flags(fs, ""),
-		health:    health.Flags(fs, ""),
-		alcotest:  alcotest.Flags(fs, ""),
 		logger:    logger.Flags(fs, "logger"),
+		alcotest:  alcotest.Flags(fs, ""),
 		telemetry: telemetry.Flags(fs, "telemetry"),
 		pprof:     pprof.Flags(fs, "pprof"),
+		health:    health.Flags(fs, ""),
+
+		server: server.Flags(fs, "", flags.NewOverride("ReadTimeout", 2*time.Minute), flags.NewOverride("WriteTimeout", 2*time.Minute)),
 
 		vith:             vith.Flags(fs, ""),
 		absto:            absto.Flags(fs, "storage", flags.NewOverride("FileSystemDirectory", "")),

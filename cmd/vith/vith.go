@@ -18,8 +18,8 @@ func main() {
 	clients, err := newClients(ctx, config)
 	logger.FatalfOnErr(ctx, err, "clients")
 
-	defer clients.Close(ctx)
 	go clients.Start()
+	defer clients.Close(ctx)
 
 	adapters, err := newAdapters(config, clients)
 	logger.FatalfOnErr(ctx, err, "adapters")

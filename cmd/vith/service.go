@@ -10,10 +10,10 @@ import (
 )
 
 type service struct {
+	server           *server.Server
 	streamHandler    *amqphandler.Service
 	thumbnailHandler *amqphandler.Service
 	vith             vith.Service
-	server           server.Server
 }
 
 func newService(config configuration, clients clients, adapters adapters) (*service, error) {
@@ -40,5 +40,5 @@ func newService(config configuration, clients clients, adapters adapters) (*serv
 func (s *service) Start(ctx context.Context) {
 	go s.streamHandler.Start(ctx)
 	go s.thumbnailHandler.Start(ctx)
-	s.vith.Start(ctx)
+	go s.vith.Start(ctx)
 }
