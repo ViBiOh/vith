@@ -24,7 +24,7 @@ func newService(config configuration, clients clients, adapters adapters) (*serv
 		return nil, fmt.Errorf("streamHandler: %w", err)
 	}
 
-	thumbnailHandlerService, err := amqphandler.New(config.streamHandler, clients.amqp, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider(), vithService.AmqpThumbnailHandler)
+	thumbnailHandlerService, err := amqphandler.New(config.thumbnailHandler, clients.amqp, clients.telemetry.MeterProvider(), clients.telemetry.TracerProvider(), vithService.AmqpThumbnailHandler)
 	if err != nil {
 		return nil, fmt.Errorf("thumbnailHandlerService: %w", err)
 	}
