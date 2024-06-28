@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/ViBiOh/httputils/v4/pkg/alcotest"
-	"github.com/ViBiOh/httputils/v4/pkg/httputils"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/server"
 )
@@ -24,16 +23,15 @@ func main() {
 	adapters, err := newAdapters(config, clients)
 	logger.FatalfOnErr(ctx, err, "adapters")
 
-	services, err := newService(config, clients, adapters)
+	services, err := newServices(config, clients, adapters)
 	logger.FatalfOnErr(ctx, err, "services")
 
 	go services.Start(clients.health.DoneCtx())
 
-	port := newPort(services)
+	port := newPort(clients, services)
 
-	go services.server.Start(clients.health.EndCtx(), httputils.Handler(port, clients.health, clients.telemetry.Middleware("http")))
+	go services.server.Start(clients.health.EndCtx(), port)
 
 	clients.health.WaitForTermination(services.server.Done())
-
 	server.GracefulWait(services.server.Done(), services.streamHandler.Done(), services.thumbnailHandler.Done())
 }

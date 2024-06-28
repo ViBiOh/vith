@@ -12,12 +12,13 @@ type adapters struct {
 }
 
 func newAdapters(config configuration, clients clients) (adapters, error) {
-	storageService, err := absto.New(config.absto, clients.telemetry.TracerProvider())
+	var output adapters
+	var err error
+
+	output.storage, err = absto.New(config.absto, clients.telemetry.TracerProvider())
 	if err != nil {
-		return adapters{}, fmt.Errorf("absto: %w", err)
+		return output, fmt.Errorf("absto: %w", err)
 	}
 
-	return adapters{
-		storage: storageService,
-	}, nil
+	return output, nil
 }
