@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/ViBiOh/absto v1.7.12
+	github.com/ViBiOh/absto v1.7.13
 	github.com/ViBiOh/flags v1.5.0
 	github.com/ViBiOh/httputils/v4 v4.78.2
 	github.com/rabbitmq/amqp091-go v1.10.0
